@@ -4,7 +4,7 @@
 #pragma once
 
 #ifndef BFPMX_FLOATREPR_H
-#include "../../alias.cpp"
+#include "definition/alias.h"
 #define BFPMX_FLOATREPR_H
 
 /**
@@ -99,4 +99,4 @@ namespace fp
     constexpr auto E4M3 = FloatRepr<3, 4, 1, 7>();
 }
 
-#endif //BFPMX_BLOCKFLOAT_H
+#endif //BFPMX_FLOATREPR_H

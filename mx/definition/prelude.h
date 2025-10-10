@@ -5,7 +5,7 @@
 #ifndef BFPMX_PRELUDE_H
 #define BFPMX_PRELUDE_H
 
-#include "alias.cpp"
+#include "alias.h"
 
 #include "block_float/block/Block.h"
 #include "block_float/factory/BlockFactory.h"
