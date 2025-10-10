@@ -4,14 +4,20 @@
 # Unignore all with extensions
 !*.*
 
+# CMake Artefacts
+CMakeCache.txt
 /CMakeFiles
-/Testing
-/build
 /.cmake
 /cmake-build-debug
 /cmake-build-release
-/
+/Testing
+/build
+
+# Editors
 /.idea
-CMakeCache.txt
+
+# Built Libraries
 *.a
 
+# Mac Elements
+.DS_Store
