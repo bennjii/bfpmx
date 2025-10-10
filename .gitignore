@@ -1,0 +1,8 @@
+/CMakeFiles
+/Testing
+/build
+/.cmake
+/cmake-build-debug
+/.idea
+CMakeCache.txt
+*.a
