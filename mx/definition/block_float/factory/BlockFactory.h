@@ -5,42 +5,38 @@
 #ifndef BFPMX_BLOCKFACTORY_H
 #define BFPMX_BLOCKFACTORY_H
 
-#include "../repr/FloatRepr.h"
+#include "definition/prelude.h"
 
 constexpr u16 DEFAULT_BLOCK_SIZE = 32;
 constexpr u16 DEFAULT_BITS_SCALAR = 32;
 
+template<typename T>
+concept IFloatRepr = requires(const T& s) {
+    { s.Size() } -> std::convertible_to<u16>;
+};
+
+template<std::size_t BlockQuantity, std::size_t BlockSize>
+class Block;
+
+template<
+    u16 BlockQuantity,
+    u16 BitsScalar,
+    IFloatRepr Float
+>
 class BlockFactory
 {
 public:
     BlockFactory() = delete;
-    explicit BlockFactory(FloatRepr repr, u16 block_size, u16 scalar);
-
-    static BlockFactory Default(const FloatRepr repr)
-    {
-        return BlockFactory(repr, DEFAULT_BLOCK_SIZE, DEFAULT_BITS_SCALAR);
-    };
-
-    void WithBlockSize(u16 size);
-    void WithScalarBits(u16 scalar);
 
     /// The size of the block, in bits, when constructed.
-    [[nodiscard]] u32 Size() const;
+    static constexpr u32 Size() {
+        return BitsScalar + (BlockQuantity * Float::Size());
+    }
 
-    // TODO: Block createBlock();
-
-private:
-    /// The representation of the floats within the block
-    FloatRepr repr;
-
-    /// The number of floats within a given block.
-    /// Default is 32.
-    u16 block_size;
-
-    /// The size of the scalar value in bits.
-    /// Default is 32.
-    u16 bits_scalar;
+    static constexpr Block<BlockQuantity, Size()> CreateBlock()
+    {
+        return Block<BlockQuantity, Size()>();
+    }
 };
-
 
 #endif //BFPMX_BLOCKFACTORY_H

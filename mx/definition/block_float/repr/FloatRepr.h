@@ -58,60 +58,45 @@
  * as specified in 5.3 of the OCP Microscaling Format Specification.
  *
  */
+template<
+    u16 Significand,
+    u16 Exponent,
+    u16 Sign,
+    u16 Bias
+>
 class FloatRepr
 {
 public:
-    explicit FloatRepr(u8 significand, u8 exponent, u8 sign_bit, u8 bias);
-
-    [[nodiscard]] u8 SignificandBits() const {
-        return this->bits_significand;
+    [[nodiscard]] static constexpr u8 SignificandBits() {
+        return Significand;
     }
 
-    [[nodiscard]] u8 ExponentBits() const {
-        return this->bits_exponent;
+    [[nodiscard]] static constexpr u8 ExponentBits() {
+        return Exponent;
     }
 
-    [[nodiscard]] u8 SignBits() const {
-        return this->bits_sign;
+    [[nodiscard]] static constexpr u8 SignBits() {
+        return Sign;
     }
 
-    [[nodiscard]] u8 ElementBits() const
+    [[nodiscard]] static constexpr u8 ElementBits()
     {
         return
-            + this->bits_significand
-            + this->bits_exponent
-            + this->bits_sign;
+            + SignificandBits()
+            + ExponentBits()
+            + SignBits();
     }
 
-    [[nodiscard]] u32 Size() const
+    [[nodiscard]] static constexpr u32 Size()
     {
-        return this->ElementBits();
+        return ElementBits();
     }
-
-    /**
-     *  Exponent-Mantissa (Bias) Form
-     *
-     * @param exponent Number of exponential bits
-     * @param mantissa Number of significand/mantissa bits
-     * @param bias The bias value
-     *
-     * @return A block float construction
-     */
-    [[nodiscard]] static FloatRepr EMB(u8 exponent, u8 mantissa, u8 bias);
-
-    static FloatRepr E4M3();
-    static FloatRepr E5M2();
-
-private:
-    // Represents the sizes of the
-    // elements within the floating point block.
-    u8 bits_significand;
-    u8 bits_exponent;
-    u8 bits_sign;
-
-    // The bias value for the exponent
-    u8 exponent_bias;
 };
 
+namespace fp
+{
+    using E4M3Type = FloatRepr<3, 4, 1, 7>;
+    constexpr auto E4M3 = FloatRepr<3, 4, 1, 7>();
+}
 
 #endif //BFPMX_BLOCKFLOAT_H

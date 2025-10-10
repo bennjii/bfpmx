@@ -1,8 +1,17 @@
+# Ignore all
+*
+
+# Unignore all with extensions
+!*.*
+
 /CMakeFiles
 /Testing
 /build
 /.cmake
 /cmake-build-debug
+/cmake-build-release
+/
 /.idea
 CMakeCache.txt
 *.a
+

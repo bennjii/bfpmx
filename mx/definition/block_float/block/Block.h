@@ -4,17 +4,27 @@
 
 #ifndef BFPMX_BLOCK_H
 #define BFPMX_BLOCK_H
-#include <array>
 
+#include <array>
+#include "definition/prelude.h"
 
 template<
-    std::integral Scalar,
+    std::size_t BlockQuantity,
     std::size_t BlockSize
 >
 class Block
 {
-    std::array<Scalar, BlockSize> values;
-};
+public:
+    Block() = default;
 
+    static constexpr u32 Length()
+    {
+        return BlockQuantity;
+    }
+
+private:
+    std::array<u8, BlockSize> values;
+    u32 quantity = BlockQuantity;
+};
 
 #endif //BFPMX_BLOCK_H

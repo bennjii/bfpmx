@@ -3,6 +3,7 @@ project(bfpmx)
 
 set(CMAKE_CXX_STANDARD 23)
 
+file(GLOB_RECURSE SOURCES "mx/*.h")
 file(GLOB_RECURSE SOURCES "mx/*.cpp")
 add_library(bfpmx STATIC ${SOURCES})
 
