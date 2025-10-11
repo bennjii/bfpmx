@@ -173,29 +173,53 @@ mx/arch/IArithmetic.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bfpmx.dir/build.make CMakeFiles/bfpmx.dir/mx/arch/IArithmetic.cpp.s
 .PHONY : mx/arch/IArithmetic.cpp.s
 
-mx/arch/cpu/Aarch64.o: mx/arch/cpu/Aarch64.cpp.o
-.PHONY : mx/arch/cpu/Aarch64.o
+mx/arch/cpu/aarch64.o: mx/arch/cpu/aarch64.cpp.o
+.PHONY : mx/arch/cpu/aarch64.o
 
 # target to build an object file
-mx/arch/cpu/Aarch64.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bfpmx.dir/build.make CMakeFiles/bfpmx.dir/mx/arch/cpu/Aarch64.cpp.o
-.PHONY : mx/arch/cpu/Aarch64.cpp.o
+mx/arch/cpu/aarch64.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bfpmx.dir/build.make CMakeFiles/bfpmx.dir/mx/arch/cpu/aarch64.cpp.o
+.PHONY : mx/arch/cpu/aarch64.cpp.o
 
-mx/arch/cpu/Aarch64.i: mx/arch/cpu/Aarch64.cpp.i
-.PHONY : mx/arch/cpu/Aarch64.i
+mx/arch/cpu/aarch64.i: mx/arch/cpu/aarch64.cpp.i
+.PHONY : mx/arch/cpu/aarch64.i
 
 # target to preprocess a source file
-mx/arch/cpu/Aarch64.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bfpmx.dir/build.make CMakeFiles/bfpmx.dir/mx/arch/cpu/Aarch64.cpp.i
-.PHONY : mx/arch/cpu/Aarch64.cpp.i
+mx/arch/cpu/aarch64.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bfpmx.dir/build.make CMakeFiles/bfpmx.dir/mx/arch/cpu/aarch64.cpp.i
+.PHONY : mx/arch/cpu/aarch64.cpp.i
 
-mx/arch/cpu/Aarch64.s: mx/arch/cpu/Aarch64.cpp.s
-.PHONY : mx/arch/cpu/Aarch64.s
+mx/arch/cpu/aarch64.s: mx/arch/cpu/aarch64.cpp.s
+.PHONY : mx/arch/cpu/aarch64.s
 
 # target to generate assembly for a file
-mx/arch/cpu/Aarch64.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bfpmx.dir/build.make CMakeFiles/bfpmx.dir/mx/arch/cpu/Aarch64.cpp.s
-.PHONY : mx/arch/cpu/Aarch64.cpp.s
+mx/arch/cpu/aarch64.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bfpmx.dir/build.make CMakeFiles/bfpmx.dir/mx/arch/cpu/aarch64.cpp.s
+.PHONY : mx/arch/cpu/aarch64.cpp.s
+
+mx/arch/cpu/x86_64.o: mx/arch/cpu/x86_64.cpp.o
+.PHONY : mx/arch/cpu/x86_64.o
+
+# target to build an object file
+mx/arch/cpu/x86_64.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bfpmx.dir/build.make CMakeFiles/bfpmx.dir/mx/arch/cpu/x86_64.cpp.o
+.PHONY : mx/arch/cpu/x86_64.cpp.o
+
+mx/arch/cpu/x86_64.i: mx/arch/cpu/x86_64.cpp.i
+.PHONY : mx/arch/cpu/x86_64.i
+
+# target to preprocess a source file
+mx/arch/cpu/x86_64.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bfpmx.dir/build.make CMakeFiles/bfpmx.dir/mx/arch/cpu/x86_64.cpp.i
+.PHONY : mx/arch/cpu/x86_64.cpp.i
+
+mx/arch/cpu/x86_64.s: mx/arch/cpu/x86_64.cpp.s
+.PHONY : mx/arch/cpu/x86_64.s
+
+# target to generate assembly for a file
+mx/arch/cpu/x86_64.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bfpmx.dir/build.make CMakeFiles/bfpmx.dir/mx/arch/cpu/x86_64.cpp.s
+.PHONY : mx/arch/cpu/x86_64.cpp.s
 
 mx/arch/gpu/CUDA.o: mx/arch/gpu/CUDA.cpp.o
 .PHONY : mx/arch/gpu/CUDA.o
@@ -220,54 +244,6 @@ mx/arch/gpu/CUDA.s: mx/arch/gpu/CUDA.cpp.s
 mx/arch/gpu/CUDA.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bfpmx.dir/build.make CMakeFiles/bfpmx.dir/mx/arch/gpu/CUDA.cpp.s
 .PHONY : mx/arch/gpu/CUDA.cpp.s
-
-mx/definition/alias.o: mx/definition/alias.cpp.o
-.PHONY : mx/definition/alias.o
-
-# target to build an object file
-mx/definition/alias.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bfpmx.dir/build.make CMakeFiles/bfpmx.dir/mx/definition/alias.cpp.o
-.PHONY : mx/definition/alias.cpp.o
-
-mx/definition/alias.i: mx/definition/alias.cpp.i
-.PHONY : mx/definition/alias.i
-
-# target to preprocess a source file
-mx/definition/alias.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bfpmx.dir/build.make CMakeFiles/bfpmx.dir/mx/definition/alias.cpp.i
-.PHONY : mx/definition/alias.cpp.i
-
-mx/definition/alias.s: mx/definition/alias.cpp.s
-.PHONY : mx/definition/alias.s
-
-# target to generate assembly for a file
-mx/definition/alias.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bfpmx.dir/build.make CMakeFiles/bfpmx.dir/mx/definition/alias.cpp.s
-.PHONY : mx/definition/alias.cpp.s
-
-mx/definition/block.o: mx/definition/block.cpp.o
-.PHONY : mx/definition/block.o
-
-# target to build an object file
-mx/definition/block.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bfpmx.dir/build.make CMakeFiles/bfpmx.dir/mx/definition/block.cpp.o
-.PHONY : mx/definition/block.cpp.o
-
-mx/definition/block.i: mx/definition/block.cpp.i
-.PHONY : mx/definition/block.i
-
-# target to preprocess a source file
-mx/definition/block.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bfpmx.dir/build.make CMakeFiles/bfpmx.dir/mx/definition/block.cpp.i
-.PHONY : mx/definition/block.cpp.i
-
-mx/definition/block.s: mx/definition/block.cpp.s
-.PHONY : mx/definition/block.s
-
-# target to generate assembly for a file
-mx/definition/block.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bfpmx.dir/build.make CMakeFiles/bfpmx.dir/mx/definition/block.cpp.s
-.PHONY : mx/definition/block.cpp.s
 
 mx/definition/block_float/block/Block.o: mx/definition/block_float/block/Block.cpp.o
 .PHONY : mx/definition/block_float/block/Block.o
@@ -341,29 +317,29 @@ mx/definition/block_float/repr/FloatRepr.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bfpmx.dir/build.make CMakeFiles/bfpmx.dir/mx/definition/block_float/repr/FloatRepr.cpp.s
 .PHONY : mx/definition/block_float/repr/FloatRepr.cpp.s
 
-tests/main.o: tests/main.cpp.o
-.PHONY : tests/main.o
+test/main.o: test/main.cpp.o
+.PHONY : test/main.o
 
 # target to build an object file
-tests/main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_main.dir/build.make CMakeFiles/test_main.dir/tests/main.cpp.o
-.PHONY : tests/main.cpp.o
+test/main.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_main.dir/build.make CMakeFiles/test_main.dir/test/main.cpp.o
+.PHONY : test/main.cpp.o
 
-tests/main.i: tests/main.cpp.i
-.PHONY : tests/main.i
+test/main.i: test/main.cpp.i
+.PHONY : test/main.i
 
 # target to preprocess a source file
-tests/main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_main.dir/build.make CMakeFiles/test_main.dir/tests/main.cpp.i
-.PHONY : tests/main.cpp.i
+test/main.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_main.dir/build.make CMakeFiles/test_main.dir/test/main.cpp.i
+.PHONY : test/main.cpp.i
 
-tests/main.s: tests/main.cpp.s
-.PHONY : tests/main.s
+test/main.s: test/main.cpp.s
+.PHONY : test/main.s
 
 # target to generate assembly for a file
-tests/main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_main.dir/build.make CMakeFiles/test_main.dir/tests/main.cpp.s
-.PHONY : tests/main.cpp.s
+test/main.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_main.dir/build.make CMakeFiles/test_main.dir/test/main.cpp.s
+.PHONY : test/main.cpp.s
 
 # Help Target
 help:
@@ -379,18 +355,15 @@ help:
 	@echo "... mx/arch/IArithmetic.o"
 	@echo "... mx/arch/IArithmetic.i"
 	@echo "... mx/arch/IArithmetic.s"
-	@echo "... mx/arch/cpu/Aarch64.o"
-	@echo "... mx/arch/cpu/Aarch64.i"
-	@echo "... mx/arch/cpu/Aarch64.s"
+	@echo "... mx/arch/cpu/aarch64.o"
+	@echo "... mx/arch/cpu/aarch64.i"
+	@echo "... mx/arch/cpu/aarch64.s"
+	@echo "... mx/arch/cpu/x86_64.o"
+	@echo "... mx/arch/cpu/x86_64.i"
+	@echo "... mx/arch/cpu/x86_64.s"
 	@echo "... mx/arch/gpu/CUDA.o"
 	@echo "... mx/arch/gpu/CUDA.i"
 	@echo "... mx/arch/gpu/CUDA.s"
-	@echo "... mx/definition/alias.o"
-	@echo "... mx/definition/alias.i"
-	@echo "... mx/definition/alias.s"
-	@echo "... mx/definition/block.o"
-	@echo "... mx/definition/block.i"
-	@echo "... mx/definition/block.s"
 	@echo "... mx/definition/block_float/block/Block.o"
 	@echo "... mx/definition/block_float/block/Block.i"
 	@echo "... mx/definition/block_float/block/Block.s"
@@ -400,9 +373,9 @@ help:
 	@echo "... mx/definition/block_float/repr/FloatRepr.o"
 	@echo "... mx/definition/block_float/repr/FloatRepr.i"
 	@echo "... mx/definition/block_float/repr/FloatRepr.s"
-	@echo "... tests/main.o"
-	@echo "... tests/main.i"
-	@echo "... tests/main.s"
+	@echo "... test/main.o"
+	@echo "... test/main.i"
+	@echo "... test/main.s"
 .PHONY : help
 
 

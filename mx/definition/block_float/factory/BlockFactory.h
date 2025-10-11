@@ -15,13 +15,18 @@ concept IFloatRepr = requires(const T& s) {
     { s.Size() } -> std::convertible_to<u16>;
 };
 
-template<std::size_t BlockQuantity, std::size_t BlockSize>
+template<
+    std::size_t BlockQuantity,
+    std::size_t BlockSize,
+    template<typename> typename ImplPolicy
+>
 class Block;
 
 template<
     u16 BlockQuantity,
     u16 BitsScalar,
-    IFloatRepr Float
+    IFloatRepr Float,
+    template<typename> typename ImplPolicy
 >
 class BlockFactory
 {
@@ -33,9 +38,9 @@ public:
         return BitsScalar + (BlockQuantity * Float::Size());
     }
 
-    static constexpr Block<BlockQuantity, Size()> CreateBlock()
+    static constexpr Block<BlockQuantity, Size(), ImplPolicy> CreateBlock()
     {
-        return Block<BlockQuantity, Size()>();
+        return Block<BlockQuantity, Size(), ImplPolicy>();
     }
 };
 

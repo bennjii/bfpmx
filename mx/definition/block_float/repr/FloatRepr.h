@@ -59,8 +59,8 @@
  *
  */
 template<
-    u16 Significand,
     u16 Exponent,
+    u16 Significand,
     u16 Sign,
     u16 Bias
 >
@@ -93,10 +93,28 @@ public:
     }
 };
 
-namespace fp
+namespace fp8
 {
-    using E4M3Type = FloatRepr<3, 4, 1, 7>;
-    constexpr auto E4M3 = FloatRepr<3, 4, 1, 7>();
+    using E4M3Type = FloatRepr<4, 3, 1, 7>;
+    constexpr auto E4M3 = E4M3Type();
+
+    using E5M2Type = FloatRepr<5, 2, 1, 15>;
+    constexpr auto E5M2 = E5M2Type();
+}
+
+namespace fp6
+{
+    using E2M3Type = FloatRepr<2, 3, 1, 1>;
+    constexpr auto E2M3 = E2M3Type();
+
+    using E3M2Type = FloatRepr<3, 2, 1, 1>;
+    constexpr auto E3M2 = E3M2Type();
+}
+
+namespace fp4
+{
+    using E2M1Type = FloatRepr<2, 1, 1, 1>;
+    constexpr auto E2M1 = E2M1Type();
 }
 
 #endif //BFPMX_FLOATREPR_H
