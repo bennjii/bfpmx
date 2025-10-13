@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "IArithmetic.h"
+#include "Arithmetic.h"
 
 #if defined(__x86_64__) || defined(_M_X64)
 #include "arch/cpu/x86_64.cpp"

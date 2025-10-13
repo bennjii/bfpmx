@@ -175,30 +175,6 @@ test_playground/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_playground.dir/build.make CMakeFiles/test_playground.dir/build
 .PHONY : test_playground/fast
 
-mx/arch/IArithmetic.o: mx/arch/IArithmetic.cpp.o
-.PHONY : mx/arch/IArithmetic.o
-
-# target to build an object file
-mx/arch/IArithmetic.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bfpmx.dir/build.make CMakeFiles/bfpmx.dir/mx/arch/IArithmetic.cpp.o
-.PHONY : mx/arch/IArithmetic.cpp.o
-
-mx/arch/IArithmetic.i: mx/arch/IArithmetic.cpp.i
-.PHONY : mx/arch/IArithmetic.i
-
-# target to preprocess a source file
-mx/arch/IArithmetic.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bfpmx.dir/build.make CMakeFiles/bfpmx.dir/mx/arch/IArithmetic.cpp.i
-.PHONY : mx/arch/IArithmetic.cpp.i
-
-mx/arch/IArithmetic.s: mx/arch/IArithmetic.cpp.s
-.PHONY : mx/arch/IArithmetic.s
-
-# target to generate assembly for a file
-mx/arch/IArithmetic.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bfpmx.dir/build.make CMakeFiles/bfpmx.dir/mx/arch/IArithmetic.cpp.s
-.PHONY : mx/arch/IArithmetic.cpp.s
-
 mx/arch/cpu/aarch64.o: mx/arch/cpu/aarch64.cpp.o
 .PHONY : mx/arch/cpu/aarch64.o
 
@@ -428,9 +404,6 @@ help:
 	@echo "... test_main"
 	@echo "... test_marshal"
 	@echo "... test_playground"
-	@echo "... mx/arch/IArithmetic.o"
-	@echo "... mx/arch/IArithmetic.i"
-	@echo "... mx/arch/IArithmetic.s"
 	@echo "... mx/arch/cpu/aarch64.o"
 	@echo "... mx/arch/cpu/aarch64.i"
 	@echo "... mx/arch/cpu/aarch64.s"
