@@ -5,22 +5,11 @@
 #ifndef BFPMX_BLOCKFACTORY_H
 #define BFPMX_BLOCKFACTORY_H
 
-#include "definition/prelude.h"
+#include "definition/block_float/block/Block.h"
 
 constexpr u16 DEFAULT_BLOCK_SIZE = 32;
 constexpr u16 DEFAULT_BITS_SCALAR = 32;
-
-template<typename T>
-concept IFloatRepr = requires(const T& s) {
-    { s.Size() } -> std::convertible_to<u16>;
-};
-
-template<
-    std::size_t BlockQuantity,
-    std::size_t BlockSize,
-    template<typename> typename ImplPolicy
->
-class Block;
+constexpr u16 BITS_IN_BYTE = 8;
 
 template<
     u16 BlockQuantity,
@@ -35,12 +24,12 @@ public:
 
     /// The size of the block, in bits, when constructed.
     static constexpr u32 Size() {
-        return BitsScalar + (BlockQuantity * Float::Size());
+        return Float::Size();
     }
 
-    static constexpr Block<BlockQuantity, Size(), ImplPolicy> CreateBlock()
+    static constexpr Block<BitsScalar, BlockQuantity, Float, ImplPolicy> CreateBlock()
     {
-        return Block<BlockQuantity, Size(), ImplPolicy>();
+        return Block<BitsScalar, BlockQuantity, Float, ImplPolicy>();
     }
 };
 

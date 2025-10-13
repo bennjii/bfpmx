@@ -4,8 +4,28 @@
 #pragma once
 
 #ifndef BFPMX_FLOATREPR_H
+
 #include "definition/alias.h"
+
+#include <concepts>
+#include <array>
+
 #define BFPMX_FLOATREPR_H
+
+template<typename T>
+concept IFloatRepr = requires(f64 v, std::array<u8, T::SizeBytes()> a) {
+    { T::SizeBytes() } -> std::convertible_to<u32>;
+    { T::Marshal(v) } -> std::same_as<std::array<u8, T::SizeBytes()>>;
+    { T::Unmarshal(a) } -> std::convertible_to<f64>;
+
+    // TODO: Add the following functions:
+    //  - Max() -> f64
+    //  - Min() -> f64
+    //  - Bias() -> f64
+    //  - ...
+    //  We need to understand what the min/max values
+    //  we can represent are, in order to perform quant*.
+};
 
 /**
  *
@@ -79,6 +99,10 @@ public:
         return Sign;
     }
 
+    [[nodiscard]] static constexpr u8 BiasValue() {
+        return Bias;
+    }
+
     [[nodiscard]] static constexpr u8 ElementBits()
     {
         return
@@ -90,6 +114,71 @@ public:
     [[nodiscard]] static constexpr u32 Size()
     {
         return ElementBits();
+    }
+
+    [[nodiscard]] static constexpr u32 SizeBytes()
+    {
+        return Size() / 8;
+    }
+
+    [[nodiscard]] static constexpr f64 Unmarshal(std::array<u8, SizeBytes()> v)
+    {
+        // ...
+        return 0;
+    }
+
+    [[nodiscard]] static constexpr std::array<u8, SizeBytes()> Marshal(const f64 value)
+    {
+        constexpr u16 srcExpBits = 11;
+        constexpr u16 srcSigBits = 52;
+
+        // reinterpret the double bits
+        const u64 bits = std::bit_cast<u64>(value);
+        const u64 sign = (bits >> 63) & 0x1;
+        const i64 exp  = ((bits >> srcSigBits) & ((1ull << srcExpBits) - 1));
+        const u64 frac = bits & ((1ull << srcSigBits) - 1);
+
+        // handle special cases
+        u32 newSign = static_cast<u32>(sign);
+        u32 newExp;
+        u64 newFrac;
+
+        if (exp == 0x7FF) { // NaN or Inf
+            newExp  = (1u << ExponentBits()) - 1;
+            newFrac = frac ? 1 : 0; // canonicalize NaN
+        }
+        else if (exp == 0) { // subnormal or zero
+            newExp  = 0;
+            newFrac = 0;
+        }
+        else
+        {
+            constexpr u16 srcBias = 1023;
+            // normalize exponent to target bias
+            if (const i64 e = exp - srcBias + BiasValue(); e <= 0) {  // underflow
+                newExp  = 0;
+                newFrac = 0;
+            } else if (e >= ((1 << ExponentBits()) - 1)) { // overflow
+                newExp  = (1u << ExponentBits()) - 1;
+                newFrac = 0;
+            } else {
+                newExp  = static_cast<u32>(e);
+                // round mantissa down to target width
+                newFrac = frac >> (srcSigBits - SignificandBits());
+            }
+        }
+
+        // pack into bits
+        u64 encoded =
+            (newSign  << (ExponentBits() + SignificandBits())) |
+            (newExp   << SignificandBits()) |
+            (newFrac  & ((1ull << SignificandBits()) - 1));
+
+        // store to bytes
+        std::array<u8, SizeBytes()> out{};
+        for (u32 i = 0; i < SizeBytes(); ++i)
+            out[i] = static_cast<u8>((encoded >> (8 * i)) & 0xFF);
+        return out;
     }
 };
 
