@@ -19,7 +19,7 @@ int main()
     // Below will be const-folded into Block<32, 272>::Length(), which statically
     // is known as 32.
     const auto block = IBlock::CreateBlock();
-    std::cout << "BlockLength=" << block.Length() << " elements" << std::endl;
+    std::cout << "BlockLength=" << block.Length() << " elements" << std::endl; // NOLINT(*-static-accessed-through-instance)
 
     std::cout << "block: " << block.as_string() << std::endl;
     const auto newBlock = block + block;
