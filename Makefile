@@ -68,7 +68,7 @@ CMAKE_BINARY_DIR = /Users/benji/Documents/Scripts/bfpmx
 # Special rule for the target edit_cache
 edit_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake cache editor..."
-	/opt/homebrew/Cellar/cmake/3.28.3/bin/ccmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/opt/homebrew/bin/ccmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : edit_cache
 
 # Special rule for the target edit_cache
@@ -148,6 +148,32 @@ test_main: cmake_check_build_system
 test_main/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_main.dir/build.make CMakeFiles/test_main.dir/build
 .PHONY : test_main/fast
+
+#=============================================================================
+# Target rules for targets named test_marshal
+
+# Build rule for target.
+test_marshal: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_marshal
+.PHONY : test_marshal
+
+# fast build rule for target.
+test_marshal/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_marshal.dir/build.make CMakeFiles/test_marshal.dir/build
+.PHONY : test_marshal/fast
+
+#=============================================================================
+# Target rules for targets named test_playground
+
+# Build rule for target.
+test_playground: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_playground
+.PHONY : test_playground
+
+# fast build rule for target.
+test_playground/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_playground.dir/build.make CMakeFiles/test_playground.dir/build
+.PHONY : test_playground/fast
 
 mx/arch/IArithmetic.o: mx/arch/IArithmetic.cpp.o
 .PHONY : mx/arch/IArithmetic.o
@@ -341,6 +367,54 @@ test/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_main.dir/build.make CMakeFiles/test_main.dir/test/main.cpp.s
 .PHONY : test/main.cpp.s
 
+test/marshalling.o: test/marshalling.cpp.o
+.PHONY : test/marshalling.o
+
+# target to build an object file
+test/marshalling.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_marshal.dir/build.make CMakeFiles/test_marshal.dir/test/marshalling.cpp.o
+.PHONY : test/marshalling.cpp.o
+
+test/marshalling.i: test/marshalling.cpp.i
+.PHONY : test/marshalling.i
+
+# target to preprocess a source file
+test/marshalling.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_marshal.dir/build.make CMakeFiles/test_marshal.dir/test/marshalling.cpp.i
+.PHONY : test/marshalling.cpp.i
+
+test/marshalling.s: test/marshalling.cpp.s
+.PHONY : test/marshalling.s
+
+# target to generate assembly for a file
+test/marshalling.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_marshal.dir/build.make CMakeFiles/test_marshal.dir/test/marshalling.cpp.s
+.PHONY : test/marshalling.cpp.s
+
+test/playground.o: test/playground.cpp.o
+.PHONY : test/playground.o
+
+# target to build an object file
+test/playground.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_playground.dir/build.make CMakeFiles/test_playground.dir/test/playground.cpp.o
+.PHONY : test/playground.cpp.o
+
+test/playground.i: test/playground.cpp.i
+.PHONY : test/playground.i
+
+# target to preprocess a source file
+test/playground.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_playground.dir/build.make CMakeFiles/test_playground.dir/test/playground.cpp.i
+.PHONY : test/playground.cpp.i
+
+test/playground.s: test/playground.cpp.s
+.PHONY : test/playground.s
+
+# target to generate assembly for a file
+test/playground.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_playground.dir/build.make CMakeFiles/test_playground.dir/test/playground.cpp.s
+.PHONY : test/playground.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -352,6 +426,8 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... bfpmx"
 	@echo "... test_main"
+	@echo "... test_marshal"
+	@echo "... test_playground"
 	@echo "... mx/arch/IArithmetic.o"
 	@echo "... mx/arch/IArithmetic.i"
 	@echo "... mx/arch/IArithmetic.s"
@@ -376,6 +452,12 @@ help:
 	@echo "... test/main.o"
 	@echo "... test/main.i"
 	@echo "... test/main.s"
+	@echo "... test/marshalling.o"
+	@echo "... test/marshalling.i"
+	@echo "... test/marshalling.s"
+	@echo "... test/playground.o"
+	@echo "... test/playground.i"
+	@echo "... test/playground.s"
 .PHONY : help
 
 

@@ -9,8 +9,15 @@
 
 #include <concepts>
 #include <array>
+#include <string>
+#include <sstream>
+#include <cmath>
 
 #define BFPMX_FLOATREPR_H
+
+constexpr u16 F64_BITS_EXPONENT = 11;
+constexpr u16 F64_BITS_SIGNIFICAND = 52;
+constexpr u16 F64_BIAS = 1023;
 
 template<typename T>
 concept IFloatRepr = requires(f64 v, std::array<u8, T::SizeBytes()> a) {
@@ -87,6 +94,41 @@ template<
 class FloatRepr
 {
 public:
+    using PackedForm = std::tuple<u64 /*sign*/, u64 /*exponent*/, u64 /*fraction*/>;
+
+    [[nodiscard]] static constexpr std::string Nomenclature()
+    {
+        std::ostringstream oss;
+        oss << "FP" << +ElementBits()    // the + ensures u8 prints as a number
+            << " "
+            << "E" << +ExponentBits()
+            << "M" << +SignificandBits();
+        return oss.str();
+    }
+
+    static constexpr f64 Next(const f64 value) {
+        if (value == 0.0) {
+            // smallest positive subnormal
+            return std::pow(2.0, 1-BiasValue()) / (1 << SignificandBits());
+        }
+
+        auto [sign, exp, frac] = Pack(value); // you already have this info in Marshal
+        if (sign == 0) { // positive
+            if (frac < (1u << SignificandBits()) - 1) {
+                ++frac;
+            } else {
+                frac = 0;
+                ++exp;
+            }
+        } else { // negative
+            // just return previous magnitude
+            if (frac > 0) --frac;
+            else { frac = (1<<SignificandBits())-1; --exp; }
+        }
+
+        return Unpack({sign, exp, frac});
+    }
+
     [[nodiscard]] static constexpr u8 SignificandBits() {
         return Significand;
     }
@@ -121,19 +163,14 @@ public:
         return Size() / 8;
     }
 
-    [[nodiscard]] static constexpr f64 Unmarshal(std::array<u8, SizeBytes()> v)
-    {
-        // ...
-        return 0;
-    }
-
-    [[nodiscard]] static constexpr std::array<u8, SizeBytes()> Marshal(const f64 value)
+    [[nodiscard]] static constexpr PackedForm Pack(const f64 value)
     {
         constexpr u16 srcExpBits = 11;
         constexpr u16 srcSigBits = 52;
 
         // reinterpret the double bits
         const u64 bits = std::bit_cast<u64>(value);
+
         const u64 sign = (bits >> 63) & 0x1;
         const i64 exp  = ((bits >> srcSigBits) & ((1ull << srcExpBits) - 1));
         const u64 frac = bits & ((1ull << srcSigBits) - 1);
@@ -168,11 +205,68 @@ public:
             }
         }
 
+        return {newSign, newExp, newFrac};
+    }
+
+    [[nodiscard]] static constexpr f64 Unpack(PackedForm value)
+    {
+        const auto [sign, exp, frac] = value;
+
+        const u64 f64Sign = sign << 63;
+        u64 f64Exp;
+        u64 f64Frac;
+
+        if (exp == 0) {
+            if (frac == 0) {
+                // zero
+                f64Exp = 0;
+                f64Frac = 0;
+            } else {
+                // subnormal (scale fraction)
+                f64Exp = 0;
+                f64Frac = frac << (F64_BITS_SIGNIFICAND - SignificandBits());
+            }
+        } else if (exp == ((1u << ExponentBits()) - 1)) {
+            // inf or NaN
+            f64Exp = 0x7FFull << F64_BITS_SIGNIFICAND;
+            f64Frac = frac ? 1ull : 0;
+        } else {
+            // normal
+            const i64 e = static_cast<i64>(exp) - BiasValue() + F64_BIAS;
+            f64Exp = static_cast<u64>(e) << F64_BITS_SIGNIFICAND;
+            f64Frac = frac << (F64_BITS_SIGNIFICAND - SignificandBits());
+        }
+
+        const u64 f64Bits = f64Sign | f64Exp | f64Frac;
+        return std::bit_cast<f64>(f64Bits);
+    }
+
+    [[nodiscard]] static constexpr f64 Unmarshal(std::array<u8, SizeBytes()> v)
+    {
+        u64 bits = 0;
+        for (u32 i = 0; i < SizeBytes(); ++i)
+            bits |= static_cast<u64>(v[i]) << (8 * i);
+
+        const u64 fracMask = (1ull << SignificandBits()) - 1;
+        const u64 frac = bits & fracMask;
+
+        const u64 expMask = (1ull << ExponentBits()) - 1;
+        const u64 exp  = (bits >> SignificandBits()) & expMask;
+
+        const u64 sign = (bits >> (SignificandBits() + ExponentBits())) & 1;
+
+        return Unpack({frac, exp, sign});
+    }
+
+    [[nodiscard]] static constexpr std::array<u8, SizeBytes()> Marshal(const f64 value)
+    {
+        auto [sign, exp, frac] = Pack(value);
+
         // pack into bits
-        u64 encoded =
-            (newSign  << (ExponentBits() + SignificandBits())) |
-            (newExp   << SignificandBits()) |
-            (newFrac  & ((1ull << SignificandBits()) - 1));
+        const u64 encoded =
+            (sign  << (ExponentBits() + SignificandBits())) |
+            (exp   << SignificandBits()) |
+            (frac & ((1ull << SignificandBits()) - 1));
 
         // store to bytes
         std::array<u8, SizeBytes()> out{};

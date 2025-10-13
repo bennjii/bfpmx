@@ -48,9 +48,10 @@ public:
         scalar_ = scalar;
     }
 
+    // TODO: Quantize, and fill
     void Fill(f64 value)
     {
-
+        return;
     }
 
     explicit Block(std::array<PackedFloat, ScalarSizeBytes> init) : data_(init), scalar_(0) {}

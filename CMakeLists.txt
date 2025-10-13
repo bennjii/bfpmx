@@ -14,3 +14,9 @@ add_definitions(-DUNIT_TESTS)
 # TESTING #
 add_executable(test_main test/main.cpp)
 target_link_libraries(test_main PRIVATE bfpmx)
+
+add_executable(test_marshal test/marshalling.cpp)
+target_link_libraries(test_marshal PRIVATE bfpmx)
+
+add_executable(test_playground test/playground.cpp)
+target_link_libraries(test_playground PRIVATE bfpmx)
