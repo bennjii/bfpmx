@@ -2,6 +2,13 @@ cmake_minimum_required(VERSION 4.0)
 project(bfpmx)
 
 set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+add_custom_target(fix_compile_commands ALL
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/fix-compile-commands.py
+        ${CMAKE_BINARY_DIR}/compile_commands.json
+        DEPENDS ${CMAKE_BINARY_DIR}/compile_commands.json
+        COMMENT "Fixing compile_commands.json for clang-tidy"
+)
 
 file(GLOB_RECURSE SOURCES "mx/*.h")
 file(GLOB_RECURSE SOURCES "mx/*.cpp")
