@@ -67,8 +67,8 @@ CMAKE_BINARY_DIR = /Users/benji/Documents/Scripts/bfpmx
 
 # Special rule for the target edit_cache
 edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake cache editor..."
-	/opt/homebrew/bin/ccmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "No interactive CMake dialog available..."
+	/Users/benji/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
 .PHONY : edit_cache
 
 # Special rule for the target edit_cache
@@ -135,6 +135,19 @@ bfpmx: cmake_check_build_system
 bfpmx/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bfpmx.dir/build.make CMakeFiles/bfpmx.dir/build
 .PHONY : bfpmx/fast
+
+#=============================================================================
+# Target rules for targets named fix_compile_commands
+
+# Build rule for target.
+fix_compile_commands: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 fix_compile_commands
+.PHONY : fix_compile_commands
+
+# fast build rule for target.
+fix_compile_commands/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/fix_compile_commands.dir/build.make CMakeFiles/fix_compile_commands.dir/build
+.PHONY : fix_compile_commands/fast
 
 #=============================================================================
 # Target rules for targets named test_main
@@ -424,6 +437,7 @@ help:
 	@echo "... codegen"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... fix_compile_commands"
 	@echo "... bfpmx"
 	@echo "... test_main"
 	@echo "... test_marshal"

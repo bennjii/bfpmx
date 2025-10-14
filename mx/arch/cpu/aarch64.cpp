@@ -5,23 +5,23 @@
 template<typename T>
 struct CPUArithmetic
 {
-    static T Add(const T& l, const T& r)
+    static auto Add(const T& lhs, const T& rhs) -> T
     {
-        return l;
+        return lhs;
     }
 
-    static T Sub(const T& l, const T& r)
+    static auto Sub(const T& lhs, const T& rhs) -> T
     {
-        return l;
+        return lhs;
     }
 
-    static T Mul(const T& l, const T& r)
+    static auto Mul(const T& lhs, const T& rhs) -> T
     {
-        return l * r;
+        return lhs;
     }
 
-    static T Div(const T& l, const T& r)
+    static auto Div(const T& lhs, const T& rhs) -> T
     {
-        return l / r;
+        return lhs;
     }
 };
