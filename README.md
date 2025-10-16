@@ -31,6 +31,9 @@ into the code itself.
 # Create build plan for release type (i.e. Debug)
 cmake -B build -DCMAKE_BUILD_TYPE=Debug
 
+# Create the makefile, for the build system
+cmake .
+
 # Build project binaries and library linkable
 cmake --build build
 
