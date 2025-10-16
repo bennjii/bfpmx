@@ -11,6 +11,9 @@ CMakeCache.txt
 /cmake-build-release
 /Testing
 /build
+Makefile
+*.json
+cmake_install.cmake
 
 # Editors
 /.idea
