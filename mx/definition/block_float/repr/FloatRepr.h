@@ -76,7 +76,7 @@ concept IFloatRepr = requires(f64 v, std::array<u8, T::SizeBytes()> a) {
  *
  * The mantissa calculation is given by:
  *
- *     mantissa = (n + 2 ^ (-M_b)) * M
+ *     mantissa = (n + 2 ^ (-M_b) * M)
  *
  * Where, `n` is 1 when our exponent is greater than 0, otherwise
  * it is 0. The value M_b is the number of bits in our mantissa.
@@ -255,7 +255,7 @@ public:
 
         const u64 sign = (bits >> (SignificandBits() + ExponentBits())) & 1;
 
-        return Unpack({frac, exp, sign});
+        return Unpack({sign, exp, frac});
     }
 
     [[nodiscard]] static constexpr std::array<u8, SizeBytes()> Marshal(const f64 value)

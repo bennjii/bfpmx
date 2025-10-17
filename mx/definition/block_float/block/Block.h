@@ -43,7 +43,7 @@ public:
         data_ = data;
 
         auto scalar = std::array<u8, ScalarSizeBytes>();
-             scalar.fill(0);
+        scalar.fill(0);
 
         scalar_ = scalar;
     }
