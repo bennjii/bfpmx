@@ -159,6 +159,8 @@ public:
 
     [[nodiscard]] static constexpr u32 SizeBytes()
     {
+        // TODO: this way we are not able to store in a compact way 6 or 4 bits floats (e.g. E2M3, E3M2, E2M1)in a Block
+        //       we still use 8 bits per significan instead of 6 (or 4).
         return Size() / 8;
     }
 
