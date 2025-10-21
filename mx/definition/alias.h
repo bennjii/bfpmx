@@ -5,20 +5,23 @@
 #ifndef BFPMX_ALIAS_H
 #define BFPMX_ALIAS_H
 
+#include <cstdint>
+
 // Float Aliases
-typedef float f32;
+typedef float  f32;
 typedef double f64;
 
 // Integer Aliases
-typedef char u8;
+typedef  int8_t i8;
+typedef uint8_t u8;
 
-typedef int i16;
-typedef unsigned int u16;
+typedef  int16_t i16;
+typedef uint16_t u16;
 
-typedef long i32;
-typedef unsigned int u32;
+typedef  int32_t i32;
+typedef uint32_t u32;
 
-typedef long long i64;
-typedef unsigned long long u64;
+typedef  int64_t i64;
+typedef uint64_t u64;
 
 #endif

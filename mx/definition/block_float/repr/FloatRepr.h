@@ -88,8 +88,7 @@ concept IFloatRepr = requires(f64 v, std::array<u8, T::SizeBytes()> a) {
 template<
     u16 Exponent,
     u16 Significand,
-    u16 Sign,
-    u16 Bias
+    u16 Sign
 >
 class FloatRepr
 {
@@ -142,7 +141,7 @@ public:
     }
 
     [[nodiscard]] static constexpr u8 BiasValue() {
-        return Bias;
+        return (1<<(Exponent-1))-1;
     }
 
     [[nodiscard]] static constexpr u8 ElementBits()
@@ -278,25 +277,25 @@ public:
 
 namespace fp8
 {
-    using E4M3Type = FloatRepr<4, 3, 1, 7>;
+    using E4M3Type = FloatRepr<4, 3, 1>;
     constexpr auto E4M3 = E4M3Type();
 
-    using E5M2Type = FloatRepr<5, 2, 1, 15>;
+    using E5M2Type = FloatRepr<5, 2, 1>;
     constexpr auto E5M2 = E5M2Type();
 }
 
 namespace fp6
 {
-    using E2M3Type = FloatRepr<2, 3, 1, 1>;
+    using E2M3Type = FloatRepr<2, 3, 1>;
     constexpr auto E2M3 = E2M3Type();
 
-    using E3M2Type = FloatRepr<3, 2, 1, 1>;
+    using E3M2Type = FloatRepr<3, 2, 1>;
     constexpr auto E3M2 = E3M2Type();
 }
 
 namespace fp4
 {
-    using E2M1Type = FloatRepr<2, 1, 1, 1>;
+    using E2M1Type = FloatRepr<2, 1, 1>;
     constexpr auto E2M1 = E2M1Type();
 }
 
