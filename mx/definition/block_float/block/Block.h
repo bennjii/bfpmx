@@ -6,6 +6,7 @@
 #define BFPMX_BLOCK_H
 
 #include <array>
+#include <cstddef>
 #include <format>
 #include <string>
 
@@ -21,7 +22,7 @@ struct WithPolicy {
 };
 
 template<
-    std::size_t ScalarSizeBytes,
+    std::size_t ScalarSizeBytes, // TODO: document what is Scalar
     std::size_t BlockSizeElements,
     IFloatRepr Float,
     template<typename> typename P
@@ -30,6 +31,7 @@ class Block : public
     WithPolicy<P>::template Type<Block<ScalarSizeBytes, BlockSizeElements, Float, P>>
 {
 public:
+    using FloatType = Float;
     using PackedFloat = std::array<u8, Float::SizeBytes()>;
 
     Block() {
@@ -48,6 +50,16 @@ public:
         scalar_ = scalar;
     }
 
+    // TODO: Quantize
+    Block(std::array<f64, BlockSizeElements> v) {
+        return;
+    }
+
+    // TODO: Quantize
+    Block(std::array<f32, BlockSizeElements> v) {
+        return;
+    }
+
     // TODO: Quantize, and fill
     void Fill(f64 value)
     {
@@ -56,13 +68,15 @@ public:
 
     explicit Block(std::array<PackedFloat, ScalarSizeBytes> init) : data_(init), scalar_(0) {}
 
+    static constexpr std::size_t dataCount() { return BlockSizeElements; }
+
+    PackedFloat* data() { return data_.data(); }
+    [[nodiscard]] const PackedFloat* data() const { return data_.data(); }
+
     [[nodiscard]] static std::size_t Length()
     {
         return Float::Size();
     }
-
-    PackedFloat* data() { return data_.data(); }
-    [[nodiscard]] const PackedFloat* data() const { return data_.data(); }
 
     [[nodiscard]] std::string as_string() const {
         std::string value;
