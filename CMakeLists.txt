@@ -12,7 +12,9 @@ add_custom_target(fix_compile_commands ALL
 
 file(GLOB_RECURSE SOURCES "mx/*.h")
 file(GLOB_RECURSE SOURCES "mx/*.cpp")
-add_library(bfpmx STATIC ${SOURCES})
+add_library(bfpmx STATIC ${SOURCES}
+        mx/definition/quantization/MaximumFractionalQuantization.h
+        test/quant.cpp)
 
 target_include_directories(bfpmx PUBLIC mx)
 
@@ -27,3 +29,6 @@ target_link_libraries(test_marshal PRIVATE bfpmx)
 
 add_executable(test_playground test/playground.cpp)
 target_link_libraries(test_playground PRIVATE bfpmx)
+
+add_executable(test_quant test/quant.cpp)
+target_link_libraries(test_quant PRIVATE bfpmx)

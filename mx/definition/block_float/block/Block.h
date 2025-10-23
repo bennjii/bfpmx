@@ -54,7 +54,10 @@ public:
         return;
     }
 
-    explicit Block(std::array<PackedFloat, ScalarSizeBytes> init) : data_(init), scalar_(0) {}
+    explicit Block(
+        std::array<PackedFloat, BlockSizeElements> init,
+        std::array<u8, ScalarSizeBytes> scalar
+    ) : data_(init), scalar_(scalar) {}
 
     [[nodiscard]] static std::size_t Length()
     {
