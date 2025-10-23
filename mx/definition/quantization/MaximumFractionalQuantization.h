@@ -8,6 +8,7 @@
 #include "definition/block_float/repr/FloatRepr.h"
 
 template<
+    std::size_t ScalarBytes,
     std::size_t Size,
     IFloatRepr Float
 >
@@ -15,7 +16,7 @@ class MaximumFractionalQuantization
 {
 public:
     using BlockFmt = Block<
-        32,
+        ScalarBytes,
         Size,
         Float,
         CPUArithmetic
@@ -44,9 +45,13 @@ public:
             blockScaledFloats[i] = byteRepr;
         }
 
-        // TODO: convert u32 into u8[]
-        std::array<u8, 32> dummyArr;
-        return BlockFmt(blockScaledFloats, dummyArr);
+        std::array<u8, ScalarBytes> packedScalar;
+        for (int i = 0; i < ScalarBytes; i++)
+        {
+            packedScalar[i] = scaleFactorInt >> (i * 8);
+        }
+
+        return BlockFmt(blockScaledFloats, packedScalar);
     }
 
     std::array<f64, Size> UnQuantize(BlockFmt &block)
@@ -66,7 +71,6 @@ public:
 private:
     static f64 ScaleFactor(u16 QuantizationSizeBits, f64 HighestValueAbsolute)
     {
-        auto numerator = ((QuantizationSizeBits - 1) << 1) - 1;
-        return numerator / HighestValueAbsolute;
+        return Float::BiasValue() / HighestValueAbsolute;
     }
 };

@@ -11,6 +11,6 @@ int main() {
         1.2f, 3.4f, 5.6f
     });
 
-    const auto block = MaximumFractionalQuantization<32, fp8::E5M2Type>::Quantize(arr);
+    const auto block = MaximumFractionalQuantization<4, 32, fp8::E4M3Type>::Quantize(arr);
     std::cout << block.as_string() << std::endl;
 }
