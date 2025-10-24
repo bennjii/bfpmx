@@ -6,6 +6,7 @@
 #define BFPMX_BLOCK_H
 
 #include <array>
+#include <cstddef>
 #include <format>
 #include <string>
 
@@ -21,15 +22,16 @@ struct WithPolicy {
 };
 
 template<
-    std::size_t ScalarSizeBytes,
+    std::size_t ScalarSizeBytes, // TODO: document what is Scalar
     std::size_t BlockSizeElements,
     IFloatRepr Float,
-    template<typename> typename Policy
+    template<typename> typename P
 >
 class Block : public
-    WithPolicy<Policy>::template Type<Block<ScalarSizeBytes, BlockSizeElements, Float, Policy>>
+    WithPolicy<P>::template Type<Block<ScalarSizeBytes, BlockSizeElements, Float, P>>
 {
 public:
+    using FloatType = Float;
     using PackedFloat = std::array<u8, Float::SizeBytes()>;
 
     Block() {
@@ -43,9 +45,19 @@ public:
         data_ = data;
 
         auto scalar = std::array<u8, ScalarSizeBytes>();
-        scalar.fill(0);
+             scalar.fill(0);
 
         scalar_ = scalar;
+    }
+
+    // TODO: Quantize
+    Block(std::array<f64, BlockSizeElements> v) {
+        return;
+    }
+
+    // TODO: Quantize
+    Block(std::array<f32, BlockSizeElements> v) {
+        return;
     }
 
     // TODO: Quantize, and fill
@@ -54,41 +66,24 @@ public:
         return;
     }
 
-    explicit Block(
-        std::array<PackedFloat, BlockSizeElements> init,
-        std::array<u8, ScalarSizeBytes> scalar
-    ) : data_(init), scalar_(scalar) {}
+    explicit Block(std::array<PackedFloat, ScalarSizeBytes> init) : data_(init), scalar_(0) {}
+
+    static constexpr std::size_t dataCount() { return BlockSizeElements; }
+
+    PackedFloat* data() { return data_.data(); }
+    [[nodiscard]] const PackedFloat* data() const { return data_.data(); }
 
     [[nodiscard]] static std::size_t Length()
     {
         return Float::Size();
     }
 
-    PackedFloat* data() { return data_.data(); }
-    [[nodiscard]] const PackedFloat* data() const { return data_.data(); }
-
-    [[nodiscard]] u64 Scalar() const
-    {
-        u64 scalar = 0;
-        for (int i = 0; i < ScalarSizeBytes; i++)
-        {
-            scalar |= scalar_[i] << (i * 8);
-        }
-
-        return scalar;
-    }
-
     [[nodiscard]] std::string as_string() const {
         std::string value;
-
-        value += "Scalar: " + std::to_string(Scalar()) + "\n";
-        value += "Elements: [\n";
+        value += "[";
         for (PackedFloat v : data_) {
-            auto unmarshalled = Float::Unmarshal(v);
-            std::string valueUnscaled = std::format("{:.3f}", unmarshalled);
-            std::string valueScaled = std::format("{:.3f}", unmarshalled * Scalar());
-
-            value += "\t" + valueUnscaled + " (St. " + valueScaled + "), \n";
+            std::string s = std::format("{:.3f}", Float::Unmarshal(v));
+            value += s + ", ";
         }
         value += "]";
 

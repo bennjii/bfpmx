@@ -9,10 +9,9 @@
 template<
     u16 E,
     u16 M,
-    u16 S,
-    u16 B
+    u16 S
 >
-void print_bits(FloatRepr<E, M, S, B> repr, f64 value) {
+void print_bits(FloatRepr<E, M, S> repr, f64 value) {
     auto bits = repr.Marshal(value);
     const double decoded = repr.Unmarshal(bits);
 
