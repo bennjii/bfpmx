@@ -12,7 +12,7 @@ constexpr u16 DEFAULT_BITS_SCALAR = 32;
 constexpr u16 BITS_IN_BYTE = 8;
 
 template<
-    u16 BlockQuantity,
+    typename BlockShape,
     u16 BitsScalar,
     IFloatRepr Float,
     template<typename> typename ImplPolicy
@@ -24,12 +24,12 @@ public:
 
     /// The size of the block, in bits, when constructed.
     static constexpr u32 Size() {
-        return Float::Size();
+        return Float::Size() * BlockShape::total_size();
     }
 
-    static constexpr Block<BitsScalar, BlockQuantity, Float, ImplPolicy> CreateBlock()
+    static constexpr Block<BitsScalar, BlockShape, Float, ImplPolicy> CreateBlock()
     {
-        return Block<BitsScalar, BlockQuantity, Float, ImplPolicy>();
+        return Block<BitsScalar, BlockShape, Float, ImplPolicy>();
     }
 };
 
