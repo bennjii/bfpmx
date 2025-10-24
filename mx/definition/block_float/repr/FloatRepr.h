@@ -160,7 +160,7 @@ public:
 
     [[nodiscard]] static constexpr u32 SizeBytes()
     {
-        return Size() / 8;
+        return (Size() + 7) / 8;
     }
 
     [[nodiscard]] static constexpr PackedForm Pack(const f64 value)

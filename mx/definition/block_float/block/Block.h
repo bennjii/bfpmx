@@ -24,10 +24,10 @@ template<
     std::size_t ScalarSizeBytes,
     std::size_t BlockSizeElements,
     IFloatRepr Float,
-    template<typename> typename P
+    template<typename> typename Policy
 >
 class Block : public
-    WithPolicy<P>::template Type<Block<ScalarSizeBytes, BlockSizeElements, Float, P>>
+    WithPolicy<Policy>::template Type<Block<ScalarSizeBytes, BlockSizeElements, Float, Policy>>
 {
 public:
     using PackedFloat = std::array<u8, Float::SizeBytes()>;
