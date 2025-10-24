@@ -15,7 +15,8 @@ template<
     u16 BlockQuantity,
     u16 BitsScalar,
     IFloatRepr Float,
-    template<typename> typename ImplPolicy
+    template<typename> typename ImplPolicy,
+    template<std::size_t, std::size_t, IFloatRepr> typename QuantizationPolicy
 >
 class BlockFactory
 {
@@ -27,9 +28,9 @@ public:
         return Float::Size();
     }
 
-    static constexpr Block<BitsScalar, BlockQuantity, Float, ImplPolicy> CreateBlock()
+    static constexpr Block<BitsScalar, BlockQuantity, Float, ImplPolicy, QuantizationPolicy> CreateBlock()
     {
-        return Block<BitsScalar, BlockQuantity, Float, ImplPolicy>();
+        return Block<BitsScalar, BlockQuantity, Float, ImplPolicy, QuantizationPolicy>();
     }
 };
 

@@ -7,10 +7,10 @@
 #include "definition/prelude.h"
 
 int main() {
-    std::array<f64, 32> arr = std::to_array<f64, 32>({
-        1.2f, 3.4f, 5.6f
+    auto arr = std::to_array<f64, 4>({
+        1.2f, 3.4f, 5.6f, 7.8f,
     });
 
-    const auto block = MaximumFractionalQuantization<4, 32, fp8::E4M3Type>::Quantize(arr);
+    const auto block = MaximumFractionalQuantization<4, 4, fp8::E4M3Type>::Quantize(arr);
     std::cout << block.as_string() << std::endl;
 }
