@@ -4,7 +4,8 @@
 
 #ifndef BFPMX_QUANTIZE_H
 #define BFPMX_QUANTIZE_H
-#include "arch/cpu/arithmetic.hpp"
+
+#include "arch/prelude.h"
 
 template<
     template <std::size_t, std::size_t, IFloatRepr> typename T,

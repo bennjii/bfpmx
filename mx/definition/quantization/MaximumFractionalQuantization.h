@@ -8,7 +8,7 @@
 #include "definition/alias.h"
 #include "definition/block_float/block/Block.h"
 #include "definition/block_float/repr/FloatRepr.h"
-#include "arch/cpu/arithmetic.hpp"
+#include "arch/cpu/CPUArithmetic.h"
 #include <iostream>
 
 template<
