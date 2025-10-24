@@ -46,8 +46,6 @@ public:
         {
             f64 scaledValue = vec[i] / scaleFactor;
             blockScaledFloats[i] = Float::Marshal(scaledValue);
-            std::cerr << "[Quant] scaledValue: " << scaledValue << " "
-            << vec[i] << " " << scaleFactor << std::endl;
         }
 
         std::array<u8, ScalarBytes> packedScalar;
@@ -64,7 +62,7 @@ public:
         std::array<f64, Size> blockUnscaledFloats;
         for (int i = 0; i < Size; i++)
         {
-            auto packedFloat = block.data()[i];
+            auto packedFloat = block.At(i);
             f64 fullPrecision = Float::Unmarshal(packedFloat);
             blockUnscaledFloats[i] = fullPrecision * block.Scalar();
         }

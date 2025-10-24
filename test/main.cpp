@@ -15,9 +15,10 @@ int main() {
 
     // Below will be const-folded into Block<32, 272>::Length(), which statically
     // is known as 32.
-    auto block1 = BlockT(std::to_array<f64, 4>({10, 15, 20, 25}));
-    auto block2 = BlockT(std::to_array<f64, 4>({2., 3., 4., 5.}));
-    const auto block = block2;
+    const auto block1 = BlockT(std::to_array<f64, 4>({10, 15, 20, 25}));
+    const auto block2 = BlockT(std::to_array<f64, 4>({2., 3., 4., 5.}));
+
+    const auto block = block1 + block2;
     std::cout << "BlockLength=" << block.Length() << " elements" << std::endl;
-    std::cout << "block: " << block.as_string() << std::endl;
+    std::cout << "block: " << block.asString() << std::endl;
 }

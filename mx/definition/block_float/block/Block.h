@@ -38,11 +38,8 @@ public:
     using ScalarType = std::array<u8, ScalarSizeBytes>;
     using QuantizationPolicyType = QuantizationPolicy<ScalarSizeBytes, BlockSizeElements, Float>;
 
+    // Empty constructor
     Block() {
-        // TODO: We would need a quantisation layer that we can callout to
-        //       ideally this is also pluggable, but could be a runtime dep
-        //       instead of a static, typename, injection.
-
         auto data = std::array<PackedFloat, BlockSizeElements>();
              data.fill(Float::Marshal(0));
 
@@ -54,37 +51,21 @@ public:
         scalar_ = scalar;
     }
 
-    // TODO: Quantize
-    Block(std::array<f64, BlockSizeElements> v) : Block(QuantizationPolicyType::Quantize(v)) {}
-
-    // TODO: Quantize
-    Block(std::array<f32, BlockSizeElements> v) {
-        return;
-    }
+    // Constructors from given element types
+    explicit Block(std::array<f64, BlockSizeElements> v) : Block(QuantizationPolicyType::Quantize(v)) {}
+    explicit Block(std::array<PackedFloat, BlockSizeElements> init) : data_(init), scalar_(0) {}
+    explicit Block(std::array<PackedFloat, BlockSizeElements> data, ScalarType scalar) : data_(data), scalar_(scalar) {}
 
     Block(const Block&) = default;
 
-    PackedFloat At(u16 index)
-    {
-        return data_[index];
-    }
-
-    // TODO: Quantize, and fill
-    void Fill(f64 value)
-    {
-        return;
-    }
-
-    explicit Block(std::array<PackedFloat, BlockSizeElements> init) : data_(init), scalar_(0) {}
-    Block(std::array<PackedFloat, BlockSizeElements> data, ScalarType scalar) : data_(data), scalar_(scalar) {}
-    static constexpr std::size_t dataCount() { return BlockSizeElements; }
-
-    PackedFloat* data() { return data_.data(); }
-    [[nodiscard]] const PackedFloat* data() const { return data_.data(); }
-
-    [[nodiscard]] static std::size_t Length()
+    [[nodiscard]] static constexpr std::size_t Length()
     {
         return BlockSizeElements;
+    }
+
+    [[nodiscard]] PackedFloat At(u16 index) const
+    {
+        return data_[index];
     }
 
     [[nodiscard]] u64 Scalar() const
@@ -98,7 +79,7 @@ public:
         return scalar;
     }
 
-    [[nodiscard]] std::string as_string() const {
+    [[nodiscard]] std::string asString() const {
         std::string value;
 
         value += "Scalar: " + std::to_string(Scalar()) + "\n";
