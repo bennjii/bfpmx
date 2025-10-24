@@ -255,7 +255,7 @@ public:
 
         const u64 sign = (bits >> (SignificandBits() + ExponentBits())) & 1;
 
-        return Unpack({frac, exp, sign});
+        return Unpack({sign, exp, frac});
     }
 
     [[nodiscard]] static constexpr std::array<u8, SizeBytes()> Marshal(const f64 value)

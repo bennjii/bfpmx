@@ -33,7 +33,8 @@ public:
         }
 
         f64 scaleFactor = ScaleFactor(Float::ElementBits(), largestValue);
-        u32 scaleFactorInt = lround(scaleFactor);
+        //u32 scaleFactorInt = lround(scaleFactor);
+        std::cout << "ScaleFactor : " << scaleFactor << std::endl;
 
         std::array<std::array<u8, Float::SizeBytes()>, Size> blockScaledFloats;
 

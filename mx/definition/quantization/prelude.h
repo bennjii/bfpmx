@@ -6,5 +6,6 @@
 #define BFPMX_PRELUDE_QUANTIZATION_H
 
 #include "MaximumFractionalQuantization.h"
+#include "SharedExpQuantization.h"
 
 #endif //BFPMX_PRELUDE_QUANTIZATION_H
