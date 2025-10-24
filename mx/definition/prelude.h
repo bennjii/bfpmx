@@ -11,4 +11,6 @@
 #include "block_float/block/Block.h"
 #include "block_float/factory/BlockFactory.h"
 
+#include "quantization/prelude.h"
+
 #endif //BFPMX_PRELUDE_H
