@@ -10,12 +10,12 @@ add_custom_target(fix_compile_commands ALL
         COMMENT "Fixing compile_commands.json for clang-tidy"
 )
 
-file(GLOB_RECURSE SOURCES "mx/*.h")
 file(GLOB_RECURSE SOURCES "mx/*.cpp")
+list(APPEND SOURCES ${HEADERS})
+
 add_library(bfpmx STATIC ${SOURCES})
 
-target_include_directories(bfpmx PUBLIC mx)
-
+target_include_directories(bfpmx PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/mx)
 add_definitions(-DUNIT_TESTS)
 
 # TESTING #
@@ -27,3 +27,6 @@ target_link_libraries(test_marshal PRIVATE bfpmx)
 
 add_executable(test_playground test/playground.cpp)
 target_link_libraries(test_playground PRIVATE bfpmx)
+
+add_executable(test_quant test/quant.cpp)
+target_link_libraries(test_quant PRIVATE bfpmx)

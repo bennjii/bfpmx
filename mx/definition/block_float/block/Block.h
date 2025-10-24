@@ -48,13 +48,21 @@ public:
         scalar_ = scalar;
     }
 
+    PackedFloat At(u16 index)
+    {
+        return data_[index];
+    }
+
     // TODO: Quantize, and fill
     void Fill(f64 value)
     {
         return;
     }
 
-    explicit Block(std::array<PackedFloat, ScalarSizeBytes> init) : data_(init), scalar_(0) {}
+    explicit Block(
+        std::array<PackedFloat, BlockSizeElements> init,
+        std::array<u8, ScalarSizeBytes> scalar
+    ) : data_(init), scalar_(scalar) {}
 
     [[nodiscard]] static std::size_t Length()
     {
@@ -64,12 +72,28 @@ public:
     PackedFloat* data() { return data_.data(); }
     [[nodiscard]] const PackedFloat* data() const { return data_.data(); }
 
+    [[nodiscard]] u64 Scalar() const
+    {
+        u64 scalar = 0;
+        for (int i = 0; i < ScalarSizeBytes; i++)
+        {
+            scalar |= scalar_[i] << (i * 8);
+        }
+
+        return scalar;
+    }
+
     [[nodiscard]] std::string as_string() const {
         std::string value;
-        value += "[";
+
+        value += "Scalar: " + std::to_string(Scalar()) + "\n";
+        value += "Elements: [\n";
         for (PackedFloat v : data_) {
-            std::string s = std::format("{:.3f}", Float::Unmarshal(v));
-            value += s + ", ";
+            auto unmarshalled = Float::Unmarshal(v);
+            std::string valueUnscaled = std::format("{:.3f}", unmarshalled);
+            std::string valueScaled = std::format("{:.3f}", unmarshalled * Scalar());
+
+            value += "\t" + valueUnscaled + " (St. " + valueScaled + "), \n";
         }
         value += "]";
 
