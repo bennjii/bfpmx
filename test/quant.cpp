@@ -23,7 +23,7 @@ int main() {
     }
     std::cout << "]" << std::endl;
 
-    const auto block1 = SharedExpQuantization<32, fp8::E5M2Type>::Quantize(arr); // test>
+    const auto block1 = SharedExpQuantization<4, 32, fp8::E5M2Type>::Quantize(arr);
     std::cout << "Quantized array {SEQ} : " << block1.as_string() << std::endl;
 
     const auto block2 = MaximumFractionalQuantization<4, 32, fp8::E4M3Type>::Quantize(arr);

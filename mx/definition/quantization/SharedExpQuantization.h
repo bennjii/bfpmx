@@ -4,21 +4,23 @@
 #include "definition/block_float/block/Block.h"
 #include "definition/block_float/repr/FloatRepr.h"
 
-template<
-    std::size_t Size,
-    IFloatRepr Float
->
+#include <iostream>
 
 /* ----------------------------
 *  SharedExpQuantization
 *  ----------------------------
 */                             
 
+template<
+    std::size_t ScalarBytes,
+    std::size_t Size,
+    IFloatRepr Float
+>
 class SharedExpQuantization
 {
 public:
     using BlockFmt = Block<
-        32,
+        ScalarBytes,
         Size,
         Float,
         CPUArithmetic
@@ -41,10 +43,8 @@ public:
         std::array<std::array<u8, Float::SizeBytes()>, Size> blockScaledFloats;
 
         f64 scaleFactor = std::pow(2.0, sharedExp);
-        std::cout << "Scale Factor : " << scaleFactor << std::endl;
-        //TODO: scale factor has to be stored and retrieved (for unquantiz.)
+        const u32 scaleFactorInt = lround(log2(scaleFactor));
 
-        
         for (int i = 0; i < Size; i++)
         {
             f64 scaledValue = vec[i] / scaleFactor;
@@ -53,11 +53,13 @@ public:
             blockScaledFloats[i] = byteRepr;
         }
 
-        
+        std::array<u8, ScalarBytes> packedScalar;
+        for (int i = 0; i < ScalarBytes; i++)
+        {
+            packedScalar[i] = scaleFactorInt >> (i * 8);
+        }
 
-        // TODO: convert u32 into u8[]
-        std::array<u8, 32> dummyArr;
-        return BlockFmt(blockScaledFloats, dummyArr);
+        return BlockFmt(blockScaledFloats, packedScalar);
     }
 
     std::array<f64, Size> UnQuantize(BlockFmt &block)

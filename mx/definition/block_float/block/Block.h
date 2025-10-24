@@ -48,6 +48,11 @@ public:
         scalar_ = scalar;
     }
 
+    PackedFloat At(u16 index)
+    {
+        return data_[index];
+    }
+
     // TODO: Quantize, and fill
     void Fill(f64 value)
     {
