@@ -12,7 +12,7 @@ template<
     std::size_t Size,
     IFloatRepr Float
 >
-class SharedExpQuantization
+class SharedExponentQuantization
 {
 public:
     using BlockFmt = Block<
@@ -20,7 +20,7 @@ public:
         Size,
         Float,
         CPUArithmetic,
-        SharedExpQuantization
+        SharedExponentQuantization
     >;
 
     static BlockFmt Quantize(std::array<f64, Size> &vec)
@@ -34,7 +34,7 @@ public:
             }
         }
 
-        const f64 sharedExp = SharedExponent(Float::ExponentBits(), largestValue);
+        const f64 sharedExp = SharedExponent(largestValue);
         std::array<std::array<u8, Float::SizeBytes()>, Size> blockScaledFloats;
 
         f64 scaleFactor = std::pow(2.0, sharedExp);
@@ -72,13 +72,14 @@ public:
 
 
 private:
-    static f64 SharedExponent(u16 exponentBits, f64 highestValueAbsolute)
+    // TODO: Does not find the largest shared exponent optimally.
+    static f64 SharedExponent(const f64 highestValueAbsolute)
     {
         // emax = (2^E - 2) - Bias
         auto bias = Float::BiasValue();
-        const f64 emax = (1 << exponentBits) - 2 - bias;
+        const f64 emax = (1 << Float::ExponentBits()) - 2 - bias;
 
-        std::cout << "expbits = " << exponentBits << std::endl;
+        std::cout << "expbits = " << Float::ExponentBits() << std::endl;
         std::cout << "bias = " << u64(bias) << std::endl;
         std::cout << "emax = " << emax << std::endl;
 

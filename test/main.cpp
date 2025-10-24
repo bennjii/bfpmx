@@ -11,7 +11,7 @@ int main() {
     std::cout << "FloatSize=" << fp8::E4M3Type::Size() << "bits" << std::endl;
 
     // We expect 16 + 32(8) = 272 bits
-    using BlockT = Block<32, 4, fp8::E4M3Type, CPUArithmetic, SharedExpQuantization>;
+    using BlockT = Block<32, 4, fp8::E4M3Type, CPUArithmetic, SharedExponentQuantization>;
 
     // Below will be const-folded into Block<32, 272>::Length(), which statically
     // is known as 32.
