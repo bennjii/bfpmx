@@ -10,14 +10,12 @@ add_custom_target(fix_compile_commands ALL
         COMMENT "Fixing compile_commands.json for clang-tidy"
 )
 
-file(GLOB_RECURSE SOURCES "mx/*.h")
 file(GLOB_RECURSE SOURCES "mx/*.cpp")
-add_library(bfpmx STATIC ${SOURCES}
-        mx/definition/quantization/MaximumFractionalQuantization.h
-        test/quant.cpp)
+list(APPEND SOURCES ${HEADERS})
 
-target_include_directories(bfpmx PUBLIC mx)
+add_library(bfpmx STATIC ${SOURCES})
 
+target_include_directories(bfpmx PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/mx)
 add_definitions(-DUNIT_TESTS)
 
 # TESTING #

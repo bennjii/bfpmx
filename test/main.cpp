@@ -12,13 +12,16 @@ int main()
     std::cout << "FloatSize=" << fp8::E4M3Type::Size() << "bits" << std::endl;
 
     // We expect 16 + 32(8) = 272 bits
-    using IBlock = BlockFactory<32, 16, fp8::E4M3Type, CPUArithmetic>;
-    std::cout << "BlockSize=" << IBlock::Size() << "bits" << std::endl;
-    std::cout << "BlockSize=" << IBlock::Size() / BITS_IN_BYTE << "bytes" << std::endl;
+    using IBlockFactory = BlockFactory<32, 16, fp8::E4M3Type, CPUArithmetic>;
+    std::cout << "BlockSize=" << IBlockFactory::Size() << "bits" << std::endl;
+    std::cout << "BlockSize=" << IBlockFactory::Size() / BITS_IN_BYTE << "bytes" << std::endl;
+
+    constexpr auto quantizer = IBlockFactory::BoundQuantizer<MaximumFractionalQuantization>();
 
     // Below will be const-folded into Block<32, 272>::Length(), which statically
     // is known as 32.
-    const auto block = IBlock::CreateBlock();
+    const auto block = IBlockFactory::CreateBlock(quantizer);
+
     std::cout << "BlockLength=" << block.Length() << " elements" << std::endl;
 
     std::cout << "block: " << block.as_string() << std::endl;
