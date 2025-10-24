@@ -23,9 +23,9 @@ int main() {
     }
     std::cout << "]" << std::endl;
 
-    const auto block1 = SharedExpQuantization<4, 32, fp8::E5M2Type>::Quantize(arr);
-    std::cout << "Quantized array {SEQ} : " << block1.as_string() << std::endl;
+    const auto block1 = SharedExponentQuantization<4, 32, fp8::E5M2Type>::Quantize(arr);
+    std::cout << "Quantized array {SEQ} : " << block1.asString() << std::endl;
 
     const auto block2 = MaximumFractionalQuantization<4, 32, fp8::E4M3Type>::Quantize(arr);
-    std::cout << "Quantized array {MFQ} : " << block2.as_string() << std::endl;
+    std::cout << "Quantized array {MFQ} : " << block2.asString() << std::endl;
 }

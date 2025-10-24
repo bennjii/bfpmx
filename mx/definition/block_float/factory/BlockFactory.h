@@ -16,27 +16,23 @@ template<
     u16 BlockQuantity,
     u16 BytesScalar,
     IFloatRepr Float,
-    template<typename> typename ImplPolicy
+    template<typename> typename ImplPolicy,
+    template<std::size_t, std::size_t, IFloatRepr> typename QuantizePolicy
 >
+requires IQuantize<QuantizePolicy, BytesScalar, BlockQuantity, Float>
 class BlockFactory
 {
 public:
     BlockFactory() = delete;
-
-    // Type alias for quantizers compatible with this factory's parameters
-    template<template<std::size_t, std::size_t, typename> typename QuantizerTemplate>
-    using BoundQuantizer = QuantizerTemplate<BytesScalar, BlockQuantity, Float>;
 
     /// The size of the block, in bits, when constructed.
     static constexpr u32 Size() {
         return Float::Size();
     }
 
-    template<typename Quantizer>
-        requires IQuantize<Quantizer, Float, BytesScalar, BlockQuantity>
-    static constexpr Block<BytesScalar, BlockQuantity, Float, ImplPolicy> CreateBlock(Quantizer q)
+    static constexpr Block<BytesScalar, BlockQuantity, Float, ImplPolicy, QuantizePolicy> CreateBlock()
     {
-        return Block<BytesScalar, BlockQuantity, Float, ImplPolicy>();
+        return Block<BytesScalar, BlockQuantity, Float, ImplPolicy, QuantizePolicy>();
     }
 };
 

@@ -8,6 +8,8 @@
 #include "definition/alias.h"
 #include "definition/block_float/block/Block.h"
 #include "definition/block_float/repr/FloatRepr.h"
+#include "arch/cpu/CPUArithmetic.h"
+#include <iostream>
 
 template<
     std::size_t ScalarBytes,
@@ -21,15 +23,15 @@ public:
         ScalarBytes,
         Size,
         Float,
-        CPUArithmetic
+        CPUArithmetic,
+        MaximumFractionalQuantization
     >;
-
     static BlockFmt Quantize(std::array<f64, Size> &vec)
     {
         f64 largestValue = 0;
         for (int i = 0; i < Size; i++)
         {
-            if (vec[i] > largestValue)
+            if (abs(vec[i]) > abs(largestValue))
             {
                 largestValue = vec[i];
             }
@@ -42,9 +44,8 @@ public:
 
         for (int i = 0; i < Size; i++)
         {
-            f64 scaledValue = round(vec[i] / scaleFactor);
-            auto byteRepr = Float::Marshal(scaledValue);
-            blockScaledFloats[i] = byteRepr;
+            f64 scaledValue = vec[i] / scaleFactor;
+            blockScaledFloats[i] = Float::Marshal(scaledValue);
         }
 
         std::array<u8, ScalarBytes> packedScalar;
@@ -56,13 +57,13 @@ public:
         return BlockFmt(blockScaledFloats, packedScalar);
     }
 
-    static std::array<f64, Size> UnQuantize(BlockFmt &block)
+    static std::array<f64, Size> UnQuantize(const BlockFmt &block)
     {
         std::array<f64, Size> blockUnscaledFloats;
         for (int i = 0; i < Size; i++)
         {
             auto packedFloat = block.At(i);
-            f64 fullPrecision = Float::Unmarshall(packedFloat);
+            f64 fullPrecision = Float::Unmarshal(packedFloat);
             blockUnscaledFloats[i] = fullPrecision * block.Scalar();
         }
 
@@ -73,7 +74,7 @@ public:
 private:
     static f64 ScaleFactor(f64 HighestValueAbsolute)
     {
-        return Float::BiasValue() / HighestValueAbsolute;
+        return HighestValueAbsolute / Float::BiasValue();
     }
 };
 

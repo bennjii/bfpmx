@@ -1,4 +1,5 @@
-#pragma once
+#ifndef BFPMX_SEQ_H
+#define BFPMX_SEQ_H
 
 #include "definition/alias.h"
 #include "definition/block_float/block/Block.h"
@@ -6,24 +7,20 @@
 
 #include <iostream>
 
-/* ----------------------------
-*  SharedExpQuantization
-*  ----------------------------
-*/                             
-
 template<
     std::size_t ScalarBytes,
     std::size_t Size,
     IFloatRepr Float
 >
-class SharedExpQuantization
+class SharedExponentQuantization
 {
 public:
     using BlockFmt = Block<
         ScalarBytes,
         Size,
         Float,
-        CPUArithmetic
+        CPUArithmetic,
+        SharedExponentQuantization
     >;
 
     static BlockFmt Quantize(std::array<f64, Size> &vec)
@@ -37,9 +34,7 @@ public:
             }
         }
 
-        f64 sharedExp = SharedExponent(Float::ExponentBits(), largestValue);
-        std::cout << "sharedExp : " << sharedExp << std::endl;
-        
+        const f64 sharedExp = SharedExponent(largestValue);
         std::array<std::array<u8, Float::SizeBytes()>, Size> blockScaledFloats;
 
         f64 scaleFactor = std::pow(2.0, sharedExp);
@@ -62,7 +57,7 @@ public:
         return BlockFmt(blockScaledFloats, packedScalar);
     }
 
-    std::array<f64, Size> UnQuantize(BlockFmt &block)
+    static std::array<f64, Size> UnQuantize(const BlockFmt &block)
     {
         std::array<f64, Size> blockUnscaledFloats;
         for (int i = 0; i < Size; i++)
@@ -76,17 +71,21 @@ public:
     }
 
 
-    private:
-        static f64 SharedExponent(u16 exponentBits, f64 highestValueAbsolute)
-        {
-            // emax = (2^E - 2) - Bias
-            auto bias = Float::BiasValue();
-            const f64 emax = (1 << exponentBits) - 2 - bias;
+private:
+    // TODO: Does not find the largest shared exponent optimally.
+    static f64 SharedExponent(const f64 highestValueAbsolute)
+    {
+        // emax = (2^E - 2) - Bias
+        auto bias = Float::BiasValue();
+        const f64 emax = (1 << Float::ExponentBits()) - 2 - bias;
 
-            std::cout << "expbits = " << exponentBits << std::endl;
-            std::cout << "bias = " << u64(bias) << std::endl;
-            std::cout << "emax = " << emax << std::endl;
-            
-            // shared_exponent = floor(log2(maxVal))- emax
-            return std::floor(std::log2(highestValueAbsolute)) - emax;
-        }};
+        std::cout << "expbits = " << Float::ExponentBits() << std::endl;
+        std::cout << "bias = " << u64(bias) << std::endl;
+        std::cout << "emax = " << emax << std::endl;
+
+        // shared_exponent = floor(log2(maxVal))- emax
+        return std::floor(std::log2(highestValueAbsolute)) - emax;
+    }
+};
+
+#endif // BFPMX_SEQ_H

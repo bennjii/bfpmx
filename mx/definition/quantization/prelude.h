@@ -10,6 +10,6 @@
 
 // Concrete Implementations
 #include "MaximumFractionalQuantization.h"
-#include "SharedExpQuantization.h"
+#include "SharedExponentQuantization.h"
 
 #endif //BFPMX_PRELUDE_QUANTIZATION_H

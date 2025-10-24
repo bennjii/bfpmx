@@ -5,25 +5,29 @@
 #ifndef BFPMX_QUANTIZE_H
 #define BFPMX_QUANTIZE_H
 
+#include "arch/prelude.h"
+
 template<
-    typename T,
-    typename Float,
+    template <std::size_t, std::size_t, IFloatRepr> typename T,
     std::size_t ScalarBytes,
-    std::size_t Size
+    std::size_t Size,
+    typename Float
 >
 concept IQuantize = IFloatRepr<Float> && requires(std::array<f64, Size> &v, Block<
         ScalarBytes,
         Size,
         Float,
-        CPUArithmetic
+        CPUArithmetic,
+        T
     > &b) {
-    { T::Quantize(v) } -> std::convertible_to<Block<
+    { T<ScalarBytes, Size, Float>::Quantize(v) } -> std::convertible_to<Block<
         ScalarBytes,
         Size,
         Float,
-        CPUArithmetic
-    >>;
-    { T::UnQuantize(b) } -> std::same_as<std::array<f64, Size>>;
+        CPUArithmetic,
+        T>
+    >;
+    { T<ScalarBytes, Size, Float>::UnQuantize(b) } -> std::same_as<std::array<f64, Size>>;
 };
 
 #endif //BFPMX_QUANTIZE_H

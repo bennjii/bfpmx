@@ -6,6 +6,7 @@
 #define BFPMX_BLOCK_H
 
 #include <array>
+#include <cstddef>
 #include <format>
 #include <string>
 
@@ -21,22 +22,24 @@ struct WithPolicy {
 };
 
 template<
-    std::size_t ScalarSizeBytes,
+    std::size_t ScalarSizeBytes, // TODO: document what is Scalar
     std::size_t BlockSizeElements,
     IFloatRepr Float,
-    template<typename> typename P
+    template<typename> typename ArithmeticPolicy,
+    template<std::size_t, std::size_t, IFloatRepr> typename QuantizationPolicy
 >
 class Block : public
-    WithPolicy<P>::template Type<Block<ScalarSizeBytes, BlockSizeElements, Float, P>>
+    WithPolicy<ArithmeticPolicy>::template
+Type<Block<ScalarSizeBytes, BlockSizeElements, Float, ArithmeticPolicy, QuantizationPolicy>>
 {
 public:
+    using FloatType = Float;
     using PackedFloat = std::array<u8, Float::SizeBytes()>;
+    using ScalarType = std::array<u8, ScalarSizeBytes>;
+    using QuantizationPolicyType = QuantizationPolicy<ScalarSizeBytes, BlockSizeElements, Float>;
 
+    // Empty constructor
     Block() {
-        // TODO: We would need a quantisation layer that we can callout to
-        //       ideally this is also pluggable, but could be a runtime dep
-        //       instead of a static, typename, injection.
-
         auto data = std::array<PackedFloat, BlockSizeElements>();
              data.fill(Float::Marshal(0));
 
@@ -48,29 +51,22 @@ public:
         scalar_ = scalar;
     }
 
-    PackedFloat At(u16 index)
+    // Constructors from given element types
+    explicit Block(std::array<f64, BlockSizeElements> v) : Block(QuantizationPolicyType::Quantize(v)) {}
+    explicit Block(std::array<PackedFloat, BlockSizeElements> init) : data_(init), scalar_(0) {}
+    explicit Block(std::array<PackedFloat, BlockSizeElements> data, ScalarType scalar) : data_(data), scalar_(scalar) {}
+
+    Block(const Block&) = default;
+
+    [[nodiscard]] static constexpr std::size_t Length()
+    {
+        return BlockSizeElements;
+    }
+
+    [[nodiscard]] PackedFloat At(u16 index) const
     {
         return data_[index];
     }
-
-    // TODO: Quantize, and fill
-    void Fill(f64 value)
-    {
-        return;
-    }
-
-    explicit Block(
-        std::array<PackedFloat, BlockSizeElements> init,
-        std::array<u8, ScalarSizeBytes> scalar
-    ) : data_(init), scalar_(scalar) {}
-
-    [[nodiscard]] static std::size_t Length()
-    {
-        return Float::Size();
-    }
-
-    PackedFloat* data() { return data_.data(); }
-    [[nodiscard]] const PackedFloat* data() const { return data_.data(); }
 
     [[nodiscard]] u64 Scalar() const
     {
@@ -83,7 +79,7 @@ public:
         return scalar;
     }
 
-    [[nodiscard]] std::string as_string() const {
+    [[nodiscard]] std::string asString() const {
         std::string value;
 
         value += "Scalar: " + std::to_string(Scalar()) + "\n";

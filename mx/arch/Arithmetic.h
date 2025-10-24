@@ -5,8 +5,6 @@
 #ifndef BFPMX_ARITHMETIC_H
 #define BFPMX_ARITHMETIC_H
 
-#include <concepts>
-
 template<typename Impl, typename T>
 concept ArithmeticImpl = requires(const T& a, const T& b) {
     Impl::Add(a, b);            // expression must be valid
