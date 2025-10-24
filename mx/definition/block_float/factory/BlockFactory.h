@@ -5,7 +5,8 @@
 #ifndef BFPMX_BLOCKFACTORY_H
 #define BFPMX_BLOCKFACTORY_H
 
-#include "definition/block_float/block/Block.h"
+#include "../../prelude.h"
+#include "../../../definition/quantization/Quantize.h"
 
 constexpr u16 DEFAULT_BLOCK_SIZE = 32;
 constexpr u16 DEFAULT_BITS_SCALAR = 32;
@@ -13,11 +14,12 @@ constexpr u16 BITS_IN_BYTE = 8;
 
 template<
     u16 BlockQuantity,
-    u16 BitsScalar,
+    u16 BytesScalar,
     IFloatRepr Float,
     template<typename> typename ImplPolicy,
-    template<std::size_t, std::size_t, IFloatRepr> typename QuantizationPolicy
+    template<std::size_t, std::size_t, IFloatRepr> typename QuantizePolicy
 >
+requires IQuantize<QuantizePolicy, BytesScalar, BlockQuantity, Float>
 class BlockFactory
 {
 public:
@@ -28,9 +30,9 @@ public:
         return Float::Size();
     }
 
-    static constexpr Block<BitsScalar, BlockQuantity, Float, ImplPolicy, QuantizationPolicy> CreateBlock()
+    static constexpr Block<BytesScalar, BlockQuantity, Float, ImplPolicy, QuantizePolicy> CreateBlock()
     {
-        return Block<BitsScalar, BlockQuantity, Float, ImplPolicy, QuantizationPolicy>();
+        return Block<BytesScalar, BlockQuantity, Float, ImplPolicy, QuantizePolicy>();
     }
 };
 

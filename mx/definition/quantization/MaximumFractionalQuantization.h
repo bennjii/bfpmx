@@ -1,12 +1,16 @@
 //
 // Created by Benjamin White on 23/10/2025.
 //
-#pragma once
+
+#ifndef BFPMX_MFQ_H
+#define BFPMX_MFQ_H
 
 #include "definition/alias.h"
 #include "definition/block_float/block/Block.h"
 #include "definition/block_float/repr/FloatRepr.h"
 #include "arch/cpu/arithmetic.hpp"
+#include <iostream>
+
 template<
     std::size_t ScalarBytes,
     std::size_t Size,
@@ -33,8 +37,8 @@ public:
             }
         }
 
-        f64 scaleFactor = ScaleFactor(Float::ElementBits(), largestValue);
-        u32 scaleFactorInt = lround(scaleFactor);
+        f64 scaleFactor = ScaleFactor(largestValue);
+        const u32 scaleFactorInt = lround(log2(scaleFactor));
 
         std::array<std::array<u8, Float::SizeBytes()>, Size> blockScaledFloats;
 
@@ -70,8 +74,10 @@ public:
 
 
 private:
-    static f64 ScaleFactor(u16 QuantizationSizeBits, f64 HighestValueAbsolute)
+    static f64 ScaleFactor(f64 HighestValueAbsolute)
     {
         return HighestValueAbsolute / Float::BiasValue();
     }
 };
+
+#endif //BFPMX_MFQ_H

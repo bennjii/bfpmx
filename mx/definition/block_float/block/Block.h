@@ -29,8 +29,8 @@ template<
     template<std::size_t, std::size_t, IFloatRepr> typename QuantizationPolicy
 >
 class Block : public
-    WithPolicy<ArithmeticPolicy>::template Type<Block<ScalarSizeBytes, BlockSizeElements, Float, ArithmeticPolicy,
-    QuantizationPolicy>>
+    WithPolicy<ArithmeticPolicy>::template
+Type<Block<ScalarSizeBytes, BlockSizeElements, Float, ArithmeticPolicy, QuantizationPolicy>>
 {
 public:
     using FloatType = Float;
@@ -63,6 +63,11 @@ public:
     }
 
     Block(const Block&) = default;
+
+    PackedFloat At(u16 index)
+    {
+        return data_[index];
+    }
 
     // TODO: Quantize, and fill
     void Fill(f64 value)

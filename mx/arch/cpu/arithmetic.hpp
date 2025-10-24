@@ -1,6 +1,8 @@
 //
 // Created by Benjamin White on 10/10/2025.
 //
+#pragma once
+
 #include "definition/alias.h"
 #include <format>
 #include <type_traits> // for std::remove_cvref_t
