@@ -11,7 +11,6 @@
 #include <array>
 #include <string>
 #include <sstream>
-#include <cmath>
 
 #define BFPMX_FLOATREPR_H
 
@@ -146,7 +145,7 @@ public:
     }
 
     [[nodiscard]] static constexpr u8 BiasValue() {
-        return (1<<(Exponent-1))-1;
+        return (1 << (Exponent - 1)) - 1;
     }
 
     [[nodiscard]] static constexpr u8 ElementBits()
