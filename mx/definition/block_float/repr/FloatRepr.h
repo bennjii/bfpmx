@@ -11,6 +11,7 @@
 #include <array>
 #include <string>
 #include <sstream>
+#include <cmath>
 
 #define BFPMX_FLOATREPR_H
 
