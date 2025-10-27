@@ -33,15 +33,15 @@ public:
         {
             if (abs(vec[i]) > abs(largestValue))
             {
-                largestValue = vec[i];
+                largestValue = abs(vec[i]);
             }
         }
 
-        f64 scaleFactor = ScaleFactor(largestValue);
-        const u32 scaleFactorInt = lround(log2(scaleFactor));
+        const u32 scaleFactorCandidate = lround(largestValue);
+        const u32 scaleFactorInt = 31 - __builtin_clz(scaleFactorCandidate);
+        const u32 scaleFactor = 1 << scaleFactorInt;
 
         std::array<std::array<u8, Float::SizeBytes()>, Size> blockScaledFloats;
-
         for (int i = 0; i < Size; i++)
         {
             f64 scaledValue = vec[i] / scaleFactor;
