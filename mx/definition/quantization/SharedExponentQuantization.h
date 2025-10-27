@@ -5,7 +5,7 @@
 #include "definition/block_float/block/Block.h"
 #include "definition/block_float/repr/FloatRepr.h"
 
-#include <string>
+#include <cstring>
 #include <iostream>
 
 template<
