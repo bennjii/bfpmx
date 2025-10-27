@@ -31,9 +31,9 @@ public:
         f64 largestValue = 0;
         for (int i = 0; i < Size; i++)
         {
-            if (abs(vec[i]) > abs(largestValue))
+            if (const f64 absValue = fabs(vec[i]); absValue > largestValue)
             {
-                largestValue = abs(vec[i]);
+                largestValue = absValue;
             }
         }
 
