@@ -5,6 +5,7 @@
 #include "definition/block_float/block/Block.h"
 #include "definition/block_float/repr/FloatRepr.h"
 
+#include <cstring>
 #include <iostream>
 
 template<
@@ -22,36 +23,40 @@ public:
         CPUArithmetic,
         SharedExponentQuantization
     >;
+    using PackedFloat = std::array<u8, Float::SizeBytes()>;
 
     static BlockFmt Quantize(std::array<f64, Size> &vec)
     {
-        f64 largestValue = 0;
+        u64 largestBiasedExponent = 0;
         for (int i = 0; i < Size; i++)
         {
-            if (std::abs(vec[i]) > largestValue)
-            {
-                largestValue = std::abs(vec[i]);
+            u64 bits;
+            std::memcpy(&bits, &vec[i], sizeof(bits));
+            const u64 exponent = (bits >> 52) & 0x7FF;
+
+            if (exponent > largestBiasedExponent) {
+                largestBiasedExponent = exponent;
             }
         }
 
-        const f64 sharedExp = SharedExponent(largestValue);
-        std::array<std::array<u8, Float::SizeBytes()>, Size> blockScaledFloats;
+        const u64 largestUnbiasedExponent = largestBiasedExponent - 1023;
+        const u64 exponent = NormalizedExponent(largestUnbiasedExponent);
+        f64 scaleFactor = std::pow(2.0, exponent);
 
-        f64 scaleFactor = std::pow(2.0, sharedExp);
-        const u32 scaleFactorInt = lround(log2(scaleFactor));
-
+        std::array<PackedFloat, Size> blockScaledFloats;
         for (int i = 0; i < Size; i++)
         {
             f64 scaledValue = vec[i] / scaleFactor;
-
-            auto byteRepr = Float::Marshal(scaledValue);
-            blockScaledFloats[i] = byteRepr;
+            PackedFloat packed = Float::Marshal(scaledValue);
+            blockScaledFloats[i] = packed;
         }
+
+        const u32 scaleFactorInt = lround(exponent);
 
         std::array<u8, ScalarBytes> packedScalar;
         for (int i = 0; i < ScalarBytes; i++)
         {
-            packedScalar[i] = scaleFactorInt >> (i * 8);
+            packedScalar[i] = static_cast<u8>(scaleFactorInt >> (i * 8));
         }
 
         return BlockFmt(blockScaledFloats, packedScalar);
@@ -72,19 +77,15 @@ public:
 
 
 private:
-    // TODO: Does not find the largest shared exponent optimally.
-    static f64 SharedExponent(const f64 highestValueAbsolute)
+    static constexpr u64 MaximumScalarExponentValue()
     {
-        // emax = (2^E - 2) - Bias
-        auto bias = Float::BiasValue();
-        const f64 emax = (1 << Float::ExponentBits()) - 2 - bias;
+        return (static_cast<u64>(1) << (ScalarBytes * 8)) - 1;
+    }
 
-        std::cout << "expbits = " << Float::ExponentBits() << std::endl;
-        std::cout << "bias = " << u64(bias) << std::endl;
-        std::cout << "emax = " << emax << std::endl;
-
-        // shared_exponent = floor(log2(maxVal))- emax
-        return std::floor(std::log2(highestValueAbsolute)) - emax;
+    static u64 NormalizedExponent(const u64 highestExponent)
+    {
+        // Exponent cannot exceed the representable maximum.
+        return std::min(MaximumScalarExponentValue(), highestExponent);
     }
 };
 

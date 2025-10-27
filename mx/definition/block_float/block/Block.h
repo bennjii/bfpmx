@@ -76,20 +76,32 @@ public:
             scalar |= scalar_[i] << (i * 8);
         }
 
-        return scalar;
+        return 1 << scalar;
+    }
+
+    [[nodiscard]] std::array<f64, BlockSizeElements> Spread() const
+    {
+        std::array<f64, BlockSizeElements> blockUnscaledFloats;
+        for (int i = 0; i < BlockSizeElements; i++)
+        {
+            auto packedFloat = At(i);
+            const f64 fullPrecision = Float::Unmarshal(packedFloat);
+            blockUnscaledFloats[i] = fullPrecision * Scalar();
+        }
+
+        return blockUnscaledFloats;
     }
 
     [[nodiscard]] std::string asString() const {
+        std::array<f64, BlockSizeElements> fullPrecisionValues = Spread();
         std::string value;
 
         value += "Scalar: " + std::to_string(Scalar()) + "\n";
         value += "Elements: [\n";
-        for (PackedFloat v : data_) {
-            auto unmarshalled = Float::Unmarshal(v);
-            std::string valueUnscaled = std::format("{:.3f}", unmarshalled);
-            std::string valueScaled = std::format("{:.3f}", unmarshalled * Scalar());
-
-            value += "\t" + valueUnscaled + " (St. " + valueScaled + "), \n";
+        for (int i = 0; i < BlockSizeElements; i++)
+        {
+            f64 fullPrecisionFloat = fullPrecisionValues[i];
+            value += std::format("\t ({}) {:.3f} \n", i, fullPrecisionFloat);
         }
         value += "]";
 
