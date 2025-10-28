@@ -1,0 +1,16 @@
+name: Build
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install CMake 4.x
+        uses: lukka/get-cmake@v4.1.2
+      - name: Create build plan
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug
+      - name: Create makefile
+        run: cmake .
+      - name: Build binaries
+        run: cmake --build build
