@@ -94,15 +94,15 @@ public:
     }
 
     // Constructors from given element types
-    explicit Block(std::array<f64, BlockShape::total_size()> v) : Block(QuantizationPolicyType::Quantize(v)) {}
-    explicit Block(std::array<PackedFloat, BlockShape::total_size()> init) : data_(init), scalar_(0) {}
-    explicit Block(std::array<PackedFloat, BlockShape::total_size()> data, ScalarType scalar) : data_(data), scalar_(scalar) {}
+    explicit Block(std::array<f64, num_elems> v) : Block(QuantizationPolicyType::Quantize(v)) {}
+    explicit Block(std::array<PackedFloat, num_elems> init) : data_(init), scalar_(0) {}
+    explicit Block(std::array<PackedFloat, num_elems> data, ScalarType scalar) : data_(data), scalar_(scalar) {}
 
     Block(const Block&) = default;
 
     [[nodiscard]] static constexpr std::size_t Length()
     {
-        return BlockShape::total_size();
+        return num_elems;
     }
 
     [[nodiscard]] PackedFloat At(u16 index) const
@@ -125,20 +125,32 @@ public:
             scalar |= scalar_[i] << (i * 8);
         }
 
-        return scalar;
+        return 1 << scalar;
+    }
+
+    [[nodiscard]] std::array<f64, num_elems> Spread() const
+    {
+        std::array<f64, num_elems> blockUnscaledFloats;
+        for (int i = 0; i < num_elems; i++)
+        {
+            auto packedFloat = At(i);
+            const f64 fullPrecision = Float::Unmarshal(packedFloat);
+            blockUnscaledFloats[i] = fullPrecision * Scalar();
+        }
+
+        return blockUnscaledFloats;
     }
 
     [[nodiscard]] std::string asString() const {
+        std::array<f64, num_elems> fullPrecisionValues = Spread();
         std::string value;
 
         value += "Scalar: " + std::to_string(Scalar()) + "\n";
         value += "Elements: [\n";
-        for (PackedFloat v : data_) {
-            auto unmarshalled = Float::Unmarshal(v);
-            std::string valueUnscaled = std::format("{:.3f}", unmarshalled);
-            std::string valueScaled = std::format("{:.3f}", unmarshalled * Scalar());
-
-            value += "\t" + valueUnscaled + " (St. " + valueScaled + "), \n";
+        for (int i = 0; i < num_elems; i++)
+        {
+            f64 fullPrecisionFloat = fullPrecisionValues[i];
+            value += std::format("\t ({}) {:.3f} \n", i, fullPrecisionFloat);
         }
         value += "]";
 

@@ -31,14 +31,15 @@ public:
         f64 largestValue = 0;
         for (int i = 0; i < BlockShape::total_size(); i++)
         {
-            if (abs(vec[i]) > abs(largestValue))
+            if (const f64 absValue = fabs(vec[i]); absValue > largestValue)
             {
-                largestValue = vec[i];
+                largestValue = absValue;
             }
         }
 
-        f64 scaleFactor = ScaleFactor(largestValue);
-        const u32 scaleFactorInt = lround(log2(scaleFactor));
+        const u32 scaleFactorCandidate = lround(largestValue);
+        const u32 scaleFactorInt = 31 - __builtin_clz(scaleFactorCandidate);
+        const u32 scaleFactor = 1 << scaleFactorInt;
 
         std::array<std::array<u8, Float::SizeBytes()>, BlockShape::total_size()> blockScaledFloats;
 

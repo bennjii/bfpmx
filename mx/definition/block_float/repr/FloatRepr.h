@@ -25,6 +25,11 @@ concept IFloatRepr = requires(f64 v, std::array<u8, T::SizeBytes()> a) {
     { T::Marshal(v) } -> std::same_as<std::array<u8, T::SizeBytes()>>;
     { T::Unmarshal(a) } -> std::convertible_to<f64>;
 
+    { T::ElementBits() } -> std::convertible_to<u32>;
+    { T::SignificandBits() } -> std::convertible_to<u32>;
+    { T::ExponentBits() } -> std::convertible_to<u32>;
+    { T::SignBits() } -> std::convertible_to<u32>;
+
     // TODO: Add the following functions:
     //  - Max() -> f64
     //  - Min() -> f64
@@ -141,7 +146,7 @@ public:
     }
 
     [[nodiscard]] static constexpr u8 BiasValue() {
-        return (1<<(Exponent-1))-1;
+        return (1 << (Exponent - 1)) - 1;
     }
 
     [[nodiscard]] static constexpr u8 ElementBits()
