@@ -29,7 +29,7 @@ int main() {
     // Below will be const-folded into Block<32, 272>::Length(), which statically
     // is known as 32.
     const auto block3 = IBlock::CreateBlock();
-    std::cout << "BlockNumElems=" << block3.NumElems() << " elements" << std::endl;
+    std::cout << "BlockNumElems=" << block3.NumElems << " elements" << std::endl;
 
     std::cout << "block3: " << block3.asString() << std::endl;
     auto newBlock = block3 + block3;

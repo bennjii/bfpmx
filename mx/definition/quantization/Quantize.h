@@ -13,7 +13,7 @@ template<
     typename BlockShape, // Concept can not be constrained
     typename Float
 >
-concept IQuantize = IFloatRepr<Float> && BlockDimsType<BlockShape> && requires(std::array<f64, BlockShape::total_size()> &v, Block<
+concept IQuantize = IFloatRepr<Float> && BlockDimsType<BlockShape> && requires(std::array<f64, BlockShape::TotalSize()> &v, Block<
         ScalarBytes,
         BlockShape,
         Float,
@@ -27,7 +27,7 @@ concept IQuantize = IFloatRepr<Float> && BlockDimsType<BlockShape> && requires(s
         CPUArithmetic,
         T>
     >;
-    { T<ScalarBytes, BlockShape, Float>::UnQuantize(b) } -> std::same_as<std::array<f64, BlockShape::total_size()>>;
+    { T<ScalarBytes, BlockShape, Float>::UnQuantize(b) } -> std::same_as<std::array<f64, BlockShape::TotalSize()>>;
 };
 
 #endif //BFPMX_QUANTIZE_H/

@@ -27,7 +27,7 @@ public:
 
     /// The size of the block, in bits, when constructed.
     static constexpr u32 Size() {
-        return Float::Size() * BlockShape::total_size();
+        return Float::Size() * BlockShape::TotalSize();
     }
 
     static constexpr Block<BytesScalar, BlockShape, Float, ImplPolicy, QuantizePolicy> CreateBlock()

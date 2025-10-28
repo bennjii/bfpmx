@@ -12,6 +12,7 @@
 
 #include "arch/prelude.h"
 #include "definition/block_float/repr/FloatRepr.h"
+#include "BlockDims.h"
 
 // Hook to simplify type definitions for wrapping a class
 // as supporting the custom prescribed arithmetic.
@@ -20,39 +21,6 @@ struct WithPolicy {
     template<typename T>
     using Type = ArithmeticEnabled<T, ImplPolicy<T>>;
 };
-
-template<u32... Dims>
-struct BlockDims {
-    static constexpr u32 num_dims = sizeof...(Dims);
-    static constexpr std::array<u32, num_dims> values = {Dims...};
-
-    static constexpr u32 total_size() {
-        u32 prod = 1;
-        for (auto d : values) prod *= d;
-        return prod;
-    }
-
-    // Flatten coordinates → linear index
-    static constexpr u32 coords_to_linear(const std::array<u32, num_dims>& coords) noexcept {
-        u32 idx = 0;
-        u32 stride = 1;
-        for (std::size_t i = 0; i < num_dims; ++i) {
-            idx += coords[i] * stride;
-            stride *= values[i];
-        }
-        return idx;
-    }
-};
-
-// Assure BlockShape is of type BlockDims
-template<typename>
-struct is_block_dims : std::false_type {};
-
-template<u32... Dims>
-struct is_block_dims<BlockDims<Dims...>> : std::true_type {};
-
-template<typename T>
-concept BlockDimsType = is_block_dims<std::remove_cvref_t<T>>::value;
 
 template<
     std::size_t ScalarSizeBytes,
@@ -68,9 +36,9 @@ Type<Block<ScalarSizeBytes, BlockShape, Float, ArithmeticPolicy, QuantizationPol
 public:
     using FloatType = Float;
 
-    static constexpr u32 num_dimensions = BlockShape::num_dims;
-    static constexpr auto dims = BlockShape::values;
-    static constexpr u32 num_elems = BlockShape::total_size();
+    static constexpr u32 NumDimensions = BlockShape::num_dims;
+    static constexpr auto Dims = BlockShape::values;
+    static constexpr u32 NumElems = BlockShape::TotalSize();
 
     using PackedFloat = std::array<u8, Float::SizeBytes()>;
     using ScalarType = std::array<u8, ScalarSizeBytes>;
@@ -82,7 +50,7 @@ public:
         //       ideally this is also pluggable, but could be a runtime dep
         //       instead of a static, typename, injection.
 
-        auto data = std::array<PackedFloat, num_elems>();
+        auto data = std::array<PackedFloat, NumElems>();
              data.fill(Float::Marshal(0));
 
         data_ = data;
@@ -94,27 +62,20 @@ public:
     }
 
     // Constructors from given element types
-    explicit Block(std::array<f64, num_elems> v) : Block(QuantizationPolicyType::Quantize(v)) {}
-    explicit Block(std::array<PackedFloat, num_elems> init) : data_(init), scalar_(0) {}
-    explicit Block(std::array<PackedFloat, num_elems> data, ScalarType scalar) : data_(data), scalar_(scalar) {}
+    explicit Block(std::array<f64, NumElems> v) : Block(QuantizationPolicyType::Quantize(v)) {}
+    explicit Block(std::array<PackedFloat, NumElems> init) : data_(init), scalar_(0) {}
+    explicit Block(std::array<PackedFloat, NumElems> data, ScalarType scalar) : data_(data), scalar_(scalar) {}
 
     Block(const Block&) = default;
 
     [[nodiscard]] static constexpr std::size_t Length()
     {
-        return num_elems;
+        return NumElems;
     }
 
     [[nodiscard]] PackedFloat At(u16 index) const
     {
         return data_[index];
-    }
-
-    explicit Block(std::array<PackedFloat, ScalarSizeBytes> init) : data_(init), scalar_(0) {}
-
-    [[nodiscard]] static std::size_t NumElems()
-    {
-        return num_elems;
     }
 
     [[nodiscard]] u64 Scalar() const
@@ -128,10 +89,10 @@ public:
         return 1 << scalar;
     }
 
-    [[nodiscard]] std::array<f64, num_elems> Spread() const
+    [[nodiscard]] std::array<f64, NumElems> Spread() const
     {
-        std::array<f64, num_elems> blockUnscaledFloats;
-        for (int i = 0; i < num_elems; i++)
+        std::array<f64, NumElems> blockUnscaledFloats;
+        for (int i = 0; i < NumElems; i++)
         {
             auto packedFloat = At(i);
             const f64 fullPrecision = Float::Unmarshal(packedFloat);
@@ -142,12 +103,13 @@ public:
     }
 
     [[nodiscard]] std::string asString() const {
-        std::array<f64, num_elems> fullPrecisionValues = Spread();
+        // TODO: Nested square brackets for multidim blocks
+        std::array<f64, NumElems> fullPrecisionValues = Spread();
         std::string value;
 
         value += "Scalar: " + std::to_string(Scalar()) + "\n";
         value += "Elements: [\n";
-        for (int i = 0; i < num_elems; i++)
+        for (int i = 0; i < NumElems; i++)
         {
             f64 fullPrecisionFloat = fullPrecisionValues[i];
             value += std::format("\t ({}) {:.3f} \n", i, fullPrecisionFloat);
@@ -163,8 +125,8 @@ public:
         static_assert(sizeof...(idxs) == BlockShape::num_dims,
                       "Incorrect number of indices for this Block");
         std::array<u32, sizeof...(idxs)> coords{static_cast<u32>(idxs)...};
-        u32 linear = BlockShape::coords_to_linear(coords);
-        return data_[linear];
+        u32 linear = BlockShape::CoordsToLinear(coords);
+        return data_.at(linear);
     }
 
     // Templated for parameter packs
@@ -173,13 +135,13 @@ public:
         static_assert(sizeof...(idxs) == BlockShape::num_dims,
                       "Incorrect number of indices for this Block");
         std::array<u32, sizeof...(idxs)> coords{static_cast<u32>(idxs)...};
-        u32 linear = BlockShape::coords_to_linear(coords);
-        return data_[linear];
+        u32 linear = BlockShape::CoordsToLinear(coords);
+        return data_.at(linear);
     }
 
 private:
     // Using Row-Major ordering
-    std::array<PackedFloat, num_elems> data_;
+    std::array<PackedFloat, NumElems> data_;
     std::array<u8, ScalarSizeBytes> scalar_;
 };
 

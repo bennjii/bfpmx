@@ -25,10 +25,10 @@ public:
     >;
     using PackedFloat = std::array<u8, Float::SizeBytes()>;
 
-    static BlockFmt Quantize(std::array<f64, BlockShape::total_size()> &vec)
+    static BlockFmt Quantize(std::array<f64, BlockShape::TotalSize()> &vec)
     {
         u64 largestBiasedExponent = 0;
-        for (int i = 0; i < BlockShape::total_size(); i++)
+        for (int i = 0; i < BlockShape::TotalSize(); i++)
         {
             u64 bits;
             std::memcpy(&bits, &vec[i], sizeof(bits));
@@ -43,8 +43,8 @@ public:
         const u64 exponent = NormalizedExponent(largestUnbiasedExponent);
         f64 scaleFactor = std::pow(2.0, exponent);
 
-        std::array<PackedFloat, BlockShape::total_size()> blockScaledFloats;
-        for (int i = 0; i < BlockShape::total_size(); i++)
+        std::array<PackedFloat, BlockShape::TotalSize()> blockScaledFloats;
+        for (int i = 0; i < BlockShape::TotalSize(); i++)
         {
             f64 scaledValue = vec[i] / scaleFactor;
             PackedFloat packed = Float::Marshal(scaledValue);
@@ -62,10 +62,10 @@ public:
         return BlockFmt(blockScaledFloats, packedScalar);
     }
 
-    static std::array<f64, BlockShape::total_size()> UnQuantize(const BlockFmt &block)
+    static std::array<f64, BlockShape::TotalSize()> UnQuantize(const BlockFmt &block)
     {
-        std::array<f64, BlockShape::total_size()> blockUnscaledFloats;
-        for (int i = 0; i < BlockShape::total_size(); i++)
+        std::array<f64, BlockShape::TotalSize()> blockUnscaledFloats;
+        for (int i = 0; i < BlockShape::TotalSize(); i++)
         {
             auto packedFloat = block.At(i);
             f64 fullPrecision = Float::Unmarshal(packedFloat);
