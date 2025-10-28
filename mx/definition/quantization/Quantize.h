@@ -8,26 +8,26 @@
 #include "arch/prelude.h"
 
 template<
-    template <std::size_t, std::size_t, IFloatRepr> typename T,
+    template <std::size_t, BlockDimsType, IFloatRepr> typename T,
     std::size_t ScalarBytes,
-    std::size_t Size,
+    typename BlockShape, // Concept can not be constrained
     typename Float
 >
-concept IQuantize = IFloatRepr<Float> && requires(std::array<f64, Size> &v, Block<
+concept IQuantize = IFloatRepr<Float> && BlockDimsType<BlockShape> && requires(std::array<f64, BlockShape::TotalSize()> &v, Block<
         ScalarBytes,
-        Size,
+        BlockShape,
         Float,
         CPUArithmetic,
         T
     > &b) {
-    { T<ScalarBytes, Size, Float>::Quantize(v) } -> std::convertible_to<Block<
+    { T<ScalarBytes, BlockShape, Float>::Quantize(v) } -> std::convertible_to<Block<
         ScalarBytes,
-        Size,
+        BlockShape,
         Float,
         CPUArithmetic,
         T>
     >;
-    { T<ScalarBytes, Size, Float>::UnQuantize(b) } -> std::same_as<std::array<f64, Size>>;
+    { T<ScalarBytes, BlockShape, Float>::UnQuantize(b) } -> std::same_as<std::array<f64, BlockShape::TotalSize()>>;
 };
 
-#endif //BFPMX_QUANTIZE_H
+#endif //BFPMX_QUANTIZE_H/
