@@ -12,4 +12,4 @@
 #include "MaximumFractionalQuantization.h"
 #include "SharedExponentQuantization.h"
 
-#endif //BFPMX_PRELUDE_QUANTIZATION_H
+#endif // BFPMX_PRELUDE_QUANTIZATION_H
