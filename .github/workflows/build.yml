@@ -1,4 +1,4 @@
-name: Build
+name: Build Artefact
 on: [push, pull_request]
 
 jobs:
@@ -6,11 +6,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Install CMake 4.x
         uses: lukka/get-cmake@v4.1.2
+
       - name: Create build plan
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
       - name: Create makefile
         run: cmake .
-      - name: Build binaries
-        run: cmake --build build
+
+      - name: Build library
+        run: cmake --build build --target mylib --config Release
+
+      - name: Upload artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bfpmx-artifacts
+          path: build/artifacts/lib/

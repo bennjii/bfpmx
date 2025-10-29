@@ -10,6 +10,12 @@ add_custom_target(fix_compile_commands ALL
         COMMENT "Fixing compile_commands.json for clang-tidy"
 )
 
+set_target_properties(bfpmx PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/artifacts/lib"
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/artifacts/lib"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/artifacts/bin"
+)
+
 file(GLOB_RECURSE SOURCES "mx/*.cpp")
 list(APPEND SOURCES ${HEADERS})
 
