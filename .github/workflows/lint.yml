@@ -19,7 +19,7 @@ jobs:
         run: cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
       - name: Run clang-tidy
-        run: run-clang-tidy -p build/
+        run: run-clang-tidy -p build/ '^(?!.*\.deps/).*\.cpp$'
 
       - name: Check formatting
         run: clang-format --dry-run --Werror $(find src include -name '*.cpp' -o -name '*.h')
