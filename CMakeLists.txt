@@ -14,19 +14,21 @@ file(GLOB_RECURSE SOURCES "mx/*.cpp")
 list(APPEND SOURCES ${HEADERS})
 
 add_library(bfpmx STATIC ${SOURCES})
-
 target_include_directories(bfpmx PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/mx)
+
+enable_testing()
+add_subdirectory(test)
 add_definitions(-DUNIT_TESTS)
 
-# TESTING #
-add_executable(test_main test/main.cpp)
-target_link_libraries(test_main PRIVATE bfpmx)
+# Example #
+add_executable(example_main example/main.cpp)
+target_link_libraries(example_main PRIVATE bfpmx)
 
-add_executable(test_marshal test/marshalling.cpp)
-target_link_libraries(test_marshal PRIVATE bfpmx)
+add_executable(example_marshal example/marshalling.cpp)
+target_link_libraries(example_marshal PRIVATE bfpmx)
 
-add_executable(test_playground test/playground.cpp)
-target_link_libraries(test_playground PRIVATE bfpmx)
+add_executable(example_playground example/playground.cpp)
+target_link_libraries(example_playground PRIVATE bfpmx)
 
-add_executable(test_quant test/quant.cpp)
-target_link_libraries(test_quant PRIVATE bfpmx)
+add_executable(example_quant example/quant.cpp)
+target_link_libraries(example_quant PRIVATE bfpmx)
