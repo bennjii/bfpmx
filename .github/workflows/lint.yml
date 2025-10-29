@@ -1,18 +1,26 @@
 name: Lint & Format C++
+
 on: [pull_request]
 
 jobs:
   lint:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Install CMake 4.x
         uses: lukka/get-cmake@v4.1.2
+
       - name: Install clang-tidy and clang-format
         run: sudo apt-get install -y clang-tidy clang-format
+
       - name: Build compile_commands.json
         run: cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
       - name: Run clang-tidy
         run: run-clang-tidy -p build/
+
       - name: Check formatting
         run: clang-format --dry-run --Werror $(find src include -name '*.cpp' -o -name '*.h')
+
