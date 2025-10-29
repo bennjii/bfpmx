@@ -15,6 +15,9 @@ CMakeCache.txt
 Makefile
 *.json
 cmake_install.cmake
+_deps
+.deps
+DartConfiguration.tcl
 
 # Editors
 /.idea
