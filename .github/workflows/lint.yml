@@ -21,6 +21,9 @@ jobs:
       - name: Run clang-tidy
         run: run-clang-tidy -p build/ '^(?!.*\.deps/).*\.cpp$'
 
+      - name: Check version
+        run: clang-format --version
+
       - name: Check formatting
         run: clang-format --dry-run --Werror $(find mx include -name '*.cpp' -o -name '*.h')
 
