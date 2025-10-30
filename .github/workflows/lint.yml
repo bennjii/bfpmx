@@ -12,11 +12,8 @@ jobs:
       - name: Install CMake 4.x
         uses: lukka/get-cmake@v4.1.2
 
-      - name: Add APT v21 Clang
-        run: wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-
-      - name: Install clang-tidy and clang-format
-        run: sudo apt-get install -y clang-tidy clang-format-21
+      - name: Add APT v21 LLVM
+        run: wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && sudo ./llvm.sh 21
 
       - name: Build compile_commands.json
         run: cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
