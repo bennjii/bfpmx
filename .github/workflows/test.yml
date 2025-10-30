@@ -1,0 +1,23 @@
+name: Test C++
+
+on: [pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install CMake 4.x
+        uses: lukka/get-cmake@v4.1.2
+
+      - name: Configure build
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Run CTest
+        working-directory: build
+        run: ctest --output-on-failure

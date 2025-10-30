@@ -1,7 +1,7 @@
 # Unignore all with extensions
 !*.*
 
-test_*
+example_*
 
 # CMake Artefacts
 CMakeCache.txt
@@ -11,9 +11,13 @@ CMakeCache.txt
 /cmake-build-release
 /Testing
 /build
+*.cmake
 Makefile
 *.json
 cmake_install.cmake
+_deps
+.deps
+DartConfiguration.tcl
 
 # Editors
 /.idea
