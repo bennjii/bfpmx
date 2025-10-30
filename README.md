@@ -5,6 +5,12 @@ You'll also need to ensure you have CMake v4 or above,
 preferably CMake v4.1.2. You'll also need python of
 a version above or equal to v3.9.
 
+We use clang tools version 21. As such, `clang-tidy-21`, 
+`clang-format-21` and `clang-21` are the valid binaries
+for this program. Newer versions may work, however CI
+will run formatting against v21, so there may be
+discrepancies with differing versions.
+
 Make sure you have `clang`, `clang-tidy` and `clang++` on
 your path.
 
