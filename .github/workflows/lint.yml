@@ -13,7 +13,9 @@ jobs:
         uses: lukka/get-cmake@v4.1.2
 
       - name: Install clang-tidy and clang-format
-        run: sudo apt-get install -y clang-tidy clang-format-21
+        run:
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo apt-get install -y clang-tidy clang-format-21
 
       - name: Build compile_commands.json
         run: cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
