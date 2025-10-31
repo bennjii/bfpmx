@@ -13,4 +13,4 @@
 
 #include "quantization/prelude.h"
 
-#endif //BFPMX_PRELUDE_H
+#endif // BFPMX_PRELUDE_H

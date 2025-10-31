@@ -5,10 +5,6 @@
 #ifndef UNTITLED_CUDA_H
 #define UNTITLED_CUDA_H
 
+class CUDA {};
 
-class CUDA
-{
-};
-
-
-#endif //UNTITLED_CUDA_H
+#endif // UNTITLED_CUDA_H

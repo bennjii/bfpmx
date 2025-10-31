@@ -8,39 +8,38 @@
 #include "arch/prelude.h"
 #include "definition/block_float/repr/FloatRepr.h"
 
-template<u32... Dims>
-struct BlockDims {
-    static constexpr u32 num_dims = sizeof...(Dims);
-    using Dimensions = std::array<u32, num_dims>;
-    static constexpr Dimensions values = {Dims...};
+template <u32... Dims> struct BlockDims {
+  static constexpr u32 num_dims = sizeof...(Dims);
+  using Dimensions = std::array<u32, num_dims>;
+  static constexpr Dimensions values = {Dims...};
 
-    static constexpr u32 TotalSize() {
-        u32 prod = 1;
-        for (auto d : values) prod *= d;
-        return prod;
+  static constexpr u32 TotalSize() {
+    u32 prod = 1;
+    for (auto d : values)
+      prod *= d;
+    return prod;
+  }
+
+  // Flatten coordinates → linear index
+  static constexpr u32 CoordsToLinear(const Dimensions &coords) noexcept {
+    u32 idx = 0;
+    u32 stride = 1;
+    for (std::size_t i = 0; i < num_dims; ++i) {
+      idx += coords[i] * stride;
+      stride *= values[i];
     }
+    return idx;
+  }
 
-    // Flatten coordinates → linear index
-    static constexpr u32 CoordsToLinear(const Dimensions& coords) noexcept {
-        u32 idx = 0;
-        u32 stride = 1;
-        for (std::size_t i = 0; i < num_dims; ++i) {
-            idx += coords[i] * stride;
-            stride *= values[i];
-        }
-        return idx;
-    }
-
-    // TODO: Linear to coords
+  // TODO: Linear to coords
 };
 
 // Assure BlockShape is of type BlockDims
-template<typename>
-struct isBlockDims : std::false_type {};
+template <typename> struct isBlockDims : std::false_type {};
 
-template<u32... Dims>
+template <u32... Dims>
 struct isBlockDims<BlockDims<Dims...>> : std::true_type {};
 
-template<typename T>
+template <typename T>
 concept BlockDimsType = isBlockDims<std::remove_cvref_t<T>>::value;
 #endif
