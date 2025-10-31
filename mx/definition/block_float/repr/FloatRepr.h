@@ -280,6 +280,10 @@ public:
             out[i] = static_cast<u8>((encoded >> (8 * i)) & 0xFF);
         return out;
     }
+
+    static constexpr f64 Loss(f64 input) {
+        return input - Unmarshal(Marshal(input));
+    }
 };
 
 namespace fp8
