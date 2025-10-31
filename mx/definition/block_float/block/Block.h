@@ -68,7 +68,33 @@ public:
 
   [[nodiscard]] static constexpr std::size_t Length() { return NumElems; }
 
-  [[nodiscard]] PackedFloat At(u16 index) const { return data_[index]; }
+  [[nodiscard]] std::optional<PackedFloat> At(u16 index) const {
+    if (index >= NumElems) {
+      return std::nullopt;
+    }
+
+    return data_[index];
+  }
+
+  // A variant of `At` which runs on the provided assertions that
+  // the underlying data must exist at the index.
+  [[nodiscard]] PackedFloat AtUnsafe(u16 index) const {
+    return data_[index];
+  }
+
+  [[nodiscard]] std::optional<f64> RealizeAt(const u16 index) const {
+    auto packedFloat = At(index);
+    if (!packedFloat.has_value()) {
+      return std::nullopt;
+    }
+
+    const f64 fullPrecision = Float::Unmarshal(*packedFloat);
+    return fullPrecision * Scalar();
+  }
+
+  [[nodiscard]] f64 RealizeAtUnsafe(const u16 index) const {
+    return Float::Unmarshal(AtUnsafe(index)) * Scalar();
+  }
 
   [[nodiscard]] u64 Scalar() const {
     u64 scalar = 0;
@@ -82,9 +108,7 @@ public:
   [[nodiscard]] std::array<f64, NumElems> Spread() const {
     std::array<f64, NumElems> blockUnscaledFloats;
     for (int i = 0; i < NumElems; i++) {
-      auto packedFloat = At(i);
-      const f64 fullPrecision = Float::Unmarshal(packedFloat);
-      blockUnscaledFloats[i] = fullPrecision * Scalar();
+      blockUnscaledFloats[i] = RealizeAtUnsafe(i);
     }
 
     return blockUnscaledFloats;
@@ -124,6 +148,15 @@ public:
     std::array<u32, sizeof...(idxs)> coords{static_cast<u32>(idxs)...};
     u32 linear = BlockShape::CoordsToLinear(coords);
     return data_.at(linear);
+  }
+
+  static Block Quantize(std::array<f64, BlockShape::TotalSize()> &vec) {
+    return QuantizationPolicyType::Quantize(vec);
+  }
+
+  static std::array<f64, BlockShape::TotalSize()>
+  UnQuantize(const Block &block) {
+    return QuantizationPolicyType::Unquantize(block);
   }
 
 private:
