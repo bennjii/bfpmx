@@ -41,9 +41,27 @@ TEST_CASE( "FloatRepr Nomenclature" ) {
 }
 
 TEST_CASE( "FloatRepr Loss Limiter" ) {
+  // Values selected are at the limit of what is representable by the
+  // given datatype. This test ensures no regressions occur even within
+  // some small range.
+
   SECTION( "fp8" ) {
-    REQUIRE( fp8::E4M3Type::Loss(1.0) <= 0.125 );
-    REQUIRE( fp8::E5M2Type::Loss(1.0) <= 0.125 );
+    // Exact Representation
+
+    REQUIRE( fp8::E4M3Type::Loss(1.0) <= 0.0 );
+    REQUIRE( fp8::E5M2Type::Loss(1.0) <= 0.0 );
+    // Exact Representation
+
+    REQUIRE( fp8::E4M3Type::Loss(5.0) <= 0.0 );
+    REQUIRE( fp8::E5M2Type::Loss(5.0) <= 0.0 );
+
+    // Exact Representation
+    REQUIRE( fp8::E4M3Type::Loss(20.0) <= 0.0 );
+    REQUIRE( fp8::E5M2Type::Loss(20.0) <= 0.0 );
+
+    // Some loss within a given acceptance criteria
+    REQUIRE( fp8::E4M3Type::Loss(200.0) <= 8.0 );
+    REQUIRE( fp8::E5M2Type::Loss(200.0) <= 8.0 );
   }
 
   SECTION( "fp6" ) {
