@@ -8,6 +8,4 @@
 
 #include "definition/prelude.h"
 
-TEST_CASE("BlockDims Construction") {
-  REQUIRE(true);
-}
+TEST_CASE("BlockDims Construction") { REQUIRE(true); }
