@@ -262,6 +262,10 @@ public:
   static constexpr f64 Loss(f64 input) {
     return input - Unmarshal(Marshal(input));
   }
+
+  static constexpr f64 Epsilon() {
+    return std::pow(2, -(SignificandBits() - 1.0));
+  }
 };
 
 namespace fp8 {
