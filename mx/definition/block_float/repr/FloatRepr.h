@@ -252,12 +252,12 @@ public:
                         (exp << SignificandBits()) |
                         (frac & ((1ull << SignificandBits()) - 1));
 
-        // store to bytes
-        std::array<u8, SizeBytes()> out{};
-        for (u32 i = 0; i < SizeBytes(); ++i)
-            out[i] = static_cast<u8>((encoded >> (8 * i)) & 0xFF);
-        return out;
-    }
+    // store to bytes
+    std::array<u8, SizeBytes()> out{};
+    for (u32 i = 0; i < SizeBytes(); ++i)
+      out[i] = static_cast<u8>((encoded >> (8 * i)) & 0xFF);
+    return out;
+  }
 
   static constexpr f64 Loss(f64 input) {
     return input - Unmarshal(Marshal(input));
