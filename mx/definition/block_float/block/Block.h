@@ -68,28 +68,26 @@ public:
 
   [[nodiscard]] static constexpr std::size_t Length() { return NumElems; }
 
-  [[nodiscard]] std::optional<PackedFloat> At(u16 index) const {
+  [[nodiscard]] std::optional<PackedFloat> At(const u16 index) const {
     if (index >= NumElems) {
       return std::nullopt;
     }
 
-    return data_[index];
+    return AtUnsafe(index);
   }
 
   // A variant of `At` which runs on the provided assertions that
   // the underlying data must exist at the index.
-  [[nodiscard]] PackedFloat AtUnsafe(u16 index) const {
+  [[nodiscard]] PackedFloat AtUnsafe(const u16 index) const {
     return data_[index];
   }
 
   [[nodiscard]] std::optional<f64> RealizeAt(const u16 index) const {
-    auto packedFloat = At(index);
-    if (!packedFloat.has_value()) {
+    if (index >= NumElems) {
       return std::nullopt;
     }
 
-    const f64 fullPrecision = Float::Unmarshal(*packedFloat);
-    return fullPrecision * Scalar();
+    return RealizeAtUnsafe(index);
   }
 
   [[nodiscard]] f64 RealizeAtUnsafe(const u16 index) const {
