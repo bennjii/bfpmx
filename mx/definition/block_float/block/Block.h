@@ -148,6 +148,30 @@ public:
     return data_.at(linear);
   }
 
+<<<<<<< Updated upstream
+=======
+  // Templated for parameter packs
+  template <typename... IndexTypes>
+  constexpr std::optional<f64> operator[](IndexTypes... idxs) noexcept {
+    static_assert(sizeof...(idxs) == BlockShape::num_dims,
+                  "Incorrect number of indices for this Block");
+    std::array<u32, sizeof...(idxs)> coords{static_cast<u32>(idxs)...};
+    const u32 linear = BlockShape::CoordsToLinear(coords);
+    return RealizeAt(linear);
+  }
+
+  // Templated for parameter packs
+  template <typename... IndexTypes>
+  constexpr const std::optional<f64> &
+  operator[](IndexTypes... idxs) const noexcept {
+    static_assert(sizeof...(idxs) == BlockShape::num_dims,
+                  "Incorrect number of indices for this Block");
+    std::array<u32, sizeof...(idxs)> coords{static_cast<u32>(idxs)...};
+    const u32 linear = BlockShape::CoordsToLinear(coords);
+    return RealizeAt(linear);
+  }
+
+>>>>>>> Stashed changes
   static Block Quantize(std::array<f64, BlockShape::TotalSize()> &vec) {
     return QuantizationPolicyType::Quantize(vec);
   }

@@ -30,6 +30,8 @@ concept IFloatRepr = requires(f64 v, std::array<u8, T::SizeBytes()> a) {
   { T::ExponentBits() } -> std::convertible_to<u32>;
   { T::SignBits() } -> std::convertible_to<u32>;
 
+  { T::Epsilon() } -> std::convertible_to<f64>;
+
   // TODO: Add the following functions:
   //  - Max() -> f64
   //  - Min() -> f64
