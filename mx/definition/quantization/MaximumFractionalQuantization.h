@@ -48,7 +48,7 @@ public:
   UnQuantize(const BlockFmt &block) {
     std::array<f64, BlockShape::TotalSize()> blockUnscaledFloats;
     for (int i = 0; i < BlockShape::TotalSize(); i++) {
-      auto packedFloat = block.At(i);
+      auto packedFloat = block.AtUnsafe(i);
       f64 fullPrecision = Float::Unmarshal(packedFloat);
       blockUnscaledFloats[i] = fullPrecision * block.Scalar();
     }
