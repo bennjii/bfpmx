@@ -26,14 +26,9 @@ TEST_CASE("Blank Block Construction") {
 }
 
 TEST_CASE("Block Construction") {
-<<<<<<< Updated upstream
-  std::array<f64, 32> EXAMPLE_ARRAY =
-      std::to_array<f64, 32>({1.2f, 3.4f, 5.6f, 2.1f, 1.3f, -6.5f});
-=======
   std::array<f64, TestingBlock::NumElems> EXAMPLE_ARRAY =
       std::to_array<f64, TestingBlock::NumElems>(
           {1.2f, 3.4f, 5.6f, 2.1f, 1.3f, -6.5f});
->>>>>>> Stashed changes
 
   SECTION("construction") {
     const auto QuantizedBlock = TestingBlock::Quantize(EXAMPLE_ARRAY);
