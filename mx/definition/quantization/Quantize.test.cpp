@@ -31,8 +31,7 @@ TEST_CASE("Maximum Fractional Quantization") {
 
 TEST_CASE("Shared Exponent Quantization") {
   using SharedExponentBlock = TestingBlock<SharedExponentQuantization>;
-  SharedExponentBlock block =
-      SharedExponentBlock::Quantize(EXAMPLE_ARRAY);
+  SharedExponentBlock block = SharedExponentBlock::Quantize(EXAMPLE_ARRAY);
 
   // Should match all from original array, within some given bound
   for (u32 i = 0; i < SharedExponentBlock::NumElems; i++) {
