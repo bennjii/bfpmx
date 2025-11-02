@@ -148,8 +148,6 @@ public:
     return data_.at(linear);
   }
 
-<<<<<<< Updated upstream
-=======
   // Templated for parameter packs
   template <typename... IndexTypes>
   constexpr std::optional<f64> operator[](IndexTypes... idxs) noexcept {
@@ -171,7 +169,6 @@ public:
     return RealizeAt(linear);
   }
 
->>>>>>> Stashed changes
   static Block Quantize(std::array<f64, BlockShape::TotalSize()> &vec) {
     return QuantizationPolicyType::Quantize(vec);
   }
