@@ -7,7 +7,6 @@
 
 #include "definition/alias.h"
 
-#include <format>
 #include <type_traits>
 
 template <typename T> struct CPUArithmetic {
@@ -15,9 +14,8 @@ template <typename T> struct CPUArithmetic {
     using ElemType = f64;
     std::array<ElemType, T::Length()> result;
 
-    using BlockType = std::remove_cvref_t<decltype(lhs)>;
-    auto l = BlockType::QuantizationPolicyType::UnQuantize(lhs);
-    auto r = BlockType::QuantizationPolicyType::UnQuantize(rhs);
+    auto l = lhs.Spread();
+    auto r = rhs.Spread();
 
     for (std::size_t i = 0; i < T::Length(); ++i)
       result[i] = l[i] + r[i];
@@ -29,9 +27,8 @@ template <typename T> struct CPUArithmetic {
     using ElemType = f64;
     std::array<ElemType, T::dataCount()> result;
 
-    using BlockType = std::remove_cvref_t<decltype(lhs)>;
-    auto l = BlockType::QuantizationPolicyType::UnQuantize(lhs);
-    auto r = BlockType::QuantizationPolicyType::UnQuantize(rhs);
+    auto l = lhs.Spread();
+    auto r = rhs.Spread();
 
     for (std::size_t i = 0; i < T::dataCount(); ++i)
       result[i] = l[i] - r[i];
@@ -43,9 +40,8 @@ template <typename T> struct CPUArithmetic {
     using ElemType = f64;
     std::array<ElemType, T::dataCount()> result;
 
-    using BlockType = std::remove_cvref_t<decltype(lhs)>;
-    auto l = BlockType::QuantizationPolicyType::UnQuantize(lhs);
-    auto r = BlockType::QuantizationPolicyType::UnQuantize(rhs);
+    auto l = lhs.Spread();
+    auto r = rhs.Spread();
 
     for (std::size_t i = 0; i < T::dataCount(); ++i)
       result[i] = l[i] * r[i];
@@ -57,9 +53,8 @@ template <typename T> struct CPUArithmetic {
     using ElemType = f64;
     std::array<ElemType, T::dataCount()> result;
 
-    using BlockType = std::remove_cvref_t<decltype(lhs)>;
-    auto l = BlockType::QuantizationPolicyType::UnQuantize(lhs);
-    auto r = BlockType::QuantizationPolicyType::UnQuantize(rhs);
+    auto l = lhs.Spread();
+    auto r = rhs.Spread();
 
     for (std::size_t i = 0; i < T::dataCount(); ++i)
       result[i] = l[i] / r[i];
