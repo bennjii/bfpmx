@@ -19,9 +19,6 @@ concept IQuantize =
         T<ScalarBytes, BlockShape, Float>::Quantize(v)
       } -> std::convertible_to<
           Block<ScalarBytes, BlockShape, Float, CPUArithmetic, T>>;
-      {
-        T<ScalarBytes, BlockShape, Float>::UnQuantize(b)
-      } -> std::same_as<std::array<f64, BlockShape::TotalSize()>>;
     };
 
 #endif // BFPMX_QUANTIZE_H/
