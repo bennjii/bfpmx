@@ -152,11 +152,6 @@ public:
     return QuantizationPolicyType::Quantize(vec);
   }
 
-  static std::array<f64, BlockShape::TotalSize()>
-  UnQuantize(const Block &block) {
-    return QuantizationPolicyType::Unquantize(block);
-  }
-
 private:
   // Using Row-Major ordering
   std::array<PackedFloat, NumElems> data_;
