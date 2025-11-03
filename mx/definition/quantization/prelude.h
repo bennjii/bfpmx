@@ -9,6 +9,7 @@
 #include "Quantize.h"
 
 // Concrete Implementations
+#include "L2NormQuantization.h"
 #include "MaximumFractionalQuantization.h"
 #include "SharedExponentQuantization.h"
 
