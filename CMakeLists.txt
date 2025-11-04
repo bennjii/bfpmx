@@ -89,6 +89,9 @@ target_link_libraries(example_main PRIVATE bfpmx)
 add_executable(example_marshal example/marshalling.cpp)
 target_link_libraries(example_marshal PRIVATE bfpmx)
 
+add_executable(example_marshal_profiler example/marshalling_with_profiler.cpp)
+target_link_libraries(example_marshal_profiler PRIVATE bfpmx)
+
 add_executable(example_playground example/playground.cpp)
 target_link_libraries(example_playground PRIVATE bfpmx)
 
