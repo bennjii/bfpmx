@@ -48,18 +48,6 @@ public:
     return BlockFmt(blockScaledFloats, packedScalar);
   }
 
-  static std::array<f64, BlockShape::TotalSize()>
-  UnQuantize(const BlockFmt &block) {
-    std::array<f64, BlockShape::TotalSize()> blockUnscaledFloats;
-    for (int i = 0; i < BlockShape::TotalSize(); i++) {
-      auto packedFloat = block.At(i);
-      f64 fullPrecision = Float::Unmarshal(packedFloat);
-      blockUnscaledFloats[i] = fullPrecision * block.Scalar();
-    }
-
-    return blockUnscaledFloats;
-  }
-
 private:
   static constexpr u64 MaximumScalarExponentValue() {
     return (static_cast<u64>(1) << (ScalarBytes * 8)) - 1;
