@@ -28,13 +28,43 @@
 #include <format>
 #include <iostream>
 
-#if _WIN32
-#include <intrin.h>
-#include <windows.h>
-#else // _WIN32
-#include <x86intrin.h>
-#include <sys/time.h>
-#endif // _WIN32
+#if defined(_WIN32)
+
+    // Windows
+    #include <intrin.h>
+    #include <windows.h>
+
+#elif defined(__APPLE__)
+
+    // macOS
+    #include <TargetConditionals.h>
+
+    #if TARGET_CPU_X86_64
+        #include <x86intrin.h>
+    #elif TARGET_CPU_ARM64
+        // ARM (Apple Silicon)
+        #include <arm_neon.h>
+    #else
+        #error "Unsupported Apple CPU architecture"
+    #endif
+
+    #include <sys/time.h>
+
+#else
+
+    // Linux / other Unix
+    #include <sys/time.h>
+
+    #if defined(__x86_64__) || defined(__i386__)
+        #include <x86intrin.h>
+    #elif defined(__aarch64__) || defined(__arm__)
+        #include <arm_neon.h>
+    #else
+        #warning "Unknown architecture; SIMD unavailable"
+    #endif
+
+#endif
+
 
 namespace profiler {
 
