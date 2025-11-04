@@ -3,7 +3,7 @@
 #include <ostream>
 
 #define PROFILE 1
-#include "../profiler/profiler.h"
+#include "profiler/profiler.h"
 #include "definition/prelude.h"
 
 template<
