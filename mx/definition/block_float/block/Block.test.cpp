@@ -13,11 +13,6 @@ using TestingFloat = fp8::E4M3Type;
 using TestingBlock = Block<4, TestingDimensions, TestingFloat, CPUArithmetic,
                            SharedExponentQuantization>;
 
-constexpr f64 LEEWAY = 5.0f;
-bool fuzzyEqual(const f64 a, const f64 b) {
-  return std::abs(a - b) <= LEEWAY * TestingFloat::Epsilon();
-}
-
 TEST_CASE("Blank Block Construction") {
   const TestingBlock blankBlock;
 
@@ -31,8 +26,9 @@ TEST_CASE("Blank Block Construction") {
 }
 
 TEST_CASE("Block Construction") {
-  std::array<f64, 32> EXAMPLE_ARRAY =
-      std::to_array<f64, 32>({1.2f, 3.4f, 5.6f, 2.1f, 1.3f, -6.5f});
+  std::array<f64, TestingBlock::NumElems> EXAMPLE_ARRAY =
+      std::to_array<f64, TestingBlock::NumElems>(
+          {1.2f, 3.4f, 5.6f, 2.1f, 1.3f, -6.5f});
 
   SECTION("construction") {
     const auto QuantizedBlock = TestingBlock::Quantize(EXAMPLE_ARRAY);
@@ -40,6 +36,6 @@ TEST_CASE("Block Construction") {
     STATIC_REQUIRE(QuantizedBlock.NumDimensions == 1);
     STATIC_REQUIRE(QuantizedBlock.Length() == 32);
 
-    REQUIRE(fuzzyEqual(QuantizedBlock.RealizeAtUnsafe(0), 1.2f));
+    REQUIRE(FuzzyEqual<TestingFloat>(QuantizedBlock.RealizeAtUnsafe(0), 1.2f));
   }
 }
