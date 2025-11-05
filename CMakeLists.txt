@@ -67,6 +67,21 @@ endforeach()
 add_subdirectory(test)
 add_definitions(-DUNIT_TESTS)
 
+# CUDA
+include(CheckLanguage)
+check_language(CUDA)
+if (CMAKE_CUDA_COMPILER)
+    message(STATUS "CUDA is OK")
+    enable_language(CUDA)
+    set(CMAKE_CUDA_STANDARD 20)
+    set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+    set(CUDA_SEPARABLE_COMPILATION ON)
+    add_executable(example_cudatest example/cudatest.cu)
+    target_link_libraries(example_cudatest PRIVATE bfpmx)
+else()
+    message(STATUS "No CUDA")
+endif()
+
 # Examples #
 add_executable(example_main example/main.cpp)
 target_link_libraries(example_main PRIVATE bfpmx)
