@@ -169,7 +169,7 @@ public:
     return RealizeAt(linear);
   }
 
-  static Block Quantize(std::array<f64, BlockShape::TotalSize()> &vec) {
+  static Block Quantize(const std::array<f64, BlockShape::TotalSize()> &vec) {
     return QuantizationPolicyType::Quantize(vec);
   }
 
