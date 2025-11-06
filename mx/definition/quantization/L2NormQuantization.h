@@ -20,8 +20,8 @@ public:
       sum_of_squares += std::pow(vec[i], 2);
     }
 
-    const f64 scaleFactorFloat = sqrt(sum_of_squares);
-    const u32 scaleFactor = lround(log2(scaleFactorFloat));
+    const f64 scaleFactorFloat = sqrt(sum_of_squares / BlockShape::TotalSize());
+    const u32 scaleFactor = lround(scaleFactorFloat);
 
     std::array<PackedFloat, BlockShape::TotalSize()> blockScaledFloats;
     for (int i = 0; i < BlockShape::TotalSize(); i++) {
@@ -30,9 +30,10 @@ public:
       blockScaledFloats[i] = packed;
     }
 
+    const u32 scaleFactorExponent = log2(scaleFactor);
     std::array<u8, ScalarBytes> packedScalar;
     for (int i = 0; i < ScalarBytes; i++) {
-      packedScalar[i] = static_cast<u8>(scaleFactor >> (i * 8));
+      packedScalar[i] = static_cast<u8>(scaleFactorExponent >> (i * 8));
     }
 
     return BlockFmt(blockScaledFloats, packedScalar);
