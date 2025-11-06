@@ -20,7 +20,9 @@ concept IQuantize =
       } -> std::convertible_to<
           Block<ScalarBytes, BlockShape, Float, CPUArithmetic, T>>;
 
-      { T<ScalarBytes, BlockShape, Float>::Identity() } -> std::convertible_to<std::string>;
+      {
+        T<ScalarBytes, BlockShape, Float>::Identity()
+      } -> std::convertible_to<std::string>;
     };
 
 #endif // BFPMX_QUANTIZE_H/
