@@ -16,7 +16,8 @@ class MaximumFractionalQuantization {
 public:
   using BlockFmt = Block<ScalarBytes, BlockShape, Float, CPUArithmetic,
                          MaximumFractionalQuantization>;
-  static BlockFmt Quantize(std::array<f64, BlockShape::TotalSize()> &vec) {
+  static BlockFmt
+  Quantize(const std::array<f64, BlockShape::TotalSize()> &vec) {
     f64 largestValue = 0;
     for (int i = 0; i < BlockShape::TotalSize(); i++) {
       if (const f64 absValue = fabs(vec[i]); absValue > largestValue) {
@@ -43,6 +44,8 @@ public:
 
     return BlockFmt(blockScaledFloats, packedScalar);
   }
+
+  static std::string Identity() { return "MaximumFractionalQuantization"; }
 
 private:
   static f64 ScaleFactor(f64 HighestValueAbsolute) {
