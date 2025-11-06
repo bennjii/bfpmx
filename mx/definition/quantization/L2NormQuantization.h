@@ -14,7 +14,7 @@ public:
       Block<ScalarBytes, BlockShape, Float, CPUArithmetic, L2NormQuantization>;
   using PackedFloat = std::array<u8, Float::SizeBytes()>;
 
-  static BlockFmt Quantize(std::array<f64, BlockShape::TotalSize()> &vec) {
+  static BlockFmt Quantize(const std::array<f64, BlockShape::TotalSize()> &vec) {
     f64 sum_of_squares = 0;
     for (int i = 0; i < BlockShape::TotalSize(); i++) {
       sum_of_squares += std::pow(vec[i], 2);
@@ -36,6 +36,10 @@ public:
     }
 
     return BlockFmt(blockScaledFloats, packedScalar);
+  }
+
+  static std::string Identity() {
+    return "L2NormQuantization";
   }
 };
 
