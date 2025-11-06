@@ -11,10 +11,10 @@
 #include "definition/block_float/repr/FloatRepr.h"
 #include <iostream>
 
-template <std::size_t ScalarBytes, BlockDimsType BlockShape, IFloatRepr Float>
+template <std::size_t ScalarBytes, BlockDimsType BlockShape, IFloatRepr Float, template <typename> typename ArithmeticPolicy>
 class MaximumFractionalQuantization {
 public:
-  using BlockFmt = Block<ScalarBytes, BlockShape, Float, CPUArithmetic,
+  using BlockFmt = Block<ScalarBytes, BlockShape, Float, ArithmeticPolicy,
                          MaximumFractionalQuantization>;
   static BlockFmt Quantize(std::array<f64, BlockShape::TotalSize()> &vec) {
     f64 largestValue = 0;

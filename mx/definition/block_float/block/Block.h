@@ -23,7 +23,7 @@ template <template <typename> typename ImplPolicy> struct WithPolicy {
 template <std::size_t ScalarSizeBytes, BlockDimsType BlockShape,
           IFloatRepr Float, template <typename> typename ArithmeticPolicy,
           template <std::size_t, BlockDimsType,
-                    IFloatRepr> typename QuantizationPolicy>
+                    IFloatRepr, template <typename> typename ArithmeticPolicy_> typename QuantizationPolicy>
 class Block : public WithPolicy<ArithmeticPolicy>::template Type<
                   Block<ScalarSizeBytes, BlockShape, Float, ArithmeticPolicy,
                         QuantizationPolicy>> {
@@ -37,7 +37,7 @@ public:
   using PackedFloat = std::array<u8, Float::SizeBytes()>;
   using ScalarType = std::array<u8, ScalarSizeBytes>;
   using QuantizationPolicyType =
-      QuantizationPolicy<ScalarSizeBytes, BlockShape, Float>;
+      QuantizationPolicy<ScalarSizeBytes, BlockShape, Float, ArithmeticPolicy>;
 
   // Empty constructor
   Block() {

@@ -8,10 +8,10 @@
 #include <cstring>
 #include <iostream>
 
-template <std::size_t ScalarBytes, BlockDimsType BlockShape, IFloatRepr Float>
+template <std::size_t ScalarBytes, BlockDimsType BlockShape, IFloatRepr Float, template <typename> typename ArithmeticPolicy>
 class SharedExponentQuantization {
 public:
-  using BlockFmt = Block<ScalarBytes, BlockShape, Float, CPUArithmetic,
+  using BlockFmt = Block<ScalarBytes, BlockShape, Float, ArithmeticPolicy,
                          SharedExponentQuantization>;
   using PackedFloat = std::array<u8, Float::SizeBytes()>;
 
