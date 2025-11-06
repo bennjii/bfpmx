@@ -19,6 +19,10 @@ concept IQuantize =
         QuantizationPolicy<ScalarBytes, BlockShape, Float, ArithmeticPolicy>::Quantize(v)
       } -> std::convertible_to<
           Block<ScalarBytes, BlockShape, Float, ArithmeticPolicy, QuantizationPolicy>>;
+
+      {
+        QuantizationPolicy<ScalarBytes, BlockShape, Float, ArithmeticPolicy>::Identity()
+      } -> std::convertible_to<std::string>;
     };
 
 #endif // BFPMX_QUANTIZE_H/
