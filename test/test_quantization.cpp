@@ -13,23 +13,23 @@ using BlockFloat = fp8::E4M3Type;
 
 template<
     template <typename T> typename ArithmeticPolicy,
-    template <std::size_t, BlockDimsType, IFloatRepr> typename QuantizationPolicy
+    template <std::size_t, BlockDimsType, IFloatRepr, template<typename> typename ArithmeticPolicy_> typename QuantizationPolicy
 >
 using BlockFmt = Block<BlockScalar, BlockSize, BlockFloat, ArithmeticPolicy, QuantizationPolicy>;
 
 template<
     template <typename T> typename A,
-    template <std::size_t, BlockDimsType, IFloatRepr> typename Q
+    template <std::size_t, BlockDimsType, IFloatRepr, template<typename> typename A_> typename Q
 > BlockFmt<A, Q> New(const std::array<f64, BlockSize::TotalSize()> &full_precision) {
     return BlockFmt<A, Q>::Quantize(full_precision);
 }
 
 template<
     template <typename T> typename A,
-    template <std::size_t, BlockDimsType, IFloatRepr> typename Q
+    template <std::size_t, BlockDimsType, IFloatRepr, template<typename> typename A_> typename Q
 >
 void Test(const std::array<f64, BlockSize::TotalSize()> &full_precision) {
-    using Quantizer = Q<BlockScalar, BlockSize, BlockFloat>;
+    using Quantizer = Q<BlockScalar, BlockSize, BlockFloat, A>;
 
     BlockFmt<A, Q> block = New<A, Q>(full_precision);
 
@@ -69,7 +69,7 @@ void TestAllArithmetic(const std::array<f64, BlockSize::TotalSize()> &full_preci
     TestAllQuantization<CPUArithmetic>(full_precision);
 #endif
 
-#ifdef GPU_COMPATIBLE
+#ifdef HAS_CUDA
     TestAllQuantization<GPUArithmetic>(full_precision);
 #endif
 }
