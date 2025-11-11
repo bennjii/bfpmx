@@ -62,8 +62,7 @@ public:
   }
 
   // Constructors from given element types
-  explicit Block(std::array<f64, NumElems> v)
-      : Block(Quantize(v)) {}
+  explicit Block(std::array<f64, NumElems> v) : Block(Quantize(v)) {}
   explicit Block(std::array<PackedFloat, NumElems> init)
       : data_(init), scalar_(0) {}
   explicit Block(std::array<PackedFloat, NumElems> data, ScalarType scalar)
