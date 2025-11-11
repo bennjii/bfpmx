@@ -14,16 +14,21 @@
 #include "arch/prelude.h"
 #include "definition/block_float/repr/FloatRepr.h"
 
+#include <iostream>
+
 // Hook to simplify type definitions for wrapping a class
 // as supporting the custom prescribed arithmetic.
 template <template <typename> typename ImplPolicy> struct WithPolicy {
   template <typename T> using Type = ArithmeticEnabled<T, ImplPolicy<T>>;
 };
 
-template <std::size_t ScalarSizeBytes, BlockDimsType BlockShape,
-          IFloatRepr Float, template <typename> typename ArithmeticPolicy,
-          template <std::size_t, BlockDimsType,
-                    IFloatRepr, template <typename> typename ArithmeticPolicy_> typename QuantizationPolicy>
+template <
+    std::size_t ScalarSizeBytes, BlockDimsType BlockShape, IFloatRepr Float,
+    template <typename> typename ArithmeticPolicy,
+    template <
+        std::size_t, BlockDimsType, IFloatRepr,
+        template <
+            typename> typename ArithmeticPolicy_> typename QuantizationPolicy>
 class Block : public WithPolicy<ArithmeticPolicy>::template Type<
                   Block<ScalarSizeBytes, BlockShape, Float, ArithmeticPolicy,
                         QuantizationPolicy>> {
@@ -58,7 +63,7 @@ public:
 
   // Constructors from given element types
   explicit Block(std::array<f64, NumElems> v)
-      : Block(QuantizationPolicyType::Quantize(v)) {}
+      : Block(Quantize(v)) {}
   explicit Block(std::array<PackedFloat, NumElems> init)
       : data_(init), scalar_(0) {}
   explicit Block(std::array<PackedFloat, NumElems> data, ScalarType scalar)
@@ -170,7 +175,25 @@ public:
   }
 
   static Block Quantize(const std::array<f64, BlockShape::TotalSize()> &vec) {
-    return QuantizationPolicyType::Quantize(vec);
+    f64 scaleFactor = QuantizationPolicyType::QuantizerScaleFactor(vec);
+
+    std::cerr << "scaleFactor = " << scaleFactor << std::endl;
+
+    // Scale each element to become x_i = v_i / S.
+    std::array<PackedFloat, BlockShape::TotalSize()> blockScaledFloats;
+    for (int i = 0; i < BlockShape::TotalSize(); i++) {
+      f64 scaledValue = vec[i] / scaleFactor;
+      blockScaledFloats[i] = Float::Marshal(scaledValue);
+    }
+
+    const u32 scaleFactorInt = lround(log2(scaleFactor));
+
+    std::array<u8, ScalarSizeBytes> packedScalar;
+    for (int i = 0; i < ScalarSizeBytes; i++) {
+      packedScalar[i] = static_cast<u8>(scaleFactorInt >> (i * 8));
+    }
+
+    return Block(blockScaledFloats, packedScalar);
   }
 
 private:
