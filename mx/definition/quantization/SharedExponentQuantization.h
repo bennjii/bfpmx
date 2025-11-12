@@ -8,7 +8,8 @@
 #include <cstring>
 #include <iostream>
 
-template <std::size_t ScalarBytes, BlockDimsType BlockShape, IFloatRepr Float, template <typename> typename ArithmeticPolicy>
+template <std::size_t ScalarBytes, BlockDimsType BlockShape, IFloatRepr Float,
+          template <typename> typename ArithmeticPolicy>
 class SharedExponentQuantization {
 public:
   using BlockFmt = Block<ScalarBytes, BlockShape, Float, ArithmeticPolicy,
