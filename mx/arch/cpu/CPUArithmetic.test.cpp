@@ -7,20 +7,21 @@
 #include <cmath>
 #include <iostream>
 
-using TestingDimensions = BlockDims<32>;
+constexpr u32 TestingScalarSize = 4;
 using TestingFloat = fp8::E4M3Type;
-using TestingBlock = Block<4, TestingDimensions, TestingFloat, CPUArithmetic,
-                           SharedExponentQuantization>;
+
+template<typename Dimensions>
+using TestingBlock = Block<
+    TestingScalarSize, Dimensions, TestingFloat, 
+    CPUArithmetic, SharedExponentQuantization
+    >;
 
 TEST_CASE("GEMV") {
 
   SECTION("2x3 matrix-vec multiplication") {
-    using Matrix2x3 = Block<4, BlockDims<2, 3>, TestingFloat, CPUArithmetic,
-                            SharedExponentQuantization>;
-    using Vector3 = Block<4, BlockDims<3>, TestingFloat, CPUArithmetic,
-                          SharedExponentQuantization>;
-    using Vector2 = Block<4, BlockDims<2>, TestingFloat, CPUArithmetic,
-                          SharedExponentQuantization>;
+    using Matrix2x3 = TestingBlock<BlockDims<2, 3>>;
+    using Vector3 = TestingBlock<BlockDims<3>>;
+    using Vector2 = TestingBlock<BlockDims<2>>;
 
     std::array<f64, Matrix2x3::NumElems> matrix_data = {
         2.0, 4.0, 8.0, // Row 0
@@ -41,12 +42,9 @@ TEST_CASE("GEMV") {
   }
 
   SECTION("3x2 matrix-vec multiplication") {
-    using Matrix3x2 = Block<4, BlockDims<3, 2>, TestingFloat, CPUArithmetic,
-                            SharedExponentQuantization>;
-    using Vector2 = Block<4, BlockDims<2>, TestingFloat, CPUArithmetic,
-                          SharedExponentQuantization>;
-    using Vector3 = Block<4, BlockDims<3>, TestingFloat, CPUArithmetic,
-                          SharedExponentQuantization>;
+    using Matrix3x2 = TestingBlock<BlockDims<3, 2>>;
+    using Vector2 = TestingBlock<BlockDims<2>>;
+    using Vector3 = TestingBlock<BlockDims<3>>;
 
     std::array<f64, Matrix3x2::NumElems> matrix_data = {4.0, 2.0, 8.0,
                                                         4.0, 2.0, 1.0};
@@ -59,7 +57,7 @@ TEST_CASE("GEMV") {
         CPUArithmetic<Vector3>::template Gemv<Matrix3x2, Vector2, Vector3>(
             matrix, vector);
 
-    // Expected: 16 38 8
+    // Expected: 16 32 8
     REQUIRE(FuzzyEqual<TestingFloat>(result.RealizeAtUnsafe(0), 16.0));
     REQUIRE(FuzzyEqual<TestingFloat>(result.RealizeAtUnsafe(1), 32.0));
     REQUIRE(FuzzyEqual<TestingFloat>(result.RealizeAtUnsafe(2), 8.0));
@@ -68,12 +66,9 @@ TEST_CASE("GEMV") {
 
 TEST_CASE("GEMM") {
   SECTION("3x4 * 4x2 Matrix Multiplication") {
-    using Matrix3x4 = Block<4, BlockDims<3, 4>, TestingFloat, CPUArithmetic,
-                            SharedExponentQuantization>;
-    using Matrix4x2 = Block<4, BlockDims<4, 2>, TestingFloat, CPUArithmetic,
-                            SharedExponentQuantization>;
-    using Matrix3x2 = Block<4, BlockDims<3, 2>, TestingFloat, CPUArithmetic,
-                            SharedExponentQuantization>;
+    using Matrix3x4 = TestingBlock<BlockDims<3, 4>>;
+    using Matrix4x2 = TestingBlock<BlockDims<4, 2>>;
+    using Matrix3x2 = TestingBlock<BlockDims<3, 2>>;
 
     std::array<f64, 12> a_data = {1.0, 2.0, 4.0, 8.0, 2.0, 4.0,
                                   8.0, 1.0, 4.0, 8.0, 1.0, 2.0};

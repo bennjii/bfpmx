@@ -24,7 +24,7 @@ template <u32... Dims> struct BlockDims {
   static constexpr u32 CoordsToLinear(const Dimensions &coords) noexcept {
     u32 idx = 0;
     u32 stride = 1;
-    for (std::size_t i = num_dims; i-- > 0;) {
+    for (std::size_t i = num_dims-1; i<num_dims; --i) {
       idx += coords[i] * stride;
       stride *= values[i];
     }
@@ -37,8 +37,8 @@ template <u32... Dims> struct BlockDims {
 
     for (std::size_t i = 0; i < num_dims; ++i) {
       u32 stride = 1;
-      for (std::size_t ii = i + 1; ii < num_dims; ++ii) {
-        stride *= values[ii];
+      for (std::size_t j = i + 1; j < num_dims; ++j) {
+        stride *= values[j];
       }
       coords[i] = remaining / stride;
       remaining %= stride;
