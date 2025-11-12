@@ -24,14 +24,27 @@ template <u32... Dims> struct BlockDims {
   static constexpr u32 CoordsToLinear(const Dimensions &coords) noexcept {
     u32 idx = 0;
     u32 stride = 1;
-    for (std::size_t i = 0; i < num_dims; ++i) {
+    for (std::size_t i = num_dims - 1; i < num_dims; --i) {
       idx += coords[i] * stride;
       stride *= values[i];
     }
     return idx;
   }
 
-  // TODO: Linear to coords
+  static constexpr Dimensions LinearToCoords(u32 linear) noexcept {
+    Dimensions coords{};
+    u32 remaining = linear;
+
+    for (std::size_t i = 0; i < num_dims; ++i) {
+      u32 stride = 1;
+      for (std::size_t j = i + 1; j < num_dims; ++j) {
+        stride *= values[j];
+      }
+      coords[i] = remaining / stride;
+      remaining %= stride;
+    }
+    return coords;
+  }
 };
 
 // Assure BlockShape is of type BlockDims

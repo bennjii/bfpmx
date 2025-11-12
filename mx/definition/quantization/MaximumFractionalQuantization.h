@@ -11,7 +11,8 @@
 #include "definition/block_float/repr/FloatRepr.h"
 #include <iostream>
 
-template <std::size_t ScalarBytes, BlockDimsType BlockShape, IFloatRepr Float, template <typename> typename ArithmeticPolicy>
+template <std::size_t ScalarBytes, BlockDimsType BlockShape, IFloatRepr Float,
+          template <typename> typename ArithmeticPolicy>
 class MaximumFractionalQuantization {
 public:
   using BlockFmt = Block<ScalarBytes, BlockShape, Float, ArithmeticPolicy,

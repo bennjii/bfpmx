@@ -20,10 +20,13 @@ template <template <typename> typename ImplPolicy> struct WithPolicy {
   template <typename T> using Type = ArithmeticEnabled<T, ImplPolicy<T>>;
 };
 
-template <std::size_t ScalarSizeBytes, BlockDimsType BlockShape,
-          IFloatRepr Float, template <typename> typename ArithmeticPolicy,
-          template <std::size_t, BlockDimsType,
-                    IFloatRepr, template <typename> typename ArithmeticPolicy_> typename QuantizationPolicy>
+template <
+    std::size_t ScalarSizeBytes, BlockDimsType BlockShape, IFloatRepr Float,
+    template <typename> typename ArithmeticPolicy,
+    template <
+        std::size_t, BlockDimsType, IFloatRepr,
+        template <
+            typename> typename ArithmeticPolicy_> typename QuantizationPolicy>
 class Block : public WithPolicy<ArithmeticPolicy>::template Type<
                   Block<ScalarSizeBytes, BlockShape, Float, ArithmeticPolicy,
                         QuantizationPolicy>> {

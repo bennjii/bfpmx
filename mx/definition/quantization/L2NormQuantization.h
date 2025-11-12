@@ -7,11 +7,12 @@
 
 #include <cstring>
 
-template <std::size_t ScalarBytes, BlockDimsType BlockShape, IFloatRepr Float, template <typename> typename ArithmeticPolicy>
+template <std::size_t ScalarBytes, BlockDimsType BlockShape, IFloatRepr Float,
+          template <typename> typename ArithmeticPolicy>
 class L2NormQuantization {
 public:
-  using BlockFmt =
-      Block<ScalarBytes, BlockShape, Float, ArithmeticPolicy, L2NormQuantization>;
+  using BlockFmt = Block<ScalarBytes, BlockShape, Float, ArithmeticPolicy,
+                         L2NormQuantization>;
   using PackedFloat = std::array<u8, Float::SizeBytes()>;
 
   static BlockFmt
