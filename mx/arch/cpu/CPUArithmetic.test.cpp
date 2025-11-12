@@ -10,11 +10,9 @@
 constexpr u32 TestingScalarSize = 4;
 using TestingFloat = fp8::E4M3Type;
 
-template<typename Dimensions>
-using TestingBlock = Block<
-    TestingScalarSize, Dimensions, TestingFloat, 
-    CPUArithmetic, SharedExponentQuantization
-    >;
+template <typename Dimensions>
+using TestingBlock = Block<TestingScalarSize, Dimensions, TestingFloat,
+                           CPUArithmetic, SharedExponentQuantization>;
 
 TEST_CASE("GEMV") {
 
