@@ -22,8 +22,8 @@ template <template <typename> typename ImplPolicy> struct WithPolicy {
 
 template <std::size_t ScalarSizeBytes, BlockDimsType BlockShape,
           IFloatRepr Float, template <typename> typename ArithmeticPolicy,
-          template <std::size_t, BlockDimsType,
-                    IFloatRepr> typename QuantizationPolicy>
+          template <std::size_t, BlockDimsType, IFloatRepr>
+          typename QuantizationPolicy>
 class Block : public WithPolicy<ArithmeticPolicy>::template Type<
                   Block<ScalarSizeBytes, BlockShape, Float, ArithmeticPolicy,
                         QuantizationPolicy>> {

@@ -12,11 +12,11 @@ constexpr u16 DEFAULT_BLOCK_SIZE = 32;
 constexpr u16 DEFAULT_BITS_SCALAR = 32;
 constexpr u16 BITS_IN_BYTE = 8;
 
-template <
-    BlockDimsType BlockShape, u16 BytesScalar, IFloatRepr Float,
-    template <typename> typename ImplPolicy,
-    template <std::size_t, BlockDimsType, IFloatRepr> typename QuantizePolicy>
-  requires IQuantize<QuantizePolicy, BytesScalar, BlockShape, Float>
+template <BlockDimsType BlockShape, u16 BytesScalar, IFloatRepr Float,
+          template <typename> typename ImplPolicy,
+          template <std::size_t, BlockDimsType, IFloatRepr>
+          typename QuantizePolicy>
+requires IQuantize<QuantizePolicy, BytesScalar, BlockShape, Float>
 class BlockFactory {
 public:
   BlockFactory() = delete;

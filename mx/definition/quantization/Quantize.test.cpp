@@ -9,8 +9,8 @@
 using TestingDimensions = BlockDims<32>;
 using TestingFloat = fp8::E4M3Type;
 
-template <template <std::size_t, BlockDimsType,
-                    IFloatRepr> typename QuantizationPolicy>
+template <template <std::size_t, BlockDimsType, IFloatRepr>
+          typename QuantizationPolicy>
 using TestingBlock = Block<4, TestingDimensions, TestingFloat, CPUArithmetic,
                            QuantizationPolicy>;
 
