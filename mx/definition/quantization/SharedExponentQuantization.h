@@ -8,14 +8,15 @@
 #include <cstring>
 #include <iostream>
 
-template <std::size_t ScalarBytes, BlockDimsType BlockShape, IFloatRepr Float>
+template <std::size_t ScalarBytes, BlockDimsType BlockShape, IFloatRepr Float, template <typename> typename ArithmeticPolicy>
 class SharedExponentQuantization {
 public:
-  using BlockFmt = Block<ScalarBytes, BlockShape, Float, CPUArithmetic,
+  using BlockFmt = Block<ScalarBytes, BlockShape, Float, ArithmeticPolicy,
                          SharedExponentQuantization>;
   using PackedFloat = std::array<u8, Float::SizeBytes()>;
 
-  static BlockFmt Quantize(std::array<f64, BlockShape::TotalSize()> &vec) {
+  static BlockFmt
+  Quantize(const std::array<f64, BlockShape::TotalSize()> &vec) {
     u64 largestBiasedExponent = 0;
     for (int i = 0; i < BlockShape::TotalSize(); i++) {
       u64 bits;
@@ -47,6 +48,8 @@ public:
 
     return BlockFmt(blockScaledFloats, packedScalar);
   }
+
+  static std::string Identity() { return "SharedExponentQuantization"; }
 
 private:
   static constexpr u64 MaximumScalarExponentValue() {
