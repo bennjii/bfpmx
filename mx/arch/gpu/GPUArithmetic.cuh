@@ -1,80 +1,9 @@
 // This header file must NOT be included in any non-CUDA file
-#ifndef BFPMX_GPU_ARITHMETIC_H
-#define BFPMX_GPU_ARITHMETIC_H
-
-#include "definition/alias.h"
-#include <array>
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
-
-using ElemType = f64;
-enum class ArithmeticOp : uint8_t {
-    Add,
-    Sub,
-    Mul,
-    Div
-};
-
-// Arithmetic kernels
-// Don't parametrize kernels because of performance reasons
-__global__ void AddKernel(const ElemType* l, const ElemType* r, ElemType* result, size_t n) {
-    int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx < n) result[idx] = l[idx] + r[idx];
-}
-
-__global__ void SubKernel(const ElemType* l, const ElemType* r, ElemType* result, size_t n) {
-    int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx < n) result[idx] = l[idx] - r[idx];
-}
-
-__global__ void MulKernel(const ElemType* l, const ElemType* r, ElemType* result, size_t n) {
-    int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx < n) result[idx] = l[idx] * r[idx];
-}
-
-__global__ void DivKernel(const ElemType* l, const ElemType* r, ElemType* result, size_t n) {
-    int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx < n) result[idx] = l[idx] / r[idx];
-}
-
-void LaunchArithmeticKernel(const ElemType* d_l, const ElemType* d_r, ElemType* d_out, size_t n, ArithmeticOp op) {
-    const int blockSize = 256;
-    const int numBlocks = (n + blockSize - 1) / blockSize;
-    switch(op) {
-        case ArithmeticOp::Add:
-            AddKernel<<<numBlocks, blockSize>>>(d_l, d_r, d_out, n);
-            break;
-        case ArithmeticOp::Sub:
-            SubKernel<<<numBlocks, blockSize>>>(d_l, d_r, d_out, n);
-            break;
-        case ArithmeticOp::Mul:
-            MulKernel<<<numBlocks, blockSize>>>(d_l, d_r, d_out, n);
-            break;
-        case ArithmeticOp::Div:
-            DivKernel<<<numBlocks, blockSize>>>(d_l, d_r, d_out, n);
-            break;
-    }
-    cudaDeviceSynchronize();
-}
-
-// Spread kernel
-template <typename T>
-__global__ void SpreadKernel(const T* lhs, const T* rhs, ElemType* d_l, ElemType* d_r) {
-    int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    // Assuming T has a static method Length() that gives the number of elements
-    if (idx < T::Length()) {
-        d_l[idx] = lhs->RealizeAtUnsafe(idx);
-        d_r[idx] = rhs->RealizeAtUnsafe(idx);
-    }
-}
-
-template <typename T>
-void LaunchSpreadKernel(const T* d_lhs, const T* d_rhs, ElemType* d_l, ElemType* d_r) {
-    const int blockSize = 256;
-    const int numBlocks = (T::Length() + blockSize - 1) / blockSize;; // Assuming single block for simplicity
-    SpreadKernel<T><<<numBlocks, blockSize>>>(d_lhs, d_rhs, d_l, d_r);
-    cudaDeviceSynchronize();
-}
+#ifndef BFPMX_GPU_ARITHMETIC_CUH
+#define BFPMX_GPU_ARITHMETIC_CUH
+#include "common.cuh"
+#include "ArithmeticKernels.cuh"
+#include "SpreadKernel.cuh"
 
 template <typename T>
 struct GPUArithmeticNaive {
