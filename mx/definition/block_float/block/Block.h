@@ -176,8 +176,6 @@ public:
   static Block Quantize(const std::array<f64, BlockShape::TotalSize()> &vec) {
     f64 scaleFactor = QuantizationPolicyType::QuantizerScaleFactor(vec);
 
-    std::cerr << "scaleFactor = " << scaleFactor << std::endl;
-
     // Scale each element to become x_i = v_i / S.
     std::array<PackedFloat, BlockShape::TotalSize()> blockScaledFloats;
     for (int i = 0; i < BlockShape::TotalSize(); i++) {
