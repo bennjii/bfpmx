@@ -14,8 +14,6 @@
 #include "arch/prelude.h"
 #include "definition/block_float/repr/FloatRepr.h"
 
-#include <iostream>
-
 // Hook to simplify type definitions for wrapping a class
 // as supporting the custom prescribed arithmetic.
 template <template <typename> typename ImplPolicy> struct WithPolicy {
