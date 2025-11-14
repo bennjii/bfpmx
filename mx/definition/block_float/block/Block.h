@@ -60,8 +60,7 @@ public:
   }
 
   // Constructors from given element types
-  explicit Block(std::array<f64, NumElems> v)
-      : Block(QuantizationPolicyType::Quantize(v)) {}
+  explicit Block(std::array<f64, NumElems> v) : Block(Quantize(v)) {}
   explicit Block(std::array<PackedFloat, NumElems> init)
       : data_(init), scalar_(0) {}
   explicit Block(std::array<PackedFloat, NumElems> data, ScalarType scalar)
@@ -173,7 +172,23 @@ public:
   }
 
   static Block Quantize(const std::array<f64, BlockShape::TotalSize()> &vec) {
-    return QuantizationPolicyType::Quantize(vec);
+    f64 scaleFactor = QuantizationPolicyType::QuantizerScaleFactor(vec);
+
+    // Scale each element to become x_i = v_i / S.
+    std::array<PackedFloat, BlockShape::TotalSize()> blockScaledFloats;
+    for (int i = 0; i < BlockShape::TotalSize(); i++) {
+      f64 scaledValue = vec[i] / scaleFactor;
+      blockScaledFloats[i] = Float::Marshal(scaledValue);
+    }
+
+    const u32 scaleFactorInt = lround(log2(scaleFactor));
+
+    std::array<u8, ScalarSizeBytes> packedScalar;
+    for (int i = 0; i < ScalarSizeBytes; i++) {
+      packedScalar[i] = static_cast<u8>(scaleFactorInt >> (i * 8));
+    }
+
+    return Block(blockScaledFloats, packedScalar);
   }
 
 private:

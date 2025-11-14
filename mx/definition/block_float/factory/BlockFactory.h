@@ -5,8 +5,7 @@
 #ifndef BFPMX_BLOCKFACTORY_H
 #define BFPMX_BLOCKFACTORY_H
 
-#include "../../../definition/quantization/Quantize.h"
-#include "../../prelude.h"
+#include "definition/quantization/Quantize.h"
 
 constexpr u16 DEFAULT_BLOCK_SIZE = 32;
 constexpr u16 DEFAULT_BITS_SCALAR = 32;
