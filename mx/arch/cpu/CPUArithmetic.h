@@ -10,8 +10,10 @@
 #include <type_traits>
 
 template <typename T> struct CPUArithmetic {
+  using ElemType = f64;
+  
   static auto Add(const T &lhs, const T &rhs) -> T {
-    using ElemType = f64;
+    
     std::array<ElemType, T::Length()> result;
 
     auto l = lhs.Spread();
@@ -24,39 +26,46 @@ template <typename T> struct CPUArithmetic {
   }
 
   static auto Sub(const T &lhs, const T &rhs) -> T {
-    using ElemType = f64;
-    std::array<ElemType, T::dataCount()> result;
+    std::array<ElemType, T::Length()> result;
 
     auto l = lhs.Spread();
     auto r = rhs.Spread();
 
-    for (std::size_t i = 0; i < T::dataCount(); ++i)
+    for (std::size_t i = 0; i < T::Length(); ++i)
       result[i] = l[i] - r[i];
 
     return T(result);
   }
 
   static auto Mul(const T &lhs, const T &rhs) -> T {
-    using ElemType = f64;
-    std::array<ElemType, T::dataCount()> result;
+    std::array<ElemType, T::Length()> result;
 
     auto l = lhs.Spread();
     auto r = rhs.Spread();
 
-    for (std::size_t i = 0; i < T::dataCount(); ++i)
+    for (std::size_t i = 0; i < T::Length(); ++i)
       result[i] = l[i] * r[i];
 
     return T(result);
   }
 
+  static auto Dot(const T &lhs, const T &rhs) -> f64 {
+    ElemType result = lhs.Scalar() * rhs.Scalar(), elementSum = 0.;
+
+    for (std::size_t i = 0; i < T::Length(); ++i)
+      elementSum += lhs.ElementAt(i) * rhs.ElementAt(i);
+
+    result *= elementSum;
+    return result;
+  }
+
   static auto Div(const T &lhs, const T &rhs) -> T {
-    using ElemType = f64;
-    std::array<ElemType, T::dataCount()> result;
+    std::array<ElemType, T::Length()> result;
 
     auto l = lhs.Spread();
     auto r = rhs.Spread();
 
-    for (std::size_t i = 0; i < T::dataCount(); ++i)
+    for (std::size_t i = 0; i < T::Length(); ++i)
       result[i] = l[i] / r[i];
 
     return T(result);
@@ -76,7 +85,6 @@ template <typename T> struct CPUArithmetic {
     const auto input_size = InT::Dims[0];
     const auto output_size = OutT::Dims[0];
 
-    using ElemType = f64;
     std::array<ElemType, rows> result;
 
     auto matrix_data = matrix.Spread();
@@ -110,7 +118,6 @@ template <typename T> struct CPUArithmetic {
     const auto o_rows = OutT::Dims[0];
     const auto o_cols = OutT::Dims[1];
 
-    using ElemType = f64;
     std::array<ElemType, o_rows * o_cols> result;
 
     auto a_data = matA.Spread();

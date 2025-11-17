@@ -55,4 +55,8 @@ struct isBlockDims<BlockDims<Dims...>> : std::true_type {};
 
 template <typename T>
 concept BlockDimsType = isBlockDims<std::remove_cvref_t<T>>::value;
+
+template <typename T> 
+concept OneDimensionalBlockDimsType = 
+    BlockDimsType<T> && (T::num_dims == 1);
 #endif

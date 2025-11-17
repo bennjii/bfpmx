@@ -100,3 +100,6 @@ target_link_libraries(example_playground PRIVATE bfpmx)
 
 add_executable(example_quant example/quant.cpp)
 target_link_libraries(example_quant PRIVATE bfpmx)
+
+add_executable(example_mx_vector example/mx_vector.cpp)
+target_link_libraries(example_mx_vector PRIVATE bfpmx)

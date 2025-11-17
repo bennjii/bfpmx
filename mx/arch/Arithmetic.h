@@ -4,6 +4,7 @@
 
 #ifndef BFPMX_ARITHMETIC_H
 #define BFPMX_ARITHMETIC_H
+#include "prelude.h"
 
 template <typename Impl, typename T>
 concept ArithmeticImpl = requires(const T &a, const T &b) {
@@ -23,10 +24,10 @@ template <typename T, typename Impl> struct ArithmeticEnabled {
     return Impl::Sub(lhs, rhs);
   }
 
-  friend T operator*(const T &lhs, const T &rhs)
+  friend double operator*(const T &lhs, const T &rhs)
     requires ArithmeticImpl<Impl, T>
   {
-    return Impl::Mul(lhs, rhs);
+    return Impl::Dot(lhs, rhs);
   }
 
   friend T operator/(const T &lhs, const T &rhs)

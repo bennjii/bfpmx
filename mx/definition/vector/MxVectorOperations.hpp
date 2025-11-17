@@ -1,0 +1,33 @@
+#pragma once
+#include "definition/vector/MxVector.hpp"
+#include <optional>
+
+namespace mx::vector::ops {
+    // For now we do not check the dimension of the vectors,
+    // as the dimension is dynamic and runtime check comes with 
+    // performance cost. If the type are mismatched, it results in a
+    // undefined behavior.
+    template <typename T, typename OutputType = f64>
+    OutputType Dot(const T& a, const T& b) {
+        OutputType result = 0.;
+        for (auto i = 0; i < a.NumBlocks(); ++i) {
+            const auto a_block = a.BlockAt(i).value();
+            const auto b_block = b.BlockAt(i).value();
+            result += a_block * b_block;
+        }
+        return result;
+    }
+
+    template <typename T>
+    T Add(const T& a, const T& b) {
+        std::vector<typename T::BlockType> result_blocks;
+        result_blocks.reserve(a.NumBlocks());
+        for (auto i = 0; i < a.NumBlocks(); ++i) {
+            const auto a_block = a.BlockAt(i).value();
+            const auto b_block = b.BlockAt(i).value();
+            result_blocks.push_back(a_block + b_block);
+        }
+        return T(result_blocks, a.Size());
+    }
+} // namespace mx
+

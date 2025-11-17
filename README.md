@@ -35,13 +35,14 @@ into the code itself.
 
 ```bash
 # Create build plan for release type (i.e. Debug)
-cmake -B build -DCMAKE_BUILD_TYPE=Debug
+mkdir -p build && cd build
+cmake -S .. -B . -DCMAKE_BUILD_TYPE=Debug
 
 # Create the makefile, for the build system
-cmake .
+cmake ..
 
 # Build project binaries and library linkable
-cmake --build build
+cmake --build . -- -j$(nproc)
 
 # Run tidy on files
 #
@@ -49,5 +50,5 @@ cmake --build build
 #       after installing `llvm` through homebrew...
 #       /opt/homebrew/opt/llvm/bin/run-clang-tidy
 #
-run-clang-tidy -p build mx/ -quiet
+run-clang-tidy . mx/ -quiet
 ```

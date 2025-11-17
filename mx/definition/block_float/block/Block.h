@@ -25,8 +25,7 @@ template <
     template <typename> typename ArithmeticPolicy,
     template <
         std::size_t, BlockDimsType, IFloatRepr,
-        template <
-            typename> typename ArithmeticPolicy_> typename QuantizationPolicy>
+        template <typename> typename ArithmeticPolicy_> typename QuantizationPolicy>
 class Block : public WithPolicy<ArithmeticPolicy>::template Type<
                   Block<ScalarSizeBytes, BlockShape, Float, ArithmeticPolicy,
                         QuantizationPolicy>> {
@@ -105,6 +104,13 @@ public:
     return 1 << scalar;
   }
 
+  f64 ElementAt(const u16 index) const {
+    if (index >= NumElems) {
+      throw std::out_of_range("Index out of range in Block::ElementAt");
+    }
+    return Float::Unmarshal(AtUnsafe(index));
+  }
+
   [[nodiscard]] std::array<f64, NumElems> Spread() const {
     std::array<f64, NumElems> blockUnscaledFloats;
     for (int i = 0; i < NumElems; i++) {
@@ -114,16 +120,30 @@ public:
     return blockUnscaledFloats;
   }
 
+  // TODO: Heuristic to rescale to block, for now no requantization
+  void SetItemAt(const u16 index, f64 value) {
+    if (index >= NumElems) {
+      throw std::out_of_range("Index out of range in Block::SetItemAt");
+    }
+    data_.at(index) = Float::Marshal(value / Scalar());
+  }
+
+  // TODO: Heuristic to rescale to block, for now no requantization
+  void SetItemAtUnsafe(const u16 index, f64 value) {
+    data_.at(index) = Float::Marshal(value / Scalar());
+  }
+
   [[nodiscard]] std::string asString() const {
     // TODO: Nested square brackets for multidim blocks
     std::array<f64, NumElems> fullPrecisionValues = Spread();
     std::string value;
 
     value += "Scalar: " + std::to_string(Scalar()) + "\n";
-    value += "Elements: [\n";
+    value += "Elements: [";
     for (int i = 0; i < NumElems; i++) {
       f64 fullPrecisionFloat = fullPrecisionValues[i];
-      value += std::format("\t ({}) {:.3f} \n", i, fullPrecisionFloat);
+      std::string end = (i == NumElems - 1) ? "" : ", ";
+      value += std::format("({}) {:.3f}{}", i, fullPrecisionFloat, end);
     }
     value += "]";
 
@@ -190,7 +210,6 @@ public:
 
     return Block(blockScaledFloats, packedScalar);
   }
-
 private:
   // Using Row-Major ordering
   std::array<PackedFloat, NumElems> data_;
