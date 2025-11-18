@@ -4,14 +4,14 @@
 
 #include <cassert>
 
-#define PROFILE 1
-
 #include "definition/prelude.h"
-#include "profiler/profiler.h"
+
+#include <fstream>
+#include <vector>
 
 // Constants to be used for the testing regime
 constexpr u32 BlockScalar = 4; // u32 (4 bytes)
-using BlockSize = BlockDims<32>;
+using BlockSize = BlockDims<64, 64, 4>;
 using BlockFloat = fp8::E4M3Type;
 
 template<
@@ -59,20 +59,9 @@ template<
 >
 void TestAllQuantization(const std::array<f64, BlockSize::TotalSize()> &full_precision)
 {
-    {
-        profiler::block("L2 Norm Quantization");
-        Test<A, L2NormQuantization>(full_precision);
-    }
-
-    {
-        profiler::block("Shared Exponent Quantization");
-        Test<A, SharedExponentQuantization>(full_precision);
-    }
-
-    {
-        profiler::block("Maximal Fractional Quantization");
-        Test<A, MaximumFractionalQuantization>(full_precision);
-    }
+    Test<A, L2NormQuantization>(full_precision);
+    Test<A, SharedExponentQuantization>(full_precision);
+    Test<A, MaximumFractionalQuantization>(full_precision);
 }
 
 // Define elsewhere.
@@ -88,17 +77,25 @@ void TestAllArithmetic(const std::array<f64, BlockSize::TotalSize()> &full_preci
 #endif
 }
 
+std::vector<f64> load_binary(const std::string& path) {
+    std::ifstream f(path, std::ios::binary);
+
+    if (!f) throw std::runtime_error("cannot open file");
+    f.seekg(0, std::ios::end);
+    size_t bytes = f.tellg();
+    f.seekg(0, std::ios::beg);
+
+    std::vector<double> v(bytes / sizeof(double));
+    f.read(reinterpret_cast<char*>(v.data()), bytes);
+
+    return v;
+}
+
 int main() {
-    profiler::begin();
+    auto vec = load_binary("../../fixtures/test_array.bin");
 
-    constexpr std::array<f64, BlockSize::TotalSize()> EXAMPLE_ARRAY =
-        std::to_array<f64, BlockSize::TotalSize()>({
-            1.2f, 3.4f, 5.6f, 2.1f, 1.3f, -6.5f
-        });
+    std::array<f64, BlockSize::TotalSize()> EXAMPLE_ARRAY{};
+    std::ranges::copy(vec, EXAMPLE_ARRAY.begin());
 
-    for (int i = 0; i < 100000; i++) {
-        TestAllArithmetic(EXAMPLE_ARRAY);
-    }
-
-    profiler::end_and_print();
+    TestAllArithmetic(EXAMPLE_ARRAY);
 }
