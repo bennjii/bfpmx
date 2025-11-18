@@ -90,7 +90,7 @@ template <typename T> struct CPUArithmeticWithoutMarshalling {
         // rBits = (isNegative << signShift)
         //       | ((rSigif >> -exponent) & fracMask);
       }
-      result.SetBitsAt(i, rBits);
+      result.SetBitsAtUnsafe(i, rBits);
     }
     return result;
   }

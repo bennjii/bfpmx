@@ -230,11 +230,6 @@ public:
   }
 
   [[nodiscard]] static constexpr f64 Unmarshal(std::array<u8, SizeBytes()> v) {
-    // TODO: can this be optimized with a simple cast,
-    //       like `if (SizeBytes == 1) return *(*u8) v[i];`
-    //            `if (SizeBytes == 2) return *(*u16) v[i];`
-    //       or even better: instead of specifying `SizeByets` cannot we specify
-    //       a type, like u8, u16, u32 or u64?
     u64 bits = 0;
     for (u32 i = 0; i < SizeBytes(); ++i)
       bits |= static_cast<u64>(v[i]) << (8 * i);

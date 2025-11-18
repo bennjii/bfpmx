@@ -224,11 +224,11 @@ static inline void end_and_print(void) {
                    (f64)detail::profiler_cpu_freq * 1e-6)
             << std::endl;
   for (u32 i = 1;
-       // f*ck Catch2 that uses __COUNTER__ too
+       // Catch2 or other libraries could use __COUNTER__ too
        i <
        _TIMINGS_MAX /* && detail::global_profiler.anchors[i].label != NULL */;
        i++) {
-    // f*ck Catch2 that uses __COUNTER__ too
+    // Catch2 or other libraries could use __COUNTER__ too
     if (detail::global_profiler.anchors[i].label == NULL)
       continue;
     detail::ProfilerAnchor *el = &detail::global_profiler.anchors[i];

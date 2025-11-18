@@ -91,18 +91,18 @@ public:
     return data_[index];
   }
 
-  void SetPackedBitsAt(const u16 index,
-                       std::array<u8, Float::SizeBytes()> const &bits) {
+  void SetPackedBitsAtUnsafe(const u16 index,
+                             std::array<u8, Float::SizeBytes()> const &bits) {
     data_[index] = bits;
   }
 
-  void SetBitsAt(const u16 index, const u64 bits) {
+  void SetBitsAtUnsafe(const u16 index, const u64 bits) {
     // TODO: see ScalarBits
     std::array<u8, Float::SizeBytes()> out{};
     for (size_t i = 0; i < Float::SizeBytes(); ++i) {
       out[i] = static_cast<u8>(bits >> (i * 8));
     }
-    SetPackedBitsAt(index, out);
+    SetPackedBitsAtUnsafe(index, out);
   }
 
   [[nodiscard]] std::optional<f64> RealizeAt(const u16 index) const {
