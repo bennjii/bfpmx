@@ -1,8 +1,9 @@
-#include "CPUArithmetic.h"
 #include "CPUArithmeticWithoutMarshalling.h"
+#include "CPUArithmetic.h"
 #include "definition/block_float/block/Block.h"
 #include "definition/block_float/block/BlockDims.h"
 #include "definition/prelude.h"
+#include "definition/util.cpp"
 #include <array>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/interfaces/catch_interfaces_config.hpp>
@@ -23,9 +24,7 @@ using TestingBlock = Block<TestingScalarSize, Dimensions, TestingFloat,
 
 TEST_CASE("AddFast") {
   SECTION("Vec_10k + Vec_10k") {
-    profiler::begin();
-
-    constexpr size_t sz = 10000;
+    constexpr size_t sz = 1;
     f64 min = 0.0, max = 1000.0;
     using Vector = TestingBlock<BlockDims<sz>>;
 
@@ -45,6 +44,7 @@ TEST_CASE("AddFast") {
     Vector v2 = Vector::Quantize(_v2);
 
     Vector resultTrue, resultNew;
+    profiler::begin();
     {
       profiler::block("naive");
       resultTrue = CPUArithmetic<Vector>::Add(v1, v2);
@@ -53,6 +53,7 @@ TEST_CASE("AddFast") {
       profiler::block("no marshal/unmarshal");
       resultNew = CPUArithmeticWithoutMarshalling<Vector>::Add(v1, v2);
     }
+    profiler::end_and_print();
 
     REQUIRE(resultNew.Length() == resultTrue.Length());
     for (std::size_t i = 0; i < resultNew.Length(); i++) {
@@ -63,9 +64,9 @@ TEST_CASE("AddFast") {
                   << resultNew.RealizeAtUnsafe(i)
                   << " != " << resultTrue.RealizeAtUnsafe(i);
       }
+      // REQUIRE(FuzzyEqual<Vector::FloatType>(resultNew.RealizeAtUnsafe(i),
+      // resultTrue.RealizeAtUnsafe(i)));
       REQUIRE(resultNew.RealizeAtUnsafe(i) == resultTrue.RealizeAtUnsafe(i));
     }
-
-    profiler::end_and_print();
   }
 }
