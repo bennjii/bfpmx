@@ -59,6 +59,13 @@ public:
     scalar_ = scalar;
   }
 
+  struct _Uninitialized {};
+  static inline constexpr _Uninitialized Uninitialized{};
+  // Usage: `Block b{Block::Uninitialized};`
+  Block(_Uninitialized) noexcept {
+    // do not initialize data_
+  }
+
   // Constructors from given element types
   explicit Block(std::array<f64, NumElems> v) : Block(Quantize(v)) {}
   explicit Block(std::array<PackedFloat, NumElems> init)
@@ -84,6 +91,20 @@ public:
     return data_[index];
   }
 
+  void SetPackedBitsAt(const u16 index,
+                       std::array<u8, Float::SizeBytes()> const &bits) {
+    data_[index] = bits;
+  }
+
+  void SetBitsAt(const u16 index, const u64 bits) {
+    // TODO: see ScalarBits
+    std::array<u8, Float::SizeBytes()> out{};
+    for (size_t i = 0; i < Float::SizeBytes(); ++i) {
+      out[i] = static_cast<u8>(bits >> (i * 8));
+    }
+    SetPackedBitsAt(index, out);
+  }
+
   [[nodiscard]] std::optional<f64> RealizeAt(const u16 index) const {
     if (index >= NumElems) {
       return std::nullopt;
@@ -96,14 +117,27 @@ public:
     return Float::Unmarshal(AtUnsafe(index)) * Scalar();
   }
 
-  [[nodiscard]] u64 Scalar() const {
+  void SetScalar(u64 scalar) {
+    // TODO: see ScalarBits
+    for (int i = 0; i < ScalarSizeBytes; i++) {
+      scalar_[i] = scalar >> (i * 8);
+    }
+  }
+
+  [[nodiscard]] u64 ScalarBits() const {
+    // TODO: can this be optimized with a simple cast,
+    //       like `if (ScalarSizeBytes == 1) return *(*u8) scalar_;`
+    //            `if (ScalarSizeBytes == 2) return *(*u16) scalar_;`
+    //       or even better: instead of specifying `ScalarSizeBytes` cannot we
+    //       specify a type, like u8, u16, u32 or u64?
     u64 scalar = 0;
     for (int i = 0; i < ScalarSizeBytes; i++) {
       scalar |= scalar_[i] << (i * 8);
     }
-
-    return 1 << scalar;
+    return scalar;
   }
+
+  [[nodiscard]] u64 Scalar() const { return 1 << ScalarBits(); }
 
   [[nodiscard]] std::array<f64, NumElems> Spread() const {
     std::array<f64, NumElems> blockUnscaledFloats;

@@ -4,8 +4,14 @@
 #include "definition/prelude.h"
 #include <array>
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/interfaces/catch_interfaces_config.hpp>
+#include <catch2/internal/catch_context.hpp>
 #include <cmath>
 #include <iostream>
+#include <random>
+
+#define PROFILE 1
+#include "../../profiler/profiler.h"
 
 constexpr u32 TestingScalarSize = 4;
 using TestingFloat = fp8::E4M3Type;
