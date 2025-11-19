@@ -9,8 +9,8 @@
 
 #include "Arithmetic.h"
 
-#include "cpu/CPUArithmeticWithoutMarshalling.h"
 #include "cpu/CPUArithmetic.h"
+#include "cpu/CPUArithmeticWithoutMarshalling.h"
 
 #ifdef HAS_CUDA
 #include "gpu/GPUArithmetic.cuh"
