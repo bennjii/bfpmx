@@ -22,9 +22,8 @@ concept IQuantize =
                    QuantizationPolicy> &b) {
       {
         QuantizationPolicy<ScalarBytes, BlockShape, Float,
-                           ArithmeticPolicy>::Quantize(v)
-      } -> std::convertible_to<Block<ScalarBytes, BlockShape, Float,
-                                     ArithmeticPolicy, QuantizationPolicy>>;
+                           ArithmeticPolicy>::QuantizerScaleFactor(v)
+      } -> std::convertible_to<f64>;
 
       {
         QuantizationPolicy<ScalarBytes, BlockShape, Float,

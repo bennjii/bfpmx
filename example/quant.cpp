@@ -6,6 +6,12 @@
 
 #include "definition/prelude.h"
 
+template <template <
+    std::size_t, BlockDimsType, IFloatRepr,
+    template <typename> typename ArithmeticPolicy_> typename QuantizationPolicy>
+using TestingBlock = Block<4, BlockDims<32>, fp8::E4M3Type, CPUArithmetic,
+                           QuantizationPolicy>;
+
 int main() {
     std::array<f64, 32> arr = std::to_array<f64, 32>({
         1.2f, 3.4f, 5.6f, 2.1f,1.3f,-6.5f
@@ -23,9 +29,9 @@ int main() {
     }
     std::cout << "]" << std::endl;
 
-    const auto block1 = SharedExponentQuantization<4, BlockDims<32>, fp8::E5M2Type, CPUArithmetic>::Quantize(arr);
+    const auto block1 = TestingBlock<SharedExponentQuantization>::Quantize(arr);
     std::cout << "Quantized array {SEQ} : \n" << block1.asString() << std::endl;
 
-    const auto block2 = MaximumFractionalQuantization<4, BlockDims<32>, fp8::E4M3Type, CPUArithmetic>::Quantize(arr);
+    const auto block2 = TestingBlock<MaximumFractionalQuantization>::Quantize(arr);
     std::cout << "Quantized array {MFQ} : \n" << block2.asString() << std::endl;
 }

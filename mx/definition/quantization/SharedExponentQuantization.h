@@ -6,48 +6,24 @@
 #include "definition/block_float/repr/FloatRepr.h"
 
 #include <cstring>
-#include <iostream>
 
 template <std::size_t ScalarBytes, BlockDimsType BlockShape, IFloatRepr Float,
           template <typename> typename ArithmeticPolicy>
 class SharedExponentQuantization {
 public:
-  using BlockFmt = Block<ScalarBytes, BlockShape, Float, ArithmeticPolicy,
-                         SharedExponentQuantization>;
-  using PackedFloat = std::array<u8, Float::SizeBytes()>;
-
-  static BlockFmt
-  Quantize(const std::array<f64, BlockShape::TotalSize()> &vec) {
-    u64 largestBiasedExponent = 0;
+  static f64
+  QuantizerScaleFactor(const std::array<f64, BlockShape::TotalSize()> &vec) {
+    uint64_t largestBiasedExponent = 0;
     for (int i = 0; i < BlockShape::TotalSize(); i++) {
-      u64 bits;
-      std::memcpy(&bits, &vec[i], sizeof(bits));
-      const u64 exponent = (bits >> 52) & 0x7FF;
-
-      if (exponent > largestBiasedExponent) {
-        largestBiasedExponent = exponent;
-      }
+      const uint64_t bits = std::bit_cast<uint64_t>(vec[i]);
+      const uint64_t exponent = (bits >> F64_BITS_SIGNIFICAND) & 0x7FF;
+      largestBiasedExponent = std::max(largestBiasedExponent, exponent);
     }
 
-    const u64 largestUnbiasedExponent = largestBiasedExponent - 1023;
+    const u64 largestUnbiasedExponent = largestBiasedExponent - F64_BIAS;
     const u64 exponent = NormalizedExponent(largestUnbiasedExponent);
-    f64 scaleFactor = std::pow(2.0, exponent);
 
-    std::array<PackedFloat, BlockShape::TotalSize()> blockScaledFloats;
-    for (int i = 0; i < BlockShape::TotalSize(); i++) {
-      f64 scaledValue = vec[i] / scaleFactor;
-      PackedFloat packed = Float::Marshal(scaledValue);
-      blockScaledFloats[i] = packed;
-    }
-
-    const u32 scaleFactorInt = lround(exponent);
-
-    std::array<u8, ScalarBytes> packedScalar;
-    for (int i = 0; i < ScalarBytes; i++) {
-      packedScalar[i] = static_cast<u8>(scaleFactorInt >> (i * 8));
-    }
-
-    return BlockFmt(blockScaledFloats, packedScalar);
+    return std::pow(2.0, exponent);
   }
 
   static std::string Identity() { return "SharedExponentQuantization"; }

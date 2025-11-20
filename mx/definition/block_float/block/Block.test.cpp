@@ -26,7 +26,7 @@ TEST_CASE("Blank Block Construction") {
 }
 
 TEST_CASE("Block Construction") {
-  std::array<f64, TestingBlock::NumElems> EXAMPLE_ARRAY =
+  constexpr std::array<f64, TestingBlock::NumElems> EXAMPLE_ARRAY =
       std::to_array<f64, TestingBlock::NumElems>(
           {1.2f, 3.4f, 5.6f, 2.1f, 1.3f, -6.5f});
 
