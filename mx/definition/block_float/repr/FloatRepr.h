@@ -133,23 +133,23 @@ public:
     return Unpack({sign, exp, frac});
   }
 
-  [[nodiscard]] static constexpr u8 SignificandBits() { return Significand; }
+  HD [[nodiscard]] static constexpr u8 SignificandBits() { return Significand; }
 
-  [[nodiscard]] static constexpr u8 ExponentBits() { return Exponent; }
+  HD [[nodiscard]] static constexpr u8 ExponentBits() { return Exponent; }
 
-  [[nodiscard]] static constexpr u8 SignBits() { return Sign; }
+  HD [[nodiscard]] static constexpr u8 SignBits() { return Sign; }
 
-  [[nodiscard]] static constexpr u8 BiasValue() {
+  HD [[nodiscard]] static constexpr u8 BiasValue() {
     return (1 << (Exponent - 1)) - 1;
   }
 
-  [[nodiscard]] static constexpr u8 ElementBits() {
+  HD [[nodiscard]] static constexpr u8 ElementBits() {
     return +SignificandBits() + ExponentBits() + SignBits();
   }
 
-  [[nodiscard]] static constexpr u32 Size() { return ElementBits(); }
+  HD [[nodiscard]] static constexpr u32 Size() { return ElementBits(); }
 
-  [[nodiscard]] static constexpr u32 SizeBytes() {
+  HD [[nodiscard]] static constexpr u32 SizeBytes() {
     // TODO: this way we are not able to store in a compact way 6 or 4 bits
     // floats (e.g. E2M3, E3M2, E2M1)in a Block
     //       we still use 8 bits per significan instead of 6 (or 4).
@@ -197,7 +197,7 @@ public:
     return {newSign, newExp, newFrac};
   }
 
-  [[nodiscard]] static constexpr f64 Unpack(PackedForm value) {
+  HD [[nodiscard]] static constexpr f64 Unpack(PackedForm value) {
     const auto [sign, exp, frac] = value;
 
     const u64 f64Sign = sign << 63;
@@ -229,7 +229,7 @@ public:
     return std::bit_cast<f64>(f64Bits);
   }
 
-  [[nodiscard]] static constexpr f64 Unmarshal(std::array<u8, SizeBytes()> v) {
+  HD [[nodiscard]] static constexpr f64 Unmarshal(std::array<u8, SizeBytes()> v) {
     u64 bits = 0;
     for (u32 i = 0; i < SizeBytes(); ++i)
       bits |= static_cast<u64>(v[i]) << (8 * i);

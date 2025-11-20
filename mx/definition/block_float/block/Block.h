@@ -70,6 +70,10 @@ public:
 
   [[nodiscard]] static constexpr std::size_t Length() { return NumElems; }
 
+  [[nodiscard]] static constexpr std::size_t SizeBytes() {
+    return NumElems * Float::SizeBytes() + ScalarSizeBytes;
+  }
+
   [[nodiscard]] std::optional<PackedFloat> At(const u16 index) const {
     if (index >= NumElems) {
       return std::nullopt;
@@ -80,7 +84,7 @@ public:
 
   // A variant of `At` which runs on the provided assertions that
   // the underlying data must exist at the index.
-  [[nodiscard]] PackedFloat AtUnsafe(const u16 index) const {
+  HD [[nodiscard]] PackedFloat AtUnsafe(const u16 index) const {
     return data_[index];
   }
 
@@ -92,11 +96,11 @@ public:
     return RealizeAtUnsafe(index);
   }
 
-  [[nodiscard]] f64 RealizeAtUnsafe(const u16 index) const {
+  HD [[nodiscard]] f64 RealizeAtUnsafe(const u16 index) const {
     return Float::Unmarshal(AtUnsafe(index)) * Scalar();
   }
 
-  [[nodiscard]] u64 Scalar() const {
+  HD [[nodiscard]] u64 Scalar() const {
     u64 scalar = 0;
     for (int i = 0; i < ScalarSizeBytes; i++) {
       scalar |= scalar_[i] << (i * 8);
