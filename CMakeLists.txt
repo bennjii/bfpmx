@@ -43,6 +43,26 @@ FetchContent_MakeAvailable(Catch2)
 # Required step: https://github.com/catchorg/Catch2/blob/devel/docs/cmake-integration.md#top
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 
+include(FetchContent)
+
+FetchContent_Declare(
+    googlebenchmark
+    GIT_REPOSITORY https://github.com/google/benchmark.git
+    GIT_TAG v1.9.4
+)
+
+set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
+set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "" FORCE)
+
+FetchContent_MakeAvailable(googlebenchmark)
+
+# Link pthread on most platforms
+if(NOT WIN32)
+    set(BENCHMARK_LIBS benchmark::benchmark pthread)
+else()
+    set(BENCHMARK_LIBS benchmark::benchmark)
+endif()
+
 include(CTest)
 include(Catch)
 
@@ -85,21 +105,5 @@ else()
     message(STATUS "No CUDA")
 endif()
 
-# Examples #
-add_executable(example_main example/main.cpp)
-target_link_libraries(example_main PRIVATE bfpmx)
-
-add_executable(example_marshal example/marshalling.cpp)
-target_link_libraries(example_marshal PRIVATE bfpmx)
-
-add_executable(example_marshal_profiler example/marshalling_with_profiler.cpp)
-target_link_libraries(example_marshal_profiler PRIVATE bfpmx)
-
-add_executable(example_playground example/playground.cpp)
-target_link_libraries(example_playground PRIVATE bfpmx)
-
-add_executable(example_quant example/quant.cpp)
-target_link_libraries(example_quant PRIVATE bfpmx)
-
-add_executable(example_mx_vector example/mx_vector.cpp)
-target_link_libraries(example_mx_vector PRIVATE bfpmx)
+add_subdirectory(example)
+add_subdirectory(bench)

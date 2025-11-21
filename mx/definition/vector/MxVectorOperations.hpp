@@ -11,8 +11,8 @@ namespace mx::vector::ops {
     OutputType Dot(const T& a, const T& b) {
         OutputType result = 0.;
         for (auto i = 0; i < a.NumBlocks(); ++i) {
-            const auto a_block = a.BlockAt(i).value();
-            const auto b_block = b.BlockAt(i).value();
+            const auto a_block = a.BlockAt(i);
+            const auto b_block = b.BlockAt(i);
             result += a_block * b_block;
         }
         return result;
@@ -23,8 +23,8 @@ namespace mx::vector::ops {
         std::vector<typename T::BlockType> result_blocks;
         result_blocks.reserve(a.NumBlocks());
         for (auto i = 0; i < a.NumBlocks(); ++i) {
-            const auto a_block = a.BlockAt(i).value();
-            const auto b_block = b.BlockAt(i).value();
+            const auto a_block = a.BlockAt(i);
+            const auto b_block = b.BlockAt(i);
             result_blocks.push_back(a_block + b_block);
         }
         return T(result_blocks, a.Size());

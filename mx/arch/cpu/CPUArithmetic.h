@@ -52,11 +52,11 @@ template <typename T> struct CPUArithmetic {
   static auto Dot(const T &lhs, const T &rhs) -> f64 {
     ElemType result = lhs.Scalar() * rhs.Scalar(), elementSum = 0.;
 
+    #pragma unroll
     for (std::size_t i = 0; i < T::Length(); ++i)
       elementSum += lhs.ElementAt(i) * rhs.ElementAt(i);
 
-    result *= elementSum;
-    return result;
+    return result * elementSum;
   }
 
   static auto Div(const T &lhs, const T &rhs) -> T {

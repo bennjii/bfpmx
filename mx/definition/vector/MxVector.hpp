@@ -28,36 +28,27 @@ namespace mx::vector {
             blocks_.resize(num_blocks);
             num_elements_ = data.size();
 
-            for (size_t blockId = 0; blockId < data.size(); ++blockId) {
-                size_t block_index = blockId / BlockType::NumElems;
-                size_t elem_index = blockId % BlockType::NumElems;
+            for (size_t blockId = 0; blockId < num_blocks; ++blockId) {
                 auto block_data = std::array<f64, BlockType::NumElems>{};
-                for (size_t i = 0; i < BlockType::NumElems; ++i){
-                    if(size_t idx = block_index * BlockType::NumElems + i; idx < data.size())
-                        block_data[i] = data[idx];
-                    else
-                        block_data[i] = 0.0;
+                size_t start = blockId * BlockType::NumElems;
+                size_t end = std::min(start + BlockType::NumElems, data.size());
+                for (size_t i = start; i < end; ++i){
+                    block_data[i-start] = data[i];
                 }
-                blocks_[block_index] = BlockType(block_data);
+                blocks_[blockId] = BlockType(block_data);
             }
         }
 
         MxVector(const std::vector<BlockType>& blocks, size_t num_elements)
             : blocks_(blocks), num_elements_(num_elements) {}
 
-        std::optional<f64> ItemAt(size_t index) const {
-            if (index >= num_elements_) {
-                return std::nullopt;
-            }
+        f64 ItemAt(size_t index) const {
             size_t block_index = index / BlockType::NumElems;
             size_t elem_index = index % BlockType::NumElems;
             return blocks_[block_index].RealizeAt(elem_index);
         }
 
-        std::optional<BlockType> BlockAt(size_t block_index) const {
-            if (block_index >= blocks_.size()) {
-                return std::nullopt;
-            }
+        const BlockType& BlockAt(size_t block_index) const noexcept{
             return blocks_[block_index];
         }
 
