@@ -9,19 +9,19 @@
 #include <cmath>
 #include <iostream>
 #include <type_traits>
+#include <utility>
 
 template <typename T> struct CPUArithmeticWithoutMarshalling {
   static auto Add(const T &lhs, const T &rhs) -> T {
-    // NOTE: should we lower those to i8 or i16? It depends on what kind of
-    //       values we pass... (see NOTE.2)
-    //       but this would be usefull in SIMD
+    // NOTE: can easily become branchless
+    // NOTE: should we lower those to i8 or i16?
+    //       It depends on what kind of values we pass...
+    //       We need at least expShift*2+1 bits
     using iT = i64;
 
     const auto aBias = lhs.ScalarBits();
     const auto bBias = rhs.ScalarBits();
-    const auto rBias =
-        std::max(aBias, bBias) + 1; // +1 so that I can avoid OF
-                                    // n_bits + n_bits = (n+1)_bits
+    const auto rBias = std::max(aBias, bBias);
 
     const iT fracMask = (1ull << T::FloatType::SignificandBits()) - 1;
     const iT expShift = T::FloatType::SignificandBits();
@@ -39,56 +39,50 @@ template <typename T> struct CPUArithmeticWithoutMarshalling {
         aBits |= static_cast<iT>(aPacked[j]) << (8 * j);
         bBits |= static_cast<iT>(bPacked[j]) << (8 * j);
       }
-      const iT aExp = (aBits >> expShift) & expMask;
-      const iT bExp = (bBits >> expShift) & expMask;
-      const iT deltaExp = aExp + aBias - bExp - bBias;
+
+      iT aExp = (aBits >> expShift) & expMask;
+      iT bExp = (bBits >> expShift) & expMask;
+      const iT deltaExpAB = aExp + aBias - bExp - bBias;
+      iT deltaExpShift;
+
       iT aSignif = 0, bSignif = 0;
-      // TODO: Load subnormal values
-
-      // NOTE.2: alternative: it uses less bits and it is what is implemented in
-      //       HW, but it looses a bit precision
-      //       !! remember to also change the line with
-      //       `NOTE.2: alternative: see above` ~30 lines down
-      // if (aBits & ~signMaskReal)
-      //   aSignif = ((1ull << expShift) + (aBits & fracMask)) >>
-      //        (deltaExp >= 0 ? 0 : -deltaExp);
-      // if (bBits & ~signMaskReal)
-      //   bSignif = ((1ull << expShift) + (bBits & fracMask)) >>
-      //        (deltaExp >= 0 ? +deltaExp : 0);
-
       if (aBits & ~signMaskReal)
-        aSignif = ((1ull << expShift) + (aBits & fracMask))
-                  << (deltaExp >= 0 ? +deltaExp : 0);
+        aSignif = ((1ull << expShift) + (aBits & fracMask));
       if (bBits & ~signMaskReal)
-        bSignif = ((1ull << expShift) + (bBits & fracMask))
-                  << (deltaExp >= 0 ? 0 : -deltaExp);
+        bSignif = ((1ull << expShift) + (bBits & fracMask));
+      iT shift;
+      if (deltaExpAB >= 0) {
+        shift = std::min(deltaExpAB, expShift - 1);
+        aSignif <<= shift;
+        bSignif >>= deltaExpAB - shift;
+      } else {
+        shift = std::min(-deltaExpAB, expShift - 1);
+        aSignif >>= -deltaExpAB - shift;
+        bSignif <<= shift;
+      }
+      deltaExpShift = shift + rBias;
       if (aBits & signMaskReal)
         aSignif = -aSignif;
       if (bBits & signMaskReal)
         bSignif = -bSignif;
-      iT rSigif = aSignif + bSignif;
-      iT isNegative = rSigif < 0;
+
+      iT rSignif = aSignif + bSignif;
+      iT isNegative = rSignif < 0;
       if (isNegative)
-        rSigif = -rSigif;
-      const iT rDeltaE =
-          sizeof(rSigif) * 8 - 1 - expShift -
-          std::countl_zero(static_cast<std::make_unsigned_t<iT>>(rSigif));
-      if (rDeltaE >= 0)
-        rSigif >>= rDeltaE;
+        rSignif = -rSignif;
+      const iT rDeltaExp =
+          sizeof(rSignif) * 8 - 1 - expShift -
+          std::countl_zero(static_cast<std::make_unsigned_t<iT>>(rSignif));
+      if (rDeltaExp >= 0)
+        rSignif >>= rDeltaExp;
       else
-        rSigif <<= -rDeltaE;
-      const iT exponent =
-          (deltaExp >= 0 ? bBias + bExp : aBias + aExp) - rBias + rDeltaE;
-      // NOTE.2: alternative: see above
-      // const iT exponent =
-      //   (deltaExp >= 0 ? aBias + aExp : bBias + bExp) - rBias + rDeltaE;
+        rSignif <<= -rDeltaExp;
+      const iT exponent = (deltaExpAB >= 0 ? aBias + aExp : bBias + bExp) -
+                          deltaExpShift + rDeltaExp;
       iT rBits = 0;
-      if (exponent > 0 && rSigif) {
+      if (exponent > 0 && rSignif) {
         rBits = (isNegative << signShift) | (exponent << expShift) |
-                (rSigif & fracMask);
-      } else { // TODO: store subnormal values
-        // rBits = (isNegative << signShift)
-        //       | ((rSigif >> -exponent) & fracMask);
+                (rSignif & fracMask);
       }
       result.SetBitsAtUnsafe(i, rBits);
     }
