@@ -31,6 +31,7 @@ TEST_CASE("Arithmetic Without Marshalling") {
   Vector v2 = Vector::Quantize(_v2);
   Vector resultTrue, resultNew;
   std::string op = "(op)";
+  f64 tollerance = 4;
 
   profiler::begin();
   SECTION("Add") {
@@ -60,14 +61,49 @@ TEST_CASE("Arithmetic Without Marshalling") {
       }
     }
   }
+
+  SECTION("Mul") {
+    tollerance = 4;
+    op = "*";
+    for (size_t i = 0; i < iterations; i++) {
+      {
+        profiler::block("naive mul");
+        resultTrue = CPUArithmetic<Vector>::Mul(v1, v2);
+      }
+      {
+        profiler::block("no marshal/unmarshal mul");
+        resultNew = CPUArithmeticWithoutMarshalling<Vector>::Mul(v1, v2);
+      }
+    }
+  }
+
+  // SECTION("Div") {
+  // tollerance = 1;
+  //   op = "/";
+  //   _v2 = fill_random_arrays<f64, Vector::NumElems>(max/16, max);
+  //   v2 = Vector::Quantize(_v2);
+  //   for (size_t i = 0; i < iterations; i++) {
+  //     {
+  //       profiler::block("naive div");
+  //       resultTrue = CPUArithmetic<Vector>::Div(v1, v2);
+  //     }
+  //     {
+  //       profiler::block("no marshal/unmarshal div");
+  //       resultNew = CPUArithmeticWithoutMarshalling<Vector>::Div(v1, v2);
+  //     }
+  //   }
+  // }
+
   profiler::end_and_print();
 
   REQUIRE(resultNew.Length() == resultTrue.Length());
   for (std::size_t i = 0; i < resultTrue.Length(); i++) {
-    bool equal = FuzzyEqual<TestingFloat>(resultNew.RealizeAtUnsafe(i),
-                                          resultTrue.RealizeAtUnsafe(i), 4);
+    bool equal =
+        FuzzyEqual<TestingFloat>(resultNew.RealizeAtUnsafe(i),
+                                 resultTrue.RealizeAtUnsafe(i), tollerance);
     if (!equal) {
-      std::cerr << i << ") " << _v1[i] << " + " << _v2[i] << " => "
+      std::cerr << std::fixed;
+      std::cerr << i << ") " << _v1[i] << " " << op << " " << _v2[i] << " => "
                 << v1[i].value() << " " << op << " " << v2[i].value()
                 << " == " << resultTrue[i].value()
                 << " != " << resultNew[i].value() << "\n";
