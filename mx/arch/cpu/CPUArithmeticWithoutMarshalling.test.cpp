@@ -7,6 +7,7 @@
 #include <array>
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
+#include <string>
 
 #define PROFILE 1
 #include "profiler/profiler.h"
@@ -30,8 +31,10 @@ TEST_CASE("Arithmetic Without Marshalling") {
   Vector v1 = Vector::Quantize(_v1);
   Vector v2 = Vector::Quantize(_v2);
   Vector resultTrue, resultNew;
+  std::string op = "(op)";
 
   SECTION("Add") {
+    op = "+";
     for (size_t i = 0; i < iterations; i++) {
       {
         profiler::block("naive add");
@@ -45,6 +48,7 @@ TEST_CASE("Arithmetic Without Marshalling") {
   }
 
   SECTION("Sub") {
+    op = "-";
     for (size_t i = 0; i < iterations; i++) {
       {
         profiler::block("naive sub");
@@ -62,8 +66,7 @@ TEST_CASE("Arithmetic Without Marshalling") {
     bool equal = FuzzyEqual<TestingFloat>(resultNew.RealizeAtUnsafe(i),
                                           resultTrue.RealizeAtUnsafe(i), 4);
     if (!equal) {
-      std::cerr << 2 << " * " << TestingFloat::Epsilon() << "\n";
-      std::cerr << i << " | " << _v1[i] << " + " << _v2[i] << " => " << " | "
+      std::cerr << i << ") " << _v1[i] << " + " << _v2[i] << " => "
                 << v1[i].value() << " (op) " << v2[i].value()
                 << " == " << resultTrue[i].value()
                 << " != " << resultNew[i].value() << "\n";
