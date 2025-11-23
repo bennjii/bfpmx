@@ -20,7 +20,6 @@ using TestingBlock = Block<TestingScalarSize, Dimensions, TestingFloat,
                            CPUArithmetic, SharedExponentQuantization>;
 
 TEST_CASE("Arithmetic Without Marshalling") {
-  profiler::begin();
   constexpr size_t sz = 10000;
   constexpr size_t iterations = 100;
   f64 min = -1000.0, max = 1000.0;
@@ -33,6 +32,7 @@ TEST_CASE("Arithmetic Without Marshalling") {
   Vector resultTrue, resultNew;
   std::string op = "(op)";
 
+  profiler::begin();
   SECTION("Add") {
     op = "+";
     for (size_t i = 0; i < iterations; i++) {
@@ -52,14 +52,15 @@ TEST_CASE("Arithmetic Without Marshalling") {
     for (size_t i = 0; i < iterations; i++) {
       {
         profiler::block("naive sub");
-        resultTrue = CPUArithmetic<Vector>::Add(v1, v2);
+        resultTrue = CPUArithmetic<Vector>::Sub(v1, v2);
       }
       {
         profiler::block("no marshal/unmarshal sub");
-        resultNew = CPUArithmeticWithoutMarshalling<Vector>::Add(v1, v2);
+        resultNew = CPUArithmeticWithoutMarshalling<Vector>::Sub(v1, v2);
       }
     }
   }
+  profiler::end_and_print();
 
   REQUIRE(resultNew.Length() == resultTrue.Length());
   for (std::size_t i = 0; i < resultTrue.Length(); i++) {
@@ -67,12 +68,10 @@ TEST_CASE("Arithmetic Without Marshalling") {
                                           resultTrue.RealizeAtUnsafe(i), 4);
     if (!equal) {
       std::cerr << i << ") " << _v1[i] << " + " << _v2[i] << " => "
-                << v1[i].value() << " (op) " << v2[i].value()
+                << v1[i].value() << " " << op << " " << v2[i].value()
                 << " == " << resultTrue[i].value()
                 << " != " << resultNew[i].value() << "\n";
     }
     REQUIRE(equal);
   }
-
-  profiler::end_and_print();
 }

@@ -24,8 +24,8 @@ template <typename T> struct CPUArithmeticWithoutMarshalling {
   static const iT signShift = expShift + T::FloatType::ExponentBits();
   static const iT signMaskReal = (1ull << signShift);
 
-  static auto _AddOrSub(const T &lhs, const T &rhs,
-                        std::function<iT(iT, iT)> op) -> T {
+  template <typename Op>
+  static auto _AddOrSub(const T &lhs, const T &rhs, Op op) -> T {
     const auto aBias = lhs.ScalarBits();
     const auto bBias = rhs.ScalarBits();
     const auto rBias = std::max(aBias, bBias);
@@ -66,8 +66,7 @@ template <typename T> struct CPUArithmeticWithoutMarshalling {
         aSignif = -aSignif;
       if (bBits & signMaskReal)
         bSignif = -bSignif;
-
-      iT rSignif = aSignif + bSignif;
+      iT rSignif = op(aSignif, bSignif);
       iT isNegative = rSignif < 0;
       if (isNegative)
         rSignif = -rSignif;
