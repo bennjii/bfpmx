@@ -36,6 +36,7 @@ TEST_CASE("Arithmetic Without Marshalling") {
   profiler::begin();
   SECTION("Add") {
     op = "+";
+    tollerance = 4;
     for (size_t i = 0; i < iterations; i++) {
       {
         profiler::block("naive add");
@@ -50,6 +51,7 @@ TEST_CASE("Arithmetic Without Marshalling") {
 
   SECTION("Sub") {
     op = "-";
+    tollerance = 4;
     for (size_t i = 0; i < iterations; i++) {
       {
         profiler::block("naive sub");
@@ -63,8 +65,8 @@ TEST_CASE("Arithmetic Without Marshalling") {
   }
 
   SECTION("Mul") {
-    tollerance = 4;
     op = "*";
+    tollerance = 4;
     for (size_t i = 0; i < iterations; i++) {
       {
         profiler::block("naive mul");
@@ -77,22 +79,22 @@ TEST_CASE("Arithmetic Without Marshalling") {
     }
   }
 
-  // SECTION("Div") {
-  // tollerance = 1;
-  //   op = "/";
-  //   _v2 = fill_random_arrays<f64, Vector::NumElems>(max/16, max);
-  //   v2 = Vector::Quantize(_v2);
-  //   for (size_t i = 0; i < iterations; i++) {
-  //     {
-  //       profiler::block("naive div");
-  //       resultTrue = CPUArithmetic<Vector>::Div(v1, v2);
-  //     }
-  //     {
-  //       profiler::block("no marshal/unmarshal div");
-  //       resultNew = CPUArithmeticWithoutMarshalling<Vector>::Div(v1, v2);
-  //     }
-  //   }
-  // }
+  SECTION("Div") {
+    op = "/";
+    tollerance = 2;
+    _v2 = fill_random_arrays<f64, Vector::NumElems>(max/64, max);
+    v2 = Vector::Quantize(_v2);
+    for (size_t i = 0; i < iterations; i++) {
+      {
+        profiler::block("naive div");
+        resultTrue = CPUArithmetic<Vector>::Div(v1, v2);
+      }
+      {
+        profiler::block("no marshal/unmarshal div");
+        resultNew = CPUArithmeticWithoutMarshalling<Vector>::Div(v1, v2);
+      }
+    }
+  }
 
   profiler::end_and_print();
 

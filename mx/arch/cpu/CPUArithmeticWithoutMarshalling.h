@@ -154,7 +154,44 @@ template <typename T> struct CPUArithmeticWithoutMarshalling {
 
     T result{T::Uninitialized};
     result.SetScalar(rBias);
-    // TODO
+    for (size_t i = 0; i < T::Length(); i++) {
+      auto aPacked = lhs.AtUnsafe(i);
+      auto bPacked = rhs.AtUnsafe(i);
+      iT aBits = 0, bBits = 0;
+      for (size_t j = 0; j < aPacked.size(); ++j) {
+        aBits |= static_cast<iT>(aPacked[j]) << (8 * j);
+        bBits |= static_cast<iT>(bPacked[j]) << (8 * j);
+      }
+
+      iT aExp = (aBits >> expShift) & expMask;
+      iT bExp = (bBits >> expShift) & expMask;
+
+      iT aSignif = 0, bSignif = 0;
+      if (aBits & ~signMask) {
+        aSignif = ((1ull << expShift) + (aBits & fracMask));
+        aSignif <<= expShift+1;
+      }
+      if (bBits & ~signMask) {
+        bSignif = ((1ull << expShift) + (bBits & fracMask));
+      }
+
+      iT rSignif = aSignif / bSignif;
+
+      const iT rDeltaExp =
+          sizeof(rSignif) * 8 - 1 - expShift -
+          std::countl_zero(static_cast<std::make_unsigned_t<iT>>(rSignif));
+      rSignif >>= rDeltaExp;
+
+      const iT exponent =
+          aExp - bExp + T::FloatType::BiasValue() - (rDeltaExp+2 != expShift);
+
+      iT rBits = 0;
+      if (exponent > 0 && rSignif) {
+        iT rSign = (aBits & signMask) ^ (bBits & signMask);
+        rBits = rSign | (exponent << expShift) | (rSignif & fracMask);
+      }
+      result.SetBitsAtUnsafe(i, rBits);
+    }
     return result;
   }
 };
