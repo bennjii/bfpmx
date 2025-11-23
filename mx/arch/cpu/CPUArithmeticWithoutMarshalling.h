@@ -7,9 +7,9 @@
 
 #include "definition/alias.h"
 #include <cmath>
+#include <functional>
 #include <iostream>
 #include <type_traits>
-#include <functional>
 #include <utility>
 
 #if 0 // nocheckin
@@ -92,18 +92,19 @@
 #endif
 
 template <typename T> struct CPUArithmeticWithoutMarshalling {
-    // NOTE: can easily become branchless
-    // NOTE: should we lower those to i8 or i16?
-    //       It depends on what kind of values we pass...
-    //       We need at least expShift*2+1 bits
-    using iT = i64;
-    static const iT fracMask = (1ull << T::FloatType::SignificandBits()) - 1;
-    static const iT expShift = T::FloatType::SignificandBits();
-    static const iT expMask = (1ull << T::FloatType::ExponentBits()) - 1;
-    static const iT signShift = expShift + T::FloatType::ExponentBits();
-    static const iT signMaskReal = (1ull << signShift);
+  // NOTE: can easily become branchless
+  // NOTE: should we lower those to i8 or i16?
+  //       It depends on what kind of values we pass...
+  //       We need at least expShift*2+1 bits
+  using iT = i64;
+  static const iT fracMask = (1ull << T::FloatType::SignificandBits()) - 1;
+  static const iT expShift = T::FloatType::SignificandBits();
+  static const iT expMask = (1ull << T::FloatType::ExponentBits()) - 1;
+  static const iT signShift = expShift + T::FloatType::ExponentBits();
+  static const iT signMaskReal = (1ull << signShift);
 
-  static auto _AddOrSub(const T &lhs, const T &rhs, std::function<iT(iT, iT)> op) -> T {
+  static auto _AddOrSub(const T &lhs, const T &rhs,
+                        std::function<iT(iT, iT)> op) -> T {
     const auto aBias = lhs.ScalarBits();
     const auto bBias = rhs.ScalarBits();
     const auto rBias = std::max(aBias, bBias);
@@ -131,11 +132,11 @@ template <typename T> struct CPUArithmeticWithoutMarshalling {
         bSignif = ((1ull << expShift) + (bBits & fracMask));
       iT shift = 0;
       if (deltaExpAB >= 0) {
-        shift = std::min(deltaExpAB, expShift+0); // nocheckin 
+        shift = std::min(deltaExpAB, expShift + 0); // nocheckin
         aSignif <<= shift;
         bSignif >>= deltaExpAB - shift;
       } else {
-        shift = std::min(-deltaExpAB, expShift+0); // nocheckin
+        shift = std::min(-deltaExpAB, expShift + 0); // nocheckin
         aSignif >>= -deltaExpAB - shift;
         bSignif <<= shift;
       }
@@ -169,11 +170,11 @@ template <typename T> struct CPUArithmeticWithoutMarshalling {
   }
 
   static auto Add(const T &lhs, const T &rhs) -> T {
-      return _AddOrSub(lhs, rhs, [](iT a, iT b) { return a + b; });
+    return _AddOrSub(lhs, rhs, [](iT a, iT b) { return a + b; });
   }
 
   static auto Sub(const T &lhs, const T &rhs) -> T {
-      return _AddOrSub(lhs, rhs, [](iT a, iT b) { return a - b; });
+    return _AddOrSub(lhs, rhs, [](iT a, iT b) { return a - b; });
   }
 
   static auto Mul(const T &lhs, const T &rhs) -> T {
