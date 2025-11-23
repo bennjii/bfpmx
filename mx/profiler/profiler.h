@@ -15,9 +15,9 @@
               return 0;
           }
     - To profile something put at the beginning of the block/function this line:
-        - profiler::function();
+        - profiler::func();
         - profiler::block("block_label");
-        - profiler::function_bandwidth(processed_bytes);
+        - profiler::func_bandwidth(processed_bytes);
         - profiler::block_bandwidth("block_label", processed_bytes)
  */
 
@@ -209,6 +209,8 @@ static inline void do_nothing() {}
 
 static inline void begin(void) {
   detail::profiler_cpu_freq = (f64)detail::guess_CPU_freq(1);
+  // here to reset the profiler in case this function is called more than once
+  detail::global_profiler = {};
   detail::global_profiler.anchors[0].elapsed_at_root = detail::read_CPU_timer();
 }
 
@@ -253,9 +255,9 @@ static inline void end_and_print(void) {
 
 #define block_bandwidth(_block_name, _byte_count)                              \
   block_bandwidth_counter(_block_name, _byte_count, __COUNTER__ + 1)
-#define function_bandwidth(_byte_count) block_bandwidth(__func__, _byte_count)
+#define func_bandwidth(_byte_count) block_bandwidth(__func__, _byte_count)
 #define block(_block_name) block_bandwidth(_block_name, 0)
-#define function() function_bandwidth(0)
+#define func() func_bandwidth(0)
 
 #else // PROFILE
 
@@ -270,9 +272,9 @@ static inline void end_and_print(void) {
 #define begin(...) detail::do_nothing()
 #define end_and_print(...) detail::do_nothing()
 #define block_bandwidth(...) detail::do_nothing()
-#define function_bandwidth(...) detail::do_nothing()
+#define func_bandwidth(...) detail::do_nothing()
 #define block(...) detail::do_nothing()
-#define function(...) detail::do_nothing()
+#define func(...) detail::do_nothing()
 
 #endif
 
