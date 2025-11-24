@@ -6,6 +6,7 @@
 #define BFPMX_CPU_ARITHMETIC_WITHOUT_MARSHALLING_H
 
 #include "definition/alias.h"
+#include <cassert>
 #include <cmath>
 #include <functional>
 #include <iostream>
@@ -24,8 +25,24 @@ template <typename T> struct CPUArithmeticWithoutMarshalling {
   static const iT signShift = expShift + T::FloatType::ExponentBits();
   static const iT signMask = (1ull << signShift);
 
-  template <typename Op>
-  static auto _doOperation(const T &lhs, const T &rhs, Op op) -> T {
+  static auto Add(const T &lhs, const T &rhs) -> T {
+    return _AddOrSub<true>(lhs, rhs);
+  }
+
+  static auto Sub(const T &lhs, const T &rhs) -> T {
+    return _AddOrSub<false>(lhs, rhs);
+  }
+
+  static auto Mul(const T &lhs, const T &rhs) -> T {
+    return _MulOrDiv<true>(lhs, rhs);
+  }
+
+  static auto Div(const T &lhs, const T &rhs) -> T {
+    return _MulOrDiv<false>(lhs, rhs);
+  }
+
+  template <bool is_sum>
+  static auto _AddOrSub(const T &lhs, const T &rhs) -> T {
     const auto aBias = lhs.ScalarBits();
     const auto bBias = rhs.ScalarBits();
     const auto rBias = std::max(aBias, bBias);
@@ -47,10 +64,17 @@ template <typename T> struct CPUArithmeticWithoutMarshalling {
       iT deltaExpShift;
 
       iT aSignif = 0, bSignif = 0;
-      if (aBits & ~signMask)
+      if (aBits & ~signMask) {
         aSignif = ((1ull << expShift) + (aBits & fracMask));
-      if (bBits & ~signMask)
+        if (aBits & signMask)
+          aSignif = -aSignif;
+      }
+      if (bBits & ~signMask) {
         bSignif = ((1ull << expShift) + (bBits & fracMask));
+        if (bBits & signMask)
+          bSignif = -bSignif;
+      }
+
       iT shift = 0;
       if (deltaExpAB >= 0) {
         shift = std::min(deltaExpAB, expShift + 0);
@@ -62,11 +86,9 @@ template <typename T> struct CPUArithmeticWithoutMarshalling {
         bSignif <<= shift;
       }
       deltaExpShift = shift + rBias;
-      if (aBits & signMask)
-        aSignif = -aSignif;
-      if (bBits & signMask)
-        bSignif = -bSignif;
-      iT rSignif = op(aSignif, bSignif);
+
+      iT rSignif = (is_sum ? aSignif + bSignif : aSignif - bSignif);
+
       iT isNegative = rSignif < 0;
       if (isNegative)
         rSignif = -rSignif;
@@ -77,6 +99,7 @@ template <typename T> struct CPUArithmeticWithoutMarshalling {
         rSignif >>= rDeltaExp;
       else
         rSignif <<= -rDeltaExp;
+
       const iT exponent = (deltaExpAB >= 0 ? aBias + aExp : bBias + bExp) -
                           deltaExpShift + rDeltaExp;
       iT rBits = 0;
@@ -89,18 +112,11 @@ template <typename T> struct CPUArithmeticWithoutMarshalling {
     return result;
   }
 
-  static auto Add(const T &lhs, const T &rhs) -> T {
-    return _doOperation(lhs, rhs, [](auto a, auto b) { return a + b; });
-  }
-
-  static auto Sub(const T &lhs, const T &rhs) -> T {
-    return _doOperation(lhs, rhs, [](auto a, auto b) { return a - b; });
-  }
-
-  static auto Mul(const T &lhs, const T &rhs) -> T {
+  template <bool is_mul>
+  static auto _MulOrDiv(const T &lhs, const T &rhs) -> T {
     const auto aBias = lhs.ScalarBits();
     const auto bBias = rhs.ScalarBits();
-    const auto rBias = aBias + bBias;
+    const auto rBias = is_mul ? aBias + bBias : aBias - bBias;
 
     T result{T::Uninitialized};
     result.SetScalar(rBias);
@@ -119,74 +135,28 @@ template <typename T> struct CPUArithmeticWithoutMarshalling {
       iT aSignif = 0, bSignif = 0;
       if (aBits & ~signMask) {
         aSignif = ((1ull << expShift) + (aBits & fracMask));
+        aSignif <<= is_mul ? 0 : expShift + 1;
       }
       if (bBits & ~signMask) {
         bSignif = ((1ull << expShift) + (bBits & fracMask));
       }
 
-      iT rSignif = aSignif * bSignif;
+      iT rSignif = is_mul ? aSignif * bSignif : aSignif / bSignif;
 
       const iT rDeltaExp =
           sizeof(rSignif) * 8 - 1 - expShift -
           std::countl_zero(static_cast<std::make_unsigned_t<iT>>(rSignif));
+      assert(!rSignif || rDeltaExp >= 0); // something went wrong
       rSignif >>= rDeltaExp;
 
-      iT exponent =
-          aExp + bExp - T::FloatType::BiasValue() + (rDeltaExp != expShift);
+      iT exponent = is_mul ? aExp + bExp - T::FloatType::BiasValue() +
+                                 (rDeltaExp != expShift)
+                           : aExp - bExp + T::FloatType::BiasValue() -
+                                 (rDeltaExp + 2 != expShift);
 
       iT rBits = 0;
       if (exponent > 0 && rSignif) {
-        if ((exponent & expMask) != exponent) {
-          std::cout << expMask << " " << exponent << "\n";
-        }
-        iT rSign = (aBits & signMask) ^ (bBits & signMask);
-        rBits = rSign | (exponent << expShift) | (rSignif & fracMask);
-      }
-      result.SetBitsAtUnsafe(i, rBits);
-    }
-    return result;
-  }
-
-  static auto Div(const T &lhs, const T &rhs) -> T {
-    const auto aBias = lhs.ScalarBits();
-    const auto bBias = rhs.ScalarBits();
-    const auto rBias = aBias - bBias;
-
-    T result{T::Uninitialized};
-    result.SetScalar(rBias);
-    for (size_t i = 0; i < T::Length(); i++) {
-      auto aPacked = lhs.AtUnsafe(i);
-      auto bPacked = rhs.AtUnsafe(i);
-      iT aBits = 0, bBits = 0;
-      for (size_t j = 0; j < aPacked.size(); ++j) {
-        aBits |= static_cast<iT>(aPacked[j]) << (8 * j);
-        bBits |= static_cast<iT>(bPacked[j]) << (8 * j);
-      }
-
-      iT aExp = (aBits >> expShift) & expMask;
-      iT bExp = (bBits >> expShift) & expMask;
-
-      iT aSignif = 0, bSignif = 0;
-      if (aBits & ~signMask) {
-        aSignif = ((1ull << expShift) + (aBits & fracMask));
-        aSignif <<= expShift+1;
-      }
-      if (bBits & ~signMask) {
-        bSignif = ((1ull << expShift) + (bBits & fracMask));
-      }
-
-      iT rSignif = aSignif / bSignif;
-
-      const iT rDeltaExp =
-          sizeof(rSignif) * 8 - 1 - expShift -
-          std::countl_zero(static_cast<std::make_unsigned_t<iT>>(rSignif));
-      rSignif >>= rDeltaExp;
-
-      const iT exponent =
-          aExp - bExp + T::FloatType::BiasValue() - (rDeltaExp+2 != expShift);
-
-      iT rBits = 0;
-      if (exponent > 0 && rSignif) {
+        assert((exponent & expMask) == exponent); // OF otherwise
         iT rSign = (aBits & signMask) ^ (bBits & signMask);
         rBits = rSign | (exponent << expShift) | (rSignif & fracMask);
       }

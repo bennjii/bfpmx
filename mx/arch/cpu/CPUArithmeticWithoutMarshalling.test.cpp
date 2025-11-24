@@ -82,7 +82,8 @@ TEST_CASE("Arithmetic Without Marshalling") {
   SECTION("Div") {
     op = "/";
     tollerance = 2;
-    _v2 = fill_random_arrays<f64, Vector::NumElems>(max/64, max);
+    _v2 = fill_random_arrays<f64, Vector::NumElems>(std::abs(max / 64),
+                                                    std::abs(max));
     v2 = Vector::Quantize(_v2);
     for (size_t i = 0; i < iterations; i++) {
       {
