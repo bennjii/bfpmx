@@ -85,7 +85,9 @@ public:
     return AtUnsafe(index);
   }
 
-  void SetValue(const u16 index, f64 value) const;
+  void SetValue(const u16 index, f64 value) const {
+    return SetBitsAtUnsafe(index, Float::Marshal(value));
+  }
 
   // A variant of `At` which runs on the provided assertions that
   // the underlying data must exist at the index.
