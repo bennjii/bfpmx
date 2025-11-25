@@ -229,7 +229,8 @@ public:
     return std::bit_cast<f64>(f64Bits);
   }
 
-  HD [[nodiscard]] static constexpr f64 Unmarshal(std::array<u8, SizeBytes()> v) {
+  HD [[nodiscard]] static constexpr f64
+  Unmarshal(std::array<u8, SizeBytes()> v) {
     u64 bits = 0;
     for (u32 i = 0; i < SizeBytes(); ++i)
       bits |= static_cast<u64>(v[i]) << (8 * i);

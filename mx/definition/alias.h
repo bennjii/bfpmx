@@ -26,11 +26,11 @@ typedef uint64_t u64;
 
 // Macro definitions for CUDA compatibility
 #ifdef HAS_CUDA
-    #include "cuda_runtime.h"
-    #include "device_launch_parameters.h"
-    #define HD __host__ __device__
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
+#define HD __host__ __device__
 #else
-    #define HD
+#define HD
 #endif
 
 #endif
