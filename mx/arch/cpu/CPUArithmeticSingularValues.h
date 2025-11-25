@@ -11,7 +11,7 @@
 
 enum OperationType { AddOp, SubOp, MulOp, DivOp };
 
-template <typename TR, typename TA, typename TB, typename iT>
+template <typename TR, typename TA, typename TB, typename iT = i64>
 struct CPUArithmeticSingularValues {
   // NOTE: can easily become branchless
   // NOTE: should we lower those to i8 or i16?
@@ -46,13 +46,13 @@ struct CPUArithmeticSingularValues {
   static inline void MulAt(TR &r, const u16 rIdx, auto rBias, const TA &a,
                            const u16 aIdx, auto aBias, const TB &b,
                            const u16 bIdx, auto bBias) {
-    _AddOrSubAt<MulOp>(r, rIdx, rBias, a, aIdx, aBias, b, bIdx, bBias);
+    _MulOrDivAt<MulOp>(r, rIdx, rBias, a, aIdx, aBias, b, bIdx, bBias);
   }
 
   static inline void DivAt(TR &r, const u16 rIdx, auto rBias, const TA &a,
                            const u16 aIdx, auto aBias, const TB &b,
                            const u16 bIdx, auto bBias) {
-    _AddOrSubAt<DivOp>(r, rIdx, rBias, a, aIdx, aBias, b, bIdx, bBias);
+    _MulOrDivAt<DivOp>(r, rIdx, rBias, a, aIdx, aBias, b, bIdx, bBias);
   }
 
   // NOTE: the bias is passed directly since it is expensive to calculate

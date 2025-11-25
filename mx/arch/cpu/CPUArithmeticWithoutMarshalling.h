@@ -8,8 +8,8 @@
 
 #include "CPUArithmeticSingularValues.h"
 
-template <typename T> struct CPUArithmeticWithoutMarshalling {
-  using iT = i64;
+template <typename T, typename iT = i64>
+struct CPUArithmeticWithoutMarshalling {
 
   static auto Add(const T &a, const T &b) -> T { return _AnyOp<AddOp>(a, b); }
 
