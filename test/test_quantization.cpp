@@ -4,7 +4,11 @@
 
 #include <cassert>
 
+#define PROFILE 1
+
 #include "definition/prelude.h"
+#include "helper/test.h"
+#include "profiler/profiler.h"
 
 // Constants to be used for the testing regime
 constexpr u32 BlockScalar = 4; // u32 (4 bytes)
@@ -56,9 +60,20 @@ template<
 >
 void TestAllQuantization(const std::array<f64, BlockSize::TotalSize()> &full_precision)
 {
-    Test<A, L2NormQuantization>(full_precision);
-    Test<A, SharedExponentQuantization>(full_precision);
-    Test<A, MaximumFractionalQuantization>(full_precision);
+    {
+        profiler::block("L2 Norm Quantization");
+        Test<A, L2NormQuantization>(full_precision);
+    }
+
+    {
+        profiler::block("Shared Exponent Quantization");
+        Test<A, SharedExponentQuantization>(full_precision);
+    }
+
+    {
+        profiler::block("Maximal Fractional Quantization");
+        Test<A, MaximumFractionalQuantization>(full_precision);
+    }
 }
 
 // Define elsewhere.
@@ -76,10 +91,16 @@ void TestAllArithmetic(const std::array<f64, BlockSize::TotalSize()> &full_preci
 }
 
 int main() {
-    constexpr std::array<f64, BlockSize::TotalSize()> EXAMPLE_ARRAY =
-        std::to_array<f64, BlockSize::TotalSize()>({
-            1.2f, 3.4f, 5.6f, 2.1f, 1.3f, -6.5f
-        });
+    profiler::begin();
 
-    TestAllArithmetic(EXAMPLE_ARRAY);
+    const f64 min = 0.0;
+    const f64 max = 1000.0;
+
+    auto array = fill_random_arrays<f64, BlockSize::TotalSize()>(min, max);
+
+    for (int i = 0; i < 100000; i++) {
+        TestAllArithmetic(array);
+    }
+
+    profiler::end_and_print();
 }
