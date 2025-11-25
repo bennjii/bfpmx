@@ -107,9 +107,9 @@ TEST_CASE("Arithmetic Without Marshalling") {
     if (!equal) {
       std::cerr << std::fixed;
       std::cerr << i << ") " << _v1[i] << " " << op << " " << _v2[i] << " => "
-                << v1[i].value() << " " << op << " " << v2[i].value()
-                << " == " << resultTrue[i].value()
-                << " != " << resultNew[i].value() << "\n";
+                << v1[i] << " " << op << " " << v2[i]
+                << " == " << resultTrue[i]
+                << " != " << resultNew[i] << "\n";
     }
     REQUIRE(equal);
   }

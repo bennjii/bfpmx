@@ -85,6 +85,10 @@ public:
     return AtUnsafe(index);
   }
 
+  void SetValue(const u16 index, f64 value) {
+    SetPackedBitsAtUnsafe(index, Float::Marshal(value));
+  }
+
   // A variant of `At` which runs on the provided assertions that
   // the underlying data must exist at the index.
   [[nodiscard]] PackedFloat AtUnsafe(const u16 index) const {
@@ -186,18 +190,17 @@ public:
 
   // Templated for parameter packs
   template <typename... IndexTypes>
-  constexpr std::optional<f64> operator[](IndexTypes... idxs) noexcept {
+  constexpr f64 operator[](IndexTypes... idxs) noexcept {
     static_assert(sizeof...(idxs) == BlockShape::num_dims,
                   "Incorrect number of indices for this Block");
     std::array<u32, sizeof...(idxs)> coords{static_cast<u32>(idxs)...};
     const u32 linear = BlockShape::CoordsToLinear(coords);
-    return RealizeAt(linear);
+    return RealizeAtUnsafe(linear);
   }
 
   // Templated for parameter packs
   template <typename... IndexTypes>
-  constexpr const std::optional<f64> &
-  operator[](IndexTypes... idxs) const noexcept {
+  constexpr const f64 &operator[](IndexTypes... idxs) const noexcept {
     static_assert(sizeof...(idxs) == BlockShape::num_dims,
                   "Incorrect number of indices for this Block");
     std::array<u32, sizeof...(idxs)> coords{static_cast<u32>(idxs)...};

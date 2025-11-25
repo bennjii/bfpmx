@@ -26,7 +26,7 @@ TEST_CASE("Maximum Fractional Quantization") {
 
   // Should match all from original array, within some given bound
   for (u32 i = 0; i < MaximumFractionalBlock::NumElems; i++) {
-    REQUIRE(FuzzyEqual<TestingFloat>(block[i].value(), EXAMPLE_ARRAY[i]));
+    REQUIRE(FuzzyEqual<TestingFloat>(block[i], EXAMPLE_ARRAY[i]));
   }
 }
 
@@ -36,6 +36,6 @@ TEST_CASE("Shared Exponent Quantization") {
 
   // Should match all from original array, within some given bound
   for (u32 i = 0; i < SharedExponentBlock::NumElems; i++) {
-    REQUIRE(FuzzyEqual<TestingFloat>(block[i].value(), EXAMPLE_ARRAY[i]));
+    REQUIRE(FuzzyEqual<TestingFloat>(block[i], EXAMPLE_ARRAY[i]));
   }
 }
