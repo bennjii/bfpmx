@@ -12,7 +12,7 @@ template<
     u16 S
 >
 void test_round_trip(FloatRepr<E, M, S> repr, f64 value, f64 range) {
-    profiler::function();
+    profiler::func();
     auto bytes = repr.Marshal(value);
     auto decoded = repr.Unmarshal(bytes);
 

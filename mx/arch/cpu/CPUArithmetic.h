@@ -37,12 +37,12 @@ template <typename T> struct CPUArithmetic {
 
   static auto Sub(const T &lhs, const T &rhs) -> T {
     using ElemType = f64;
-    std::array<ElemType, T::dataCount()> result;
+    std::array<ElemType, T::Length()> result;
 
     auto l = lhs.Spread();
     auto r = rhs.Spread();
 
-    for (std::size_t i = 0; i < T::dataCount(); ++i)
+    for (std::size_t i = 0; i < T::Length(); ++i)
       result[i] = l[i] - r[i];
 
     return T(result);
@@ -50,12 +50,12 @@ template <typename T> struct CPUArithmetic {
 
   static auto Mul(const T &lhs, const T &rhs) -> T {
     using ElemType = f64;
-    std::array<ElemType, T::dataCount()> result;
+    std::array<ElemType, T::Length()> result;
 
     auto l = lhs.Spread();
     auto r = rhs.Spread();
 
-    for (std::size_t i = 0; i < T::dataCount(); ++i)
+    for (std::size_t i = 0; i < T::Length(); ++i)
       result[i] = l[i] * r[i];
 
     return T(result);
@@ -63,12 +63,12 @@ template <typename T> struct CPUArithmetic {
 
   static auto Div(const T &lhs, const T &rhs) -> T {
     using ElemType = f64;
-    std::array<ElemType, T::dataCount()> result;
+    std::array<ElemType, T::Length()> result;
 
     auto l = lhs.Spread();
     auto r = rhs.Spread();
 
-    for (std::size_t i = 0; i < T::dataCount(); ++i)
+    for (std::size_t i = 0; i < T::Length(); ++i)
       result[i] = l[i] / r[i];
 
     return T(result);
