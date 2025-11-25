@@ -25,7 +25,7 @@ static void jacobi_2d_array(
   std::array<std::array<f64, N>, N> A,
   std::array<std::array<f64, N>, N> B
 ) {
-  profiler::function();
+  profiler::func();
   int t, i, j;
 
 #pragma scop
@@ -47,7 +47,7 @@ static void jacobi_2d_block(
   TestingBlock<BlockDims<N, N>> A,
   TestingBlock<BlockDims<N, N>> B
 ) {
-  profiler::function();
+  profiler::func();
 
   using Dimensions = BlockDims<N, N>;
 
