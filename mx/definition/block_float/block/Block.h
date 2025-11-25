@@ -200,8 +200,7 @@ public:
 
   // Templated for parameter packs
   template <typename... IndexTypes>
-  constexpr const f64 &
-  operator[](IndexTypes... idxs) const noexcept {
+  constexpr const f64 &operator[](IndexTypes... idxs) const noexcept {
     static_assert(sizeof...(idxs) == BlockShape::num_dims,
                   "Incorrect number of indices for this Block");
     std::array<u32, sizeof...(idxs)> coords{static_cast<u32>(idxs)...};
