@@ -21,7 +21,7 @@ using TestingBlock = Block<TestingScalarSize, Dimensions, TestingFloat,
 // https://github.com/MatthiasJReisinger/PolyBenchC-4.2.1/blob/3e872547cef7e5c9909422ef1e6af03cf4e56072/stencils/jacobi-2d/jacobi-2d.c
 template <size_t N>
 static void jacobi_2d_array(
-  int steps,
+  const int steps,
   std::array<std::array<f64, N>, N> A,
   std::array<std::array<f64, N>, N> B
 ) {
