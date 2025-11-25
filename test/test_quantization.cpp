@@ -7,6 +7,7 @@
 #define PROFILE 1
 
 #include "definition/prelude.h"
+#include "helper/test.h"
 #include "profiler/profiler.h"
 
 // Constants to be used for the testing regime
@@ -81,6 +82,7 @@ void TestAllQuantization(const std::array<f64, BlockSize::TotalSize()> &full_pre
 void TestAllArithmetic(const std::array<f64, BlockSize::TotalSize()> &full_precision) {
 #ifdef CPU_COMPATIBLE
     TestAllQuantization<CPUArithmetic>(full_precision);
+    TestAllQuantization<CPUArithmeticWithoutMarshalling>(full_precision);
 #endif
 
 #ifdef HAS_CUDA
@@ -91,13 +93,13 @@ void TestAllArithmetic(const std::array<f64, BlockSize::TotalSize()> &full_preci
 int main() {
     profiler::begin();
 
-    constexpr std::array<f64, BlockSize::TotalSize()> EXAMPLE_ARRAY =
-        std::to_array<f64, BlockSize::TotalSize()>({
-            1.2f, 3.4f, 5.6f, 2.1f, 1.3f, -6.5f
-        });
+    const f64 min = 0.0;
+    const f64 max = 1000.0;
+
+    auto array = fill_random_arrays<f64, BlockSize::TotalSize()>(min, max);
 
     for (int i = 0; i < 100000; i++) {
-        TestAllArithmetic(EXAMPLE_ARRAY);
+        TestAllArithmetic(array);
     }
 
     profiler::end_and_print();
