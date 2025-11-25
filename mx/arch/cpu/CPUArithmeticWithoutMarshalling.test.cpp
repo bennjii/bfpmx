@@ -49,9 +49,8 @@ TEST_CASE("Arithmetic Without Marshalling") {
     for (std::size_t i = 0; i < resultTrue.Length(); i++) {
       if (resultNew.RealizeAtUnsafe(i) != resultTrue.RealizeAtUnsafe(i)) {
         std::cerr << i << " | " << _v1[i] << " + " << _v2[i] << " => " << " | "
-                  << v1[i].value() << " + " << v2[i].value()
-                  << " ==" << resultTrue[i].value()
-                  << " != " << resultNew[i].value();
+                  << v1[i] << " + " << v2[i] << " ==" << resultTrue[i]
+                  << " != " << resultNew[i];
       }
       REQUIRE(resultNew.RealizeAtUnsafe(i) == resultTrue.RealizeAtUnsafe(i));
     }

@@ -100,3 +100,7 @@ target_link_libraries(example_playground PRIVATE bfpmx)
 
 add_executable(example_quant example/quant.cpp)
 target_link_libraries(example_quant PRIVATE bfpmx)
+
+# Benchmarks #
+add_executable(jacobi2d benchmarks/jacobi.cpp)
+target_link_libraries(jacobi2d PRIVATE bfpmx)
