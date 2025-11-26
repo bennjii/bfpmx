@@ -4,8 +4,6 @@
 #include "definition/prelude.h"
 #include <array>
 #include <catch2/catch_test_macros.hpp>
-#include <cmath>
-#include <iostream>
 
 constexpr u32 TestingScalarSize = 4;
 using TestingFloat = fp8::E4M3Type;

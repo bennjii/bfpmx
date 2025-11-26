@@ -1,4 +1,3 @@
-// This header file must NOT be included in any non-CUDA file
 #ifndef BFPMX_GPU_ARITHMETIC_CUH
 #define BFPMX_GPU_ARITHMETIC_CUH
 #include "common.cuh"

@@ -59,6 +59,13 @@ public:
     scalar_ = scalar;
   }
 
+  struct _Uninitialized {};
+  static inline constexpr _Uninitialized Uninitialized{};
+  // Usage: `Block b{Block::Uninitialized};`
+  Block(_Uninitialized) noexcept {
+    // do not initialize data_
+  }
+
   // Constructors from given element types
   explicit Block(std::array<f64, NumElems> v) : Block(Quantize(v)) {}
   explicit Block(std::array<PackedFloat, NumElems> init)
@@ -82,10 +89,28 @@ public:
     return AtUnsafe(index);
   }
 
+  void SetValue(const u16 index, f64 value) {
+    SetPackedBitsAtUnsafe(index, Float::Marshal(value));
+  }
+
   // A variant of `At` which runs on the provided assertions that
   // the underlying data must exist at the index.
   HD [[nodiscard]] PackedFloat AtUnsafe(const u16 index) const {
     return data_[index];
+  }
+
+  void SetPackedBitsAtUnsafe(const u16 index,
+                             std::array<u8, Float::SizeBytes()> const &bits) {
+    data_[index] = bits;
+  }
+
+  void SetBitsAtUnsafe(const u16 index, const u64 bits) {
+    // TODO: see ScalarBits
+    std::array<u8, Float::SizeBytes()> out{};
+    for (size_t i = 0; i < Float::SizeBytes(); ++i) {
+      out[i] = static_cast<u8>(bits >> (i * 8));
+    }
+    SetPackedBitsAtUnsafe(index, out);
   }
 
   [[nodiscard]] std::optional<f64> RealizeAt(const u16 index) const {
@@ -100,14 +125,27 @@ public:
     return Float::Unmarshal(AtUnsafe(index)) * Scalar();
   }
 
-  HD [[nodiscard]] u64 Scalar() const {
+  void SetScalar(u64 scalar) {
+    // TODO: see ScalarBits
+    for (int i = 0; i < ScalarSizeBytes; i++) {
+      scalar_[i] = scalar >> (i * 8);
+    }
+  }
+
+  HD [[nodiscard]] u64 ScalarBits() const {
+    // TODO: can this be optimized with a simple cast,
+    //       like `if (ScalarSizeBytes == 1) return *(*u8) scalar_;`
+    //            `if (ScalarSizeBytes == 2) return *(*u16) scalar_;`
+    //       or even better: instead of specifying `ScalarSizeBytes` cannot we
+    //       specify a type, like u8, u16, u32 or u64?
     u64 scalar = 0;
     for (int i = 0; i < ScalarSizeBytes; i++) {
       scalar |= scalar_[i] << (i * 8);
     }
-
-    return 1 << scalar;
+    return scalar;
   }
+
+  HD [[nodiscard]] u64 Scalar() const { return 1 << ScalarBits(); }
 
   [[nodiscard]] std::array<f64, NumElems> Spread() const {
     std::array<f64, NumElems> blockUnscaledFloats;
@@ -156,18 +194,17 @@ public:
 
   // Templated for parameter packs
   template <typename... IndexTypes>
-  constexpr std::optional<f64> operator[](IndexTypes... idxs) noexcept {
+  constexpr f64 operator[](IndexTypes... idxs) noexcept {
     static_assert(sizeof...(idxs) == BlockShape::num_dims,
                   "Incorrect number of indices for this Block");
     std::array<u32, sizeof...(idxs)> coords{static_cast<u32>(idxs)...};
     const u32 linear = BlockShape::CoordsToLinear(coords);
-    return RealizeAt(linear);
+    return RealizeAtUnsafe(linear);
   }
 
   // Templated for parameter packs
   template <typename... IndexTypes>
-  constexpr const std::optional<f64> &
-  operator[](IndexTypes... idxs) const noexcept {
+  constexpr const f64 &operator[](IndexTypes... idxs) const noexcept {
     static_assert(sizeof...(idxs) == BlockShape::num_dims,
                   "Incorrect number of indices for this Block");
     std::array<u32, sizeof...(idxs)> coords{static_cast<u32>(idxs)...};

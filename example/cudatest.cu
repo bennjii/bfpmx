@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "definition/prelude.h"
-#include "arch/gpu/GPUArithmetic.cuh"
+#include "arch/gpu/preludeGPU.cuh"
 using FloatReprCUDATest = fp8::E4M3Type;
 template<template <typename T> typename ArithmeticPolicy>
 using BlockT = Block<32, BlockDims<4>, FloatReprCUDATest, ArithmeticPolicy, MaximumFractionalQuantization>;

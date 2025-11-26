@@ -6,6 +6,7 @@
 #define BFPMX_CPU_ARITHMETIC_H
 
 #include "definition/alias.h"
+#include <cmath>
 #include <iostream>
 #include <type_traits>
 
@@ -19,18 +20,29 @@ template <typename T> struct CPUArithmetic {
 
     for (std::size_t i = 0; i < T::Length(); ++i)
       result[i] = l[i] + r[i];
-
     return T(result);
+
+    // NOTE: slightly faster?
+    /* const auto rB = std::max(lhs.ScalarBits(), rhs.ScalarBits()) + 1;
+    T result{T::Uninitialized};
+    result.SetScalar(rB);
+    for (std::size_t i = 0; i < T::Length(); i++) {
+        auto a = lhs.RealizeAtUnsafe(i);
+        auto b = rhs.RealizeAtUnsafe(i);
+        auto r = T::FloatType::Marshal((a+b)/(1ull<<rB));
+        result.SetPackedBitsAt(i, r);
+    }
+    return result; */
   }
 
   static auto Sub(const T &lhs, const T &rhs) -> T {
     using ElemType = f64;
-    std::array<ElemType, T::dataCount()> result;
+    std::array<ElemType, T::Length()> result;
 
     auto l = lhs.Spread();
     auto r = rhs.Spread();
 
-    for (std::size_t i = 0; i < T::dataCount(); ++i)
+    for (std::size_t i = 0; i < T::Length(); ++i)
       result[i] = l[i] - r[i];
 
     return T(result);
@@ -38,12 +50,12 @@ template <typename T> struct CPUArithmetic {
 
   static auto Mul(const T &lhs, const T &rhs) -> T {
     using ElemType = f64;
-    std::array<ElemType, T::dataCount()> result;
+    std::array<ElemType, T::Length()> result;
 
     auto l = lhs.Spread();
     auto r = rhs.Spread();
 
-    for (std::size_t i = 0; i < T::dataCount(); ++i)
+    for (std::size_t i = 0; i < T::Length(); ++i)
       result[i] = l[i] * r[i];
 
     return T(result);
@@ -51,12 +63,12 @@ template <typename T> struct CPUArithmetic {
 
   static auto Div(const T &lhs, const T &rhs) -> T {
     using ElemType = f64;
-    std::array<ElemType, T::dataCount()> result;
+    std::array<ElemType, T::Length()> result;
 
     auto l = lhs.Spread();
     auto r = rhs.Spread();
 
-    for (std::size_t i = 0; i < T::dataCount(); ++i)
+    for (std::size_t i = 0; i < T::Length(); ++i)
       result[i] = l[i] / r[i];
 
     return T(result);
