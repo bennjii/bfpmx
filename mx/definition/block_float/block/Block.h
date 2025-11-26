@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <format>
 #include <string>
+#include <cstring>
 
 #include "BlockDims.h"
 #include "arch/prelude.h"
@@ -101,11 +102,9 @@ public:
   }
 
   void SetBitsAtUnsafe(const u16 index, const u64 bits) {
-    // TODO: see ScalarBits
     std::array<u8, Float::SizeBytes()> out{};
-    for (size_t i = 0; i < Float::SizeBytes(); ++i) {
-      out[i] = static_cast<u8>(bits >> (i * 8));
-    }
+    // memcpy is optimized at comp-time since Float::SizeBytes() is a constexpr
+    std::memcpy(&out[0], &bits, Float::SizeBytes());
     SetPackedBitsAtUnsafe(index, out);
   }
 
@@ -122,22 +121,14 @@ public:
   }
 
   void SetScalar(u64 scalar) {
-    // TODO: see ScalarBits
-    for (int i = 0; i < ScalarSizeBytes; i++) {
-      scalar_[i] = scalar >> (i * 8);
-    }
+    // memcpy is optimized at comp-time since ScalarSizeBytes is a constexpr
+    std::memcpy(&scalar_[0], &scalar, ScalarSizeBytes);
   }
 
   [[nodiscard]] u64 ScalarBits() const {
-    // TODO: can this be optimized with a simple cast,
-    //       like `if (ScalarSizeBytes == 1) return *(*u8) scalar_;`
-    //            `if (ScalarSizeBytes == 2) return *(*u16) scalar_;`
-    //       or even better: instead of specifying `ScalarSizeBytes` cannot we
-    //       specify a type, like u8, u16, u32 or u64?
     u64 scalar = 0;
-    for (int i = 0; i < ScalarSizeBytes; i++) {
-      scalar |= scalar_[i] << (i * 8);
-    }
+    // memcpy is optimized at comp-time since ScalarSizeBytes is a constexpr
+    std::memcpy(&scalar, &scalar_[0], ScalarSizeBytes);
     return scalar;
   }
 

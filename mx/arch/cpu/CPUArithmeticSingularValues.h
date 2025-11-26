@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <bit>
 #include <cassert>
+#include <cstring>
 #include <type_traits>
 
 enum OperationType { AddOp, SubOp, MulOp, DivOp };
@@ -65,10 +66,12 @@ struct CPUArithmeticSingularValues {
     auto aPacked = a.AtUnsafe(aIdx);
     auto bPacked = b.AtUnsafe(bIdx);
     iT aBits = 0, bBits = 0;
-    for (std::size_t j = 0; j < aPacked.size(); ++j) {
-      aBits |= static_cast<iT>(aPacked[j]) << (8 * j);
-      bBits |= static_cast<iT>(bPacked[j]) << (8 * j);
-    }
+
+    // memcpy is optimized at comp-time since aPacked.size() is a constexpr
+    static_assert(aPacked.size() == bPacked.size());
+    std::memcpy(&aBits, aPacked.data(), aPacked.size());
+    std::memcpy(&bBits, bPacked.data(), bPacked.size());
+
     iT aExp = (aBits >> expShift) & expMask;
     iT bExp = (bBits >> expShift) & expMask;
     const iT deltaExpAB = aExp + aBias - bExp - bBias;
@@ -125,11 +128,13 @@ struct CPUArithmeticSingularValues {
     static_assert(op == MulOp || op == DivOp);
     auto aPacked = a.AtUnsafe(aIdx);
     auto bPacked = b.AtUnsafe(bIdx);
+
     iT aBits = 0, bBits = 0;
-    for (std::size_t j = 0; j < aPacked.size(); ++j) {
-      aBits |= static_cast<iT>(aPacked[j]) << (8 * j);
-      bBits |= static_cast<iT>(bPacked[j]) << (8 * j);
-    }
+    static_assert(aPacked.size() == bPacked.size());
+    // memcpy is optimized at comp-time since aPacked.size() is a constexpr
+    std::memcpy(&aBits, aPacked.data(), aPacked.size());
+    std::memcpy(&bBits, bPacked.data(), bPacked.size());
+
     iT aExp = (aBits >> expShift) & expMask;
     iT bExp = (bBits >> expShift) & expMask;
     iT aSignif = 0, bSignif = 0;

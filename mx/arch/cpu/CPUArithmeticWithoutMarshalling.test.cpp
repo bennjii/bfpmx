@@ -1,3 +1,6 @@
+#define PROFILE 1
+#include "profiler/profiler.h"
+
 #include "CPUArithmeticWithoutMarshalling.h"
 #include "CPUArithmetic.h"
 #include "definition/block_float/block/Block.h"
@@ -8,9 +11,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
 #include <string>
-
-#define PROFILE 1
-#include "profiler/profiler.h"
 
 constexpr u32 TestingScalarSize = 4;
 using TestingFloat = fp8::E4M3Type;
@@ -31,12 +31,11 @@ TEST_CASE("Arithmetic Without Marshalling") {
   Vector v2 = Vector::Quantize(_v2);
   Vector resultTrue, resultNew;
   std::string op = "(op)";
-  f64 tollerance = 4;
+  f64 tollerance = 1;
 
   profiler::begin();
   SECTION("Add") {
     op = "+";
-    tollerance = 4;
     for (size_t i = 0; i < iterations; i++) {
       {
         profiler::block("naive add");
@@ -51,7 +50,6 @@ TEST_CASE("Arithmetic Without Marshalling") {
 
   SECTION("Sub") {
     op = "-";
-    tollerance = 4;
     for (size_t i = 0; i < iterations; i++) {
       {
         profiler::block("naive sub");
@@ -66,7 +64,6 @@ TEST_CASE("Arithmetic Without Marshalling") {
 
   SECTION("Mul") {
     op = "*";
-    tollerance = 4;
     for (size_t i = 0; i < iterations; i++) {
       {
         profiler::block("naive mul");
@@ -81,7 +78,6 @@ TEST_CASE("Arithmetic Without Marshalling") {
 
   SECTION("Div") {
     op = "/";
-    tollerance = 2;
     _v2 = fill_random_arrays<f64, Vector::NumElems>(std::abs(max / 64),
                                                     std::abs(max));
     v2 = Vector::Quantize(_v2);
@@ -95,15 +91,16 @@ TEST_CASE("Arithmetic Without Marshalling") {
         resultNew = CPUArithmeticWithoutMarshalling<Vector>::Div(v1, v2);
       }
     }
-  }
+  }  
 
   profiler::end_and_print();
 
+  i64 scalar = std::max(resultNew.ScalarBits(), resultTrue.ScalarBits());
+  f64 epsilon = std::pow(2, scalar -(i64)Vector::FloatType::SignificandBits()) ;
+
   REQUIRE(resultNew.Length() == resultTrue.Length());
   for (std::size_t i = 0; i < resultTrue.Length(); i++) {
-    bool equal =
-        FuzzyEqual<TestingFloat>(resultNew.RealizeAtUnsafe(i),
-                                 resultTrue.RealizeAtUnsafe(i), tollerance);
+    bool equal = FuzzyEqual(resultNew.RealizeAtUnsafe(i), resultTrue.RealizeAtUnsafe(i), epsilon*tollerance);
     if (!equal) {
       std::cerr << std::fixed;
       std::cerr << i << ") " << _v1[i] << " " << op << " " << _v2[i] << " => "
