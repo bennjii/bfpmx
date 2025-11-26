@@ -72,6 +72,49 @@ static void jacobi_2d_block(
   }
 }
 
+template <size_t N>
+static void jacobi_2d_block_wo_marsh(
+  const int steps,
+  TestingBlock<BlockDims<N, N>> A,
+  TestingBlock<BlockDims<N, N>> B
+) {
+  profiler::func();
+
+  using Dimensions = BlockDims<N, N>;
+
+  const auto aBias = A.ScalarBits();
+  const auto bBias = B.ScalarBits();
+
+  // TODO: block mulAt by scalar
+  const auto scalar = TestingBlock<BlockDims<1>>(std::array<f64, 1>{0.2f});
+  const auto sBias = scalar.ScalarBits();
+  #define AT(i,j)  ((i)*N + (j))
+  #define ADD(...) CPUArithmeticSingularValues<decltype(B), decltype(A), decltype(A)>::AddAt(__VA_ARGS__);
+  #define MUL(...) CPUArithmeticSingularValues<decltype(B), decltype(B), decltype(scalar)>::MulAt(__VA_ARGS__);
+
+  for (u32 t = 0; t < steps; t++) {
+    for (u32 i = 1; i < N - 1; i++) {
+      for (u32 j = 1; j < N - 1; j++) {
+        ADD(B, AT(i,j) , bBias, A, AT(i,j), aBias, A, AT(i,j-1), aBias);
+        ADD(B, AT(i,j) , bBias, B, AT(i,j), bBias, A, AT(i,j+1), aBias);
+        ADD(B, AT(i,j) , bBias, B, AT(i,j), bBias, A, AT(i+1,j), aBias);
+        ADD(B, AT(i,j) , bBias, B, AT(i,j), bBias, A, AT(i-1,j), aBias);
+        MUL(B, AT(i,j) , bBias, B, AT(i,j), bBias, scalar, 0, sBias);
+      }
+    }
+
+    for (u32 i = 1; i < N - 1; i++) {
+      for (u32 j = 1; j < N - 1; j++) {
+        ADD(A, AT(i,j) , aBias, B, AT(i,j), bBias, B, AT(i,j-1), bBias);
+        ADD(A, AT(i,j) , aBias, A, AT(i,j), aBias, B, AT(i,j+1), bBias);
+        ADD(A, AT(i,j) , aBias, A, AT(i,j), aBias, B, AT(i+1,j), bBias);
+        ADD(A, AT(i,j) , aBias, A, AT(i,j), aBias, B, AT(i-1,j), bBias);
+        MUL(A, AT(i,j) , bBias, A, AT(i,j), bBias, scalar, 0, sBias);
+      }
+    }
+  }
+}
+
 constexpr u32 N = 32;
 
 int main() {
@@ -109,6 +152,9 @@ int main() {
 
   jacobi_2d_array<N>(250, a, b);
   jacobi_2d_block<N>(250, blockA, blockB);
+  jacobi_2d_block_wo_marsh<N>(250, blockA, blockB);
+
+  // TODO: check results
 
   profiler::end_and_print();
   return 0;
