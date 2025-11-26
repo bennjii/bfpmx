@@ -7,9 +7,9 @@
 
 #include <array>
 #include <cstddef>
+#include <cstring>
 #include <format>
 #include <string>
-#include <cstring>
 
 #include "BlockDims.h"
 #include "arch/prelude.h"

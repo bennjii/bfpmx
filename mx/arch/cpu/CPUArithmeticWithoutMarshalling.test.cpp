@@ -1,8 +1,8 @@
 #define PROFILE 1
 #include "profiler/profiler.h"
 
-#include "CPUArithmeticWithoutMarshalling.h"
 #include "CPUArithmetic.h"
+#include "CPUArithmeticWithoutMarshalling.h"
 #include "definition/block_float/block/Block.h"
 #include "definition/block_float/block/BlockDims.h"
 #include "definition/prelude.h"
@@ -91,16 +91,18 @@ TEST_CASE("Arithmetic Without Marshalling") {
         resultNew = CPUArithmeticWithoutMarshalling<Vector>::Div(v1, v2);
       }
     }
-  }  
+  }
 
   profiler::end_and_print();
 
   i64 scalar = std::max(resultNew.ScalarBits(), resultTrue.ScalarBits());
-  f64 epsilon = std::pow(2, scalar -(i64)Vector::FloatType::SignificandBits()) ;
+  f64 epsilon = std::pow(2, scalar - (i64)Vector::FloatType::SignificandBits());
 
   REQUIRE(resultNew.Length() == resultTrue.Length());
   for (std::size_t i = 0; i < resultTrue.Length(); i++) {
-    bool equal = FuzzyEqual(resultNew.RealizeAtUnsafe(i), resultTrue.RealizeAtUnsafe(i), epsilon*tollerance);
+    bool equal =
+        FuzzyEqual(resultNew.RealizeAtUnsafe(i), resultTrue.RealizeAtUnsafe(i),
+                   epsilon * tollerance);
     if (!equal) {
       std::cerr << std::fixed;
       std::cerr << i << ") " << _v1[i] << " " << op << " " << _v2[i] << " => "
