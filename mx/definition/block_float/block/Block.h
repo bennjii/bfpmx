@@ -147,7 +147,7 @@ public:
     std::array<f64, NumElems> fullPrecisionValues = Spread();
     std::string value;
 
-    value += "Scalar: " + std::to_string(Scalar()) + "\n";
+    value += "Scalar: " + std::to_string(ScalarValue()) + "\n";
     value += "Elements: [\n";
     for (int i = 0; i < NumElems; i++) {
       f64 fullPrecisionFloat = fullPrecisionValues[i];

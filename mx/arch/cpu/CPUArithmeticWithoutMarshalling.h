@@ -3,20 +3,19 @@
 //
 #ifndef BFPMX_CPU_ARITHMETIC_WITHOUT_MARSHALLING_H
 #define BFPMX_CPU_ARITHMETIC_WITHOUT_MARSHALLING_H
+
 #include "definition/alias.h"
 #include <cassert>
-#include <cmath>
 #include <functional>
 #include <iostream>
 #include <type_traits>
-#include <utility>
 
 template <typename T> struct CPUArithmeticWithoutMarshalling {
   // NOTE: can easily become branchless
   // NOTE: should we lower those to i8 or i16?
   //       It depends on what kind of values we pass...
   //       We need at least expShift*2+2 bits
-  using iT = T::ScalarType;
+  using iT = typename T::ScalarType;
 
   static const iT fracMask = (1ull << T::FloatType::SignificandBits()) - 1;
   static const iT expShift = T::FloatType::SignificandBits();
