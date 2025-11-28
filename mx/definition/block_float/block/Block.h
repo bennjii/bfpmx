@@ -28,15 +28,15 @@ template <
     // The arithmetic policy to use for mathematical functions
     template <typename> typename ArithmeticPolicy,
     // The quantization policy to use
-    template <std::size_t, BlockDimsType, IFloatRepr> typename QuantizationPolicy
->
-class Block :
-  public WithPolicy<ArithmeticPolicy>::template
-    Type<Block<Scalar, BlockShape, Float, ArithmeticPolicy, QuantizationPolicy>>
-{
+    template <std::size_t, BlockDimsType,
+              IFloatRepr> typename QuantizationPolicy>
+class Block
+    : public WithPolicy<ArithmeticPolicy>::template Type<Block<
+          Scalar, BlockShape, Float, ArithmeticPolicy, QuantizationPolicy>> {
   // Statically confirm the provided scalar is an unsigned integer value
   static_assert(std::is_integral_v<Scalar> && std::is_unsigned_v<Scalar>,
-                  "Template parameter T must be an unsigned integer.");
+                "Template parameter T must be an unsigned integer.");
+
 public:
   using FloatType = Float;
   using ScalarType = Scalar;
@@ -48,7 +48,8 @@ public:
   static constexpr u32 NumElems = BlockShape::TotalSize();
 
   using PackedFloat = std::array<u8, Float::SizeBytes()>;
-  using QuantizationPolicyType = QuantizationPolicy<ScalarSizeBytes, BlockShape, Float>;
+  using QuantizationPolicyType =
+      QuantizationPolicy<ScalarSizeBytes, BlockShape, Float>;
 
   // Empty constructor
   explicit Block() {
@@ -125,12 +126,12 @@ public:
     return Float::Unmarshal(AtUnsafe(index)) * ScalarValue();
   }
 
-  void SetScalar(Scalar scalar) {
-    scalar_ = scalar;
-  }
+  void SetScalar(Scalar scalar) { scalar_ = scalar; }
 
   [[nodiscard]] constexpr Scalar inline ScalarBits() const { return scalar_; }
-  [[nodiscard]] constexpr Scalar inline ScalarValue() const { return 1 << scalar_; }
+  [[nodiscard]] constexpr Scalar inline ScalarValue() const {
+    return 1 << scalar_;
+  }
 
   [[nodiscard]] std::array<f64, NumElems> Spread() const {
     std::array<f64, NumElems> blockUnscaledFloats;
