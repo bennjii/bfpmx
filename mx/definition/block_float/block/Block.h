@@ -14,6 +14,10 @@
 #include "arch/prelude.h"
 #include "definition/block_float/repr/FloatRepr.h"
 
+template <template <typename> typename ImplPolicy> struct WithPolicy {
+  template <typename T> using Type = ArithmeticEnabled<T, ImplPolicy<T>>;
+};
+
 template <
     // The unsigned integer to use as the scalar
     typename Scalar,
@@ -21,17 +25,21 @@ template <
     BlockDimsType BlockShape,
     // The representation of the floating point values within the block
     IFloatRepr Float,
-    // The arithmetic policy to use for mathemtical functions
+    // The arithmetic policy to use for mathematical functions
     template <typename> typename ArithmeticPolicy,
     // The quantization policy to use
     template <std::size_t, BlockDimsType, IFloatRepr> typename QuantizationPolicy
 >
-class Block {
+class Block :
+  public WithPolicy<ArithmeticPolicy>::template
+    Type<Block<Scalar, BlockShape, Float, ArithmeticPolicy, QuantizationPolicy>>
+{
   // Statically confirm the provided scalar is an unsigned integer value
   static_assert(std::is_integral_v<Scalar> && std::is_unsigned_v<Scalar>,
                   "Template parameter T must be an unsigned integer.");
 public:
   using FloatType = Float;
+  using ScalarType = Scalar;
 
   static constexpr size_t ScalarSizeBytes = sizeof(Scalar);
 

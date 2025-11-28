@@ -5,11 +5,11 @@
 #include <array>
 #include <catch2/catch_test_macros.hpp>
 
-constexpr u32 TestingScalarSize = 4;
+using TestingScalar = u32;
 using TestingFloat = fp8::E4M3Type;
 
 template <typename Dimensions>
-using TestingBlock = Block<TestingScalarSize, Dimensions, TestingFloat,
+using TestingBlock = Block<TestingScalar, Dimensions, TestingFloat,
                            CPUArithmetic, SharedExponentQuantization>;
 
 TEST_CASE("GEMV") {

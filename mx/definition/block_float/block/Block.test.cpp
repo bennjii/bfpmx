@@ -10,7 +10,9 @@
 
 using TestingDimensions = BlockDims<32>;
 using TestingFloat = fp8::E4M3Type;
-using TestingBlock = Block<4, TestingDimensions, TestingFloat, CPUArithmetic,
+using TestingScalar = u32;
+
+using TestingBlock = Block<TestingScalar, TestingDimensions, TestingFloat, CPUArithmetic,
                            SharedExponentQuantization>;
 
 TEST_CASE("Blank Block Construction") {

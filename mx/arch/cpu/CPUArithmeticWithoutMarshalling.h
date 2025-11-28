@@ -16,7 +16,8 @@ template <typename T> struct CPUArithmeticWithoutMarshalling {
   // NOTE: should we lower those to i8 or i16?
   //       It depends on what kind of values we pass...
   //       We need at least expShift*2+2 bits
-  using iT = i64;
+  using iT = T::ScalarType;
+
   static const iT fracMask = (1ull << T::FloatType::SignificandBits()) - 1;
   static const iT expShift = T::FloatType::SignificandBits();
   static const iT expMask = (1ull << T::FloatType::ExponentBits()) - 1;
@@ -44,7 +45,7 @@ template <typename T> struct CPUArithmeticWithoutMarshalling {
     const auto aBias = lhs.ScalarBits();
     const auto bBias = rhs.ScalarBits();
     const auto rBias = std::max(aBias, bBias);
-    T result{T::Uninitialized};
+    T result{T::UninitializedUnit};
     result.SetScalar(rBias);
     for (size_t i = 0; i < T::Length(); i++) {
       auto aPacked = lhs.AtUnsafe(i);
@@ -107,7 +108,7 @@ template <typename T> struct CPUArithmeticWithoutMarshalling {
     const auto aBias = lhs.ScalarBits();
     const auto bBias = rhs.ScalarBits();
     const auto rBias = is_mul ? aBias + bBias : aBias - bBias;
-    T result{T::Uninitialized};
+    T result{T::UninitializedUnit};
     result.SetScalar(rBias);
     for (size_t i = 0; i < T::Length(); i++) {
       auto aPacked = lhs.AtUnsafe(i);
