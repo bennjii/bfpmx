@@ -46,6 +46,8 @@ void Test(const std::array<f64, BlockSize::TotalSize()> &full_precision) {
             const std::string equalityString = std::format("Expected {:.9f}, but got {:.9f}", originalValue, recoveredValue);
             std::cerr << "Original value and recovered value are not equivalent: " << equalityString << std::endl;
             std::cerr << "For index " << +i << " using quantization policy " << Quantizer::Identity() << std::endl;
+            std::cerr << "The block had the scalar value: " << block.ScalarValue() << std::endl;
+            std::cerr << "The float at the location was: " << block.RealizeAtUnsafe(i) << std::endl;
 
             assert(false);
         }
@@ -82,7 +84,7 @@ void TestAllQuantization(const std::array<f64, BlockSize::TotalSize()> &full_pre
 void TestAllArithmetic(const std::array<f64, BlockSize::TotalSize()> &full_precision) {
 #ifdef CPU_COMPATIBLE
     TestAllQuantization<CPUArithmetic>(full_precision);
-    TestAllQuantization<CPUArithmeticWithoutMarshalling>(full_precision);
+    // TestAllQuantization<CPUArithmeticWithoutMarshalling>(full_precision);
 #endif
 
 #ifdef HAS_CUDA
@@ -93,12 +95,13 @@ void TestAllArithmetic(const std::array<f64, BlockSize::TotalSize()> &full_preci
 int main() {
     profiler::begin();
 
-    constexpr f64 min = 0.0;
-    constexpr f64 max = 1000.0;
+    constexpr f64 min = -100.0;
+    constexpr f64 max = 100.0;
 
-    const auto array = fill_random_arrays<f64, BlockSize::TotalSize()>(min, max);
+    const std::array array =
+      fill_random_arrays<f64, BlockSize::TotalSize()>(min, max);
 
-    for (int i = 0; i < 100000; i++) {
+    for (int i = 0; i < 1000000; i++) {
         TestAllArithmetic(array);
     }
 

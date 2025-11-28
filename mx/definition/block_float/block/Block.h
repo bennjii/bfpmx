@@ -21,6 +21,7 @@ template <
     BlockDimsType BlockShape,
     // The representation of the floating point values within the block
     IFloatRepr Float,
+    // The arithmetic policy to use for mathemtical functions
     template <typename> typename ArithmeticPolicy,
     // The quantization policy to use
     template <std::size_t, BlockDimsType, IFloatRepr> typename QuantizationPolicy
@@ -113,7 +114,7 @@ public:
   }
 
   HD [[nodiscard]] f64 RealizeAtUnsafe(const u16 index) const {
-    return Float::Unmarshal(AtUnsafe(index)) * Scalar();
+    return Float::Unmarshal(AtUnsafe(index)) * ScalarValue();
   }
 
   void SetScalar(Scalar scalar) {
