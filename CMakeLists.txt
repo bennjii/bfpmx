@@ -104,3 +104,6 @@ target_link_libraries(example_quant PRIVATE bfpmx)
 # Benchmarks #
 add_executable(jacobi2d benchmarks/jacobi.cpp)
 target_link_libraries(jacobi2d PRIVATE bfpmx)
+
+add_executable(heat3d benchmarks/heat3d.cpp)
+target_link_libraries(heat3d PRIVATE bfpmx)
