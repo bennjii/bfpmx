@@ -3,7 +3,7 @@
 #include "definition/prelude.h"
 using FloatReprCUDATest = fp8::E4M3Type;
 template<template <typename T> typename ArithmeticPolicy>
-using BlockT = Block<32, BlockDims<4>, FloatReprCUDATest, ArithmeticPolicy, MaximumFractionalQuantization>;
+using BlockT = Block<4, BlockDims<4>, FloatReprCUDATest, ArithmeticPolicy, MaximumFractionalQuantization>;
 using BlockT_CPU = BlockT<CPUArithmetic>;
 using BlockT_GPU = BlockT<GPUArithmetic>;
 

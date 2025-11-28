@@ -7,8 +7,8 @@
 
 #include "definition/quantization/Quantize.h"
 
-constexpr u16 DEFAULT_BLOCK_SIZE = 32;
-constexpr u16 DEFAULT_BITS_SCALAR = 32;
+constexpr u16 DEFAULT_BLOCK_SIZE = 4;
+constexpr u16 DEFAULT_BITS_SCALAR = 4;
 constexpr u16 BITS_IN_BYTE = 8;
 
 template <

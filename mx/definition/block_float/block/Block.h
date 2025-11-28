@@ -32,6 +32,7 @@ class Block : public WithPolicy<ArithmeticPolicy>::template Type<
                   Block<ScalarSizeBytes, BlockShape, Float, ArithmeticPolicy,
                         QuantizationPolicy>> {
 public:
+  static_assert(ScalarSizeBytes <= 8);
   using FloatType = Float;
 
   static constexpr u32 NumDimensions = BlockShape::num_dims;
