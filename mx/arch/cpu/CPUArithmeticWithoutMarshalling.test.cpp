@@ -31,11 +31,11 @@ auto v2_ = fill_random_arrays<f64, Vector::NumElems>(min, max);
 Vector v1 = Vector::Quantize(v1_);
 Vector v2 = Vector::Quantize(v2_);
 
-void Test(std::string operation, Vector correct, Vector trial) {
-  REQUIRE(trial.Length() == correct.Length());
+void Test(std::string operation, Vector reference, Vector trial) {
+  REQUIRE(trial.Length() == reference.Length());
 
   for (std::size_t i = 0; i < Vector::Length(); i++) {
-    bool equal = FuzzyEqual<TestingFloat>(trial[i], correct[i]);
+    bool equal = FuzzyEqual<TestingFloat>(trial[i], reference[i]);
 
     if (!equal) {
       std::cerr << std::fixed;
@@ -45,7 +45,7 @@ void Test(std::string operation, Vector correct, Vector trial) {
       std::cerr << "Raw: "   << v1_[i] << " " << operation << " " << v2_[i] << std::endl;
       std::cerr << "Block: " << v1[i]  << " " << operation << " " << v2[i]  << std::endl;
 
-      std::cerr << "Reference Output: " << correct[i] << std::endl;
+      std::cerr << "Reference Output: " << reference[i] << std::endl;
       std::cerr << "Actual Output: "    << trial[i]   << std::endl;
     }
 
@@ -55,59 +55,59 @@ void Test(std::string operation, Vector correct, Vector trial) {
 
 void TestAll() {
   SECTION("Add") {
-    Vector correct, trial;
+    Vector reference, trial;
     {
       profiler::block("naive add");
-      correct = CPUArithmetic<Vector>::Add(v1, v2);
+      reference = CPUArithmetic<Vector>::Add(v1, v2);
     }
     {
       profiler::block("no marshal/unmarshal add");
       trial = CPUArithmeticWithoutMarshalling<Vector>::Add(v1, v2);
     }
 
-    Test("+", correct, trial);
+    Test("+", reference, trial);
   }
 
   SECTION("Sub") {
-    Vector correct, trial;
+    Vector reference, trial;
     {
       profiler::block("naive sub");
-      correct = CPUArithmetic<Vector>::Sub(v1, v2);
+      reference = CPUArithmetic<Vector>::Sub(v1, v2);
     }
     {
       profiler::block("no marshal/unmarshal sub");
       trial = CPUArithmeticWithoutMarshalling<Vector>::Sub(v1, v2);
     }
 
-    Test("-", correct, trial);
+    Test("-", reference, trial);
   }
 
   SECTION("Mul") {
-    Vector correct, trial;
+    Vector reference, trial;
     {
       profiler::block("naive mul");
-      correct = CPUArithmetic<Vector>::Mul(v1, v2);
+      reference = CPUArithmetic<Vector>::Mul(v1, v2);
     }
     {
       profiler::block("no marshal/unmarshal mul");
       trial = CPUArithmeticWithoutMarshalling<Vector>::Mul(v1, v2);
     }
 
-    Test("*", correct, trial);
+    Test("*", reference, trial);
   }
 
   SECTION("Div") {
-    Vector correct, trial;
+    Vector reference, trial;
     {
       profiler::block("naive div");
-      correct = CPUArithmetic<Vector>::Div(v1, v2);
+      reference = CPUArithmetic<Vector>::Div(v1, v2);
     }
     {
       profiler::block("no marshal/unmarshal div");
       trial = CPUArithmeticWithoutMarshalling<Vector>::Div(v1, v2);
     }
 
-    Test("/", correct, trial);
+    Test("/", reference, trial);
   }
 }
 
