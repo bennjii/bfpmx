@@ -31,7 +31,7 @@ auto v2_ = fill_random_arrays<f64, Vector::NumElems>(min, max);
 Vector v1 = Vector::Quantize(v1_);
 Vector v2 = Vector::Quantize(v2_);
 
-void Test(std::string operation, Vector reference, Vector trial) {
+void Test(const std::string& operation, Vector reference, Vector trial) {
   REQUIRE(trial.Length() == reference.Length());
 
   for (std::size_t i = 0; i < Vector::Length(); i++) {
