@@ -21,10 +21,10 @@ template <
     BlockDimsType BlockShape,
     // The representation of the floating point values within the block
     IFloatRepr Float,
-    // The arithmetic policy to use
     template <typename> typename ArithmeticPolicy,
     // The quantization policy to use
-    template <std::size_t, BlockDimsType, IFloatRepr> typename QuantizationPolicy>
+    template <std::size_t, BlockDimsType, IFloatRepr> typename QuantizationPolicy
+>
 class Block {
   // Statically confirm the provided scalar is an unsigned integer value
   static_assert(std::is_integral_v<Scalar> && std::is_unsigned_v<Scalar>,
@@ -42,7 +42,7 @@ public:
   using QuantizationPolicyType = QuantizationPolicy<ScalarSizeBytes, BlockShape, Float>;
 
   // Empty constructor
-  Block() {
+  explicit Block() {
     auto data = std::array<PackedFloat, NumElems>();
     data.fill(Float::Marshal(0));
 
@@ -116,15 +116,12 @@ public:
     return Float::Unmarshal(AtUnsafe(index)) * Scalar();
   }
 
-  void SetScalar(u64 scalar) {
-    // TODO: see ScalarBits
-    for (int i = 0; i < ScalarSizeBytes; i++) {
-      scalar_[i] = scalar >> (i * 8);
-    }
+  void SetScalar(Scalar scalar) {
+    scalar_ = scalar;
   }
 
-  [[nodiscard]] constexpr Scalar inline ScalarBits() const { return scalar_(); }
-  [[nodiscard]] constexpr Scalar inline ScalarValue() const { return 1 << scalar_(); }
+  [[nodiscard]] constexpr Scalar inline ScalarBits() const { return scalar_; }
+  [[nodiscard]] constexpr Scalar inline ScalarValue() const { return 1 << scalar_; }
 
   [[nodiscard]] std::array<f64, NumElems> Spread() const {
     std::array<f64, NumElems> blockUnscaledFloats;
@@ -202,13 +199,7 @@ public:
     }
 
     const u32 scaleFactorInt = lround(log2(scaleFactor));
-
-    std::array<u8, ScalarSizeBytes> packedScalar;
-    for (int i = 0; i < ScalarSizeBytes; i++) {
-      packedScalar[i] = static_cast<u8>(scaleFactorInt >> (i * 8));
-    }
-
-    return Block(blockScaledFloats, packedScalar);
+    return Block(blockScaledFloats, scaleFactorInt);
   }
 
 private:

@@ -11,29 +11,29 @@
 #include "profiler/profiler.h"
 
 // Constants to be used for the testing regime
-constexpr u32 BlockScalar = 4; // u32 (4 bytes)
+using BlockScalar = u32; // u32 (4 bytes)
 using BlockSize = BlockDims<32>;
 using BlockFloat = fp8::E4M3Type;
 
 template<
     template <typename T> typename ArithmeticPolicy,
-    template <std::size_t, BlockDimsType, IFloatRepr, template<typename> typename ArithmeticPolicy_> typename QuantizationPolicy
+    template <std::size_t, BlockDimsType, IFloatRepr> typename QuantizationPolicy
 >
 using BlockFmt = Block<BlockScalar, BlockSize, BlockFloat, ArithmeticPolicy, QuantizationPolicy>;
 
 template<
     template <typename T> typename A,
-    template <std::size_t, BlockDimsType, IFloatRepr, template<typename> typename A_> typename Q
+    template <std::size_t, BlockDimsType, IFloatRepr> typename Q
 > BlockFmt<A, Q> New(const std::array<f64, BlockSize::TotalSize()> &full_precision) {
     return BlockFmt<A, Q>::Quantize(full_precision);
 }
 
 template<
     template <typename T> typename A,
-    template <std::size_t, BlockDimsType, IFloatRepr, template<typename> typename A_> typename Q
+    template <std::size_t, BlockDimsType, IFloatRepr> typename Q
 >
 void Test(const std::array<f64, BlockSize::TotalSize()> &full_precision) {
-    using Quantizer = Q<BlockScalar, BlockSize, BlockFloat, A>;
+    using Quantizer = Q<sizeof(BlockScalar), BlockSize, BlockFloat>;
 
     BlockFmt<A, Q> block = New<A, Q>(full_precision);
 
@@ -93,10 +93,10 @@ void TestAllArithmetic(const std::array<f64, BlockSize::TotalSize()> &full_preci
 int main() {
     profiler::begin();
 
-    const f64 min = 0.0;
-    const f64 max = 1000.0;
+    constexpr f64 min = 0.0;
+    constexpr f64 max = 1000.0;
 
-    auto array = fill_random_arrays<f64, BlockSize::TotalSize()>(min, max);
+    const auto array = fill_random_arrays<f64, BlockSize::TotalSize()>(min, max);
 
     for (int i = 0; i < 100000; i++) {
         TestAllArithmetic(array);
