@@ -31,7 +31,7 @@ auto v2_ = fill_random_arrays<f64, Vector::NumElems>(min, max);
 Vector v1 = Vector::Quantize(v1_);
 Vector v2 = Vector::Quantize(v2_);
 
-void Test(const std::string& operation, Vector reference, Vector trial) {
+void Test(const std::string &operation, Vector reference, Vector trial) {
   REQUIRE(trial.Length() == reference.Length());
 
   for (std::size_t i = 0; i < Vector::Length(); i++) {
@@ -39,14 +39,17 @@ void Test(const std::string& operation, Vector reference, Vector trial) {
 
     if (!equal) {
       std::cerr << std::fixed;
-      std::cerr << "Assertion failed for element" << i << " of " << Vector::Length() << " elements." << std::endl;
+      std::cerr << "Assertion failed for element" << i << " of "
+                << Vector::Length() << " elements." << std::endl;
       std::cerr << "Operation: " << operation << std::endl;
 
-      std::cerr << "Raw: "   << v1_[i] << " " << operation << " " << v2_[i] << std::endl;
-      std::cerr << "Block: " << v1[i]  << " " << operation << " " << v2[i]  << std::endl;
+      std::cerr << "Raw: " << v1_[i] << " " << operation << " " << v2_[i]
+                << std::endl;
+      std::cerr << "Block: " << v1[i] << " " << operation << " " << v2[i]
+                << std::endl;
 
       std::cerr << "Reference Output: " << reference[i] << std::endl;
-      std::cerr << "Actual Output: "    << trial[i]   << std::endl;
+      std::cerr << "Actual Output: " << trial[i] << std::endl;
     }
 
     REQUIRE(equal);
