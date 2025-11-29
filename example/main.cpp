@@ -13,7 +13,7 @@ int main() {
     std::cout << "FloatSize=" << FloatRepr::Size() << " bits" << std::endl;
 
     // We pick particular arithmetic and quantization policies
-    using BlockT = Block<32, BlockDims<4>, FloatRepr, CPUArithmetic, MaximumFractionalQuantization>;
+    using BlockT = Block<u32, BlockDims<4>, FloatRepr, CPUArithmetic, MaximumFractionalQuantization>;
 
     const auto block1 = BlockT(std::to_array<f64, 4>({10, 15, 20, 25}));
     const auto block2 = BlockT(std::to_array<f64, 4>({2., 3., 4., 5.}));
@@ -22,7 +22,7 @@ int main() {
     std::cout << "Block=" << block.asString() << std::endl;
 
     // We expect 16 + 32(8) = 272 bits
-    using IBlock = BlockFactory<BlockDims<2, 2, 2>, 16, fp8::E4M3Type, CPUArithmetic, MaximumFractionalQuantization>;
+    using IBlock = BlockFactory<BlockDims<2, 2, 2>, u32, fp8::E4M3Type, CPUArithmetic, MaximumFractionalQuantization>;
     std::cout << "BlockSize=" << IBlock::Size() << "bits" << std::endl;
     std::cout << "BlockSize=" << IBlock::Size() / BITS_IN_BYTE << "bytes" << std::endl;
 

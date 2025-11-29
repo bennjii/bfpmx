@@ -7,8 +7,7 @@
 
 #include <cstring>
 
-template <std::size_t ScalarBytes, BlockDimsType BlockShape, IFloatRepr Float,
-          template <typename> typename ArithmeticPolicy>
+template <std::size_t ScalarBytes, BlockDimsType BlockShape, IFloatRepr Float>
 class L2NormQuantization {
 public:
   static f64
