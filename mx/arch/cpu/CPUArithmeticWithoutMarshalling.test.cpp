@@ -36,11 +36,13 @@ void Test(const std::string &operation, Vector reference, Vector trial) {
 
   const f64 toleranceScaling = 1;
   const i64 scalar = std::max(reference.ScalarBits(), trial.ScalarBits());
-  const f64 epsilon = std::pow(2, scalar - static_cast<i64>(Vector::FloatType::SignificandBits()));
+  const f64 epsilon = std::pow(
+      2, scalar - static_cast<i64>(Vector::FloatType::SignificandBits()));
 
   for (std::size_t i = 0; i < Vector::Length(); i++) {
-    bool equal = FuzzyEqual(reference.RealizeAtUnsafe(i),
-                            trial.RealizeAtUnsafe(i), epsilon * toleranceScaling);
+    bool equal =
+        FuzzyEqual(reference.RealizeAtUnsafe(i), trial.RealizeAtUnsafe(i),
+                   epsilon * toleranceScaling);
 
     if (!equal) {
       std::cerr << std::fixed;
