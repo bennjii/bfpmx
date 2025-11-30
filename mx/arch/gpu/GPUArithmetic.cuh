@@ -1,24 +1,13 @@
-#ifndef BFPMX_GPU_ARITHMETIC_H
-#define BFPMX_GPU_ARITHMETIC_H
-
-#include "definition/alias.h"
-#include <array>
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
-
-using ElemType = f64;
-enum class ArithmeticOp : uint8_t {
-    Add,
-    Sub,
-    Mul,
-    Div
-};
-// Need a separate kernel because CUDA kernel launch can't be in cuh
-void LaunchKernel(const ElemType* l, const ElemType* r, ElemType* out, size_t n, ArithmeticOp op);
+#ifndef BFPMX_GPU_ARITHMETIC_CUH
+#define BFPMX_GPU_ARITHMETIC_CUH
+#include "common.cuh"
+#include "ArithmeticKernels.cuh"
+#include "SpreadKernel.cuh"
 
 template <typename T>
-struct GPUArithmetic {
-    static T PointwiseOp(const T& lhs, const T& rhs, auto op) {
+struct GPUArithmeticNaive {
+    // Only arithmetic operations are done on GPU, not Spread
+    static T PointwiseOpNaive(const T& lhs, const T& rhs, auto op) {
         constexpr size_t N = T::Length();
         auto l = lhs.Spread();
         auto r = rhs.Spread();
@@ -32,7 +21,7 @@ struct GPUArithmetic {
         cudaMemcpy(d_l, l.data(), N * sizeof(ElemType), cudaMemcpyHostToDevice);
         cudaMemcpy(d_r, r.data(), N * sizeof(ElemType), cudaMemcpyHostToDevice);
 
-        LaunchKernel(d_l, d_r, d_result, N, op);
+        LaunchArithmeticKernel(d_l, d_r, d_result, N, op);
 
         cudaMemcpy(result.data(), d_result, N * sizeof(ElemType), cudaMemcpyDeviceToHost);
 
@@ -42,7 +31,52 @@ struct GPUArithmetic {
 
         return T(result);
     }
+    static T Add(const T& lhs, const T& rhs) { return PointwiseOpNaive(lhs, rhs, ArithmeticOp::Add); }
+    static T Sub(const T& lhs, const T& rhs) { return PointwiseOpNaive(lhs, rhs, ArithmeticOp::Sub); }
+    static T Mul(const T& lhs, const T& rhs) { return PointwiseOpNaive(lhs, rhs, ArithmeticOp::Mul); }
+    static T Div(const T& lhs, const T& rhs) { return PointwiseOpNaive(lhs, rhs, ArithmeticOp::Div); }
+};
 
+
+template <typename T>
+struct GPUArithmetic {
+    // Spread is done on GPU
+    static T PointwiseOp(const T& lhs, const T& rhs, auto op) {
+        // Untested, adjustable
+        const int THRESHOLD = 0;
+        // For small sizes, GPU overhead is larger than computation time
+        if constexpr (T::Length() <= THRESHOLD) {
+            return PointwiseOpNaive(lhs, rhs, op);
+        } else {
+            constexpr size_t N = T::Length();
+            size_t blockSizeBytes = T::SizeBytes();
+            size_t flattenSizeBytes = N * sizeof(ElemType);
+
+            std::array<ElemType, N> result;
+            T *d_lhs, *d_rhs;
+            ElemType *d_l, *d_r, *d_result;
+
+            cudaMalloc(&d_lhs, blockSizeBytes);
+            cudaMalloc(&d_rhs, blockSizeBytes);
+            cudaMalloc(&d_l, flattenSizeBytes);
+            cudaMalloc(&d_r, flattenSizeBytes);
+            cudaMalloc(&d_result, flattenSizeBytes);
+
+            cudaMemcpy(d_lhs, &lhs, blockSizeBytes, cudaMemcpyHostToDevice);
+            cudaMemcpy(d_rhs, &rhs, blockSizeBytes, cudaMemcpyHostToDevice);
+
+            LaunchSpreadKernel<T>(d_lhs, d_rhs, d_l, d_r);
+            LaunchArithmeticKernel(d_l, d_r, d_result, N, op);
+
+            cudaMemcpy(result.data(), d_result, flattenSizeBytes, cudaMemcpyDeviceToHost);
+
+            cudaFree(d_l);
+            cudaFree(d_r);
+            cudaFree(d_result);
+
+            return T(result);
+        }
+    }
     static T Add(const T& lhs, const T& rhs) { return PointwiseOp(lhs, rhs, ArithmeticOp::Add); }
     static T Sub(const T& lhs, const T& rhs) { return PointwiseOp(lhs, rhs, ArithmeticOp::Sub); }
     static T Mul(const T& lhs, const T& rhs) { return PointwiseOp(lhs, rhs, ArithmeticOp::Mul); }

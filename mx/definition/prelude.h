@@ -14,5 +14,10 @@
 #include "quantization/prelude.h"
 
 #include "util.cpp"
+#ifdef HAS_CUDA
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
+#include <cuda/std/array>
+#endif
 
 #endif // BFPMX_PRELUDE_H
