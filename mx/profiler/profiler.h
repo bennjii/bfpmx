@@ -253,19 +253,19 @@ static inline void end_and_print(void) {
   }
 }
 
-static inline double get_elapsed_seconds(const std::string& function_name) {
-    for (u32 i = 1; i < _TIMINGS_MAX; i++) {
-        if (detail::global_profiler.anchors[i].label == NULL)
-            continue;
-            
-        if (std::string(detail::global_profiler.anchors[i].label) == function_name) {
-            detail::ProfilerAnchor* el = &detail::global_profiler.anchors[i];
-            return (f64)el->elapsed_at_root / (f64)detail::profiler_cpu_freq;
-        }
-    }
-    return 0.0;
-}
+static inline double get_elapsed_seconds(const std::string &function_name) {
+  for (u32 i = 1; i < _TIMINGS_MAX; i++) {
+    if (detail::global_profiler.anchors[i].label == NULL)
+      continue;
 
+    if (std::string(detail::global_profiler.anchors[i].label) ==
+        function_name) {
+      detail::ProfilerAnchor *el = &detail::global_profiler.anchors[i];
+      return (f64)el->elapsed_at_root / (f64)detail::profiler_cpu_freq;
+    }
+  }
+  return 0.0;
+}
 
 #define block_bandwidth(_block_name, _byte_count)                              \
   block_bandwidth_counter(_block_name, _byte_count, __COUNTER__ + 1)
