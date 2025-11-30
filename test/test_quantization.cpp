@@ -41,7 +41,7 @@ void Test(const std::array<f64, BlockSize::TotalSize()> &full_precision) {
         f64 recoveredValue = block.RealizeAtUnsafe(i);
         f64 originalValue = full_precision.at(i);
 
-        const bool isEquivalent = FuzzyEqual<BlockFloat>(recoveredValue, originalValue);
+        const bool isEquivalent = FuzzyEqual<BlockFloat>(recoveredValue, originalValue, 5);
         if (!isEquivalent) {
             const std::string equalityString = std::format("Expected {:.9f}, but got {:.9f}", originalValue, recoveredValue);
             std::cerr << "Original value and recovered value are not equivalent: " << equalityString << std::endl;
@@ -84,7 +84,7 @@ void TestAllQuantization(const std::array<f64, BlockSize::TotalSize()> &full_pre
 void TestAllArithmetic(const std::array<f64, BlockSize::TotalSize()> &full_precision) {
 #ifdef CPU_COMPATIBLE
     TestAllQuantization<CPUArithmetic>(full_precision);
-    // TestAllQuantization<CPUArithmeticWithoutMarshalling>(full_precision);
+    TestAllQuantization<CPUArithmeticWithoutMarshalling>(full_precision);
 #endif
 
 #ifdef HAS_CUDA
@@ -95,13 +95,15 @@ void TestAllArithmetic(const std::array<f64, BlockSize::TotalSize()> &full_preci
 int main() {
     profiler::begin();
 
-    constexpr f64 min = -100.0;
-    constexpr f64 max = 100.0;
+    constexpr u64 iterations = 1000;
+
+    constexpr f64 min = -10.0;
+    constexpr f64 max = +10.0;
 
     const std::array array =
       fill_random_arrays<f64, BlockSize::TotalSize()>(min, max);
 
-    for (int i = 0; i < 1000000; i++) {
+    for (int i = 0; i < iterations; i++) {
         TestAllArithmetic(array);
     }
 

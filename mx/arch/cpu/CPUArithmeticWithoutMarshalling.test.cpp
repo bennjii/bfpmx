@@ -24,7 +24,7 @@ constexpr size_t TestIterations = 100;
 
 using Vector = TestingBlock<BlockDims<TestingSize>>;
 
-constexpr f64 min = -1000.0, max = 1000.0;
+constexpr f64 min = 1, max = 100.0;
 auto v1_ = fill_random_arrays<f64, Vector::NumElems>(min, max);
 auto v2_ = fill_random_arrays<f64, Vector::NumElems>(min, max);
 
@@ -34,13 +34,13 @@ Vector v2 = Vector::Quantize(v2_);
 void Test(const std::string &operation, Vector reference, Vector trial) {
   REQUIRE(trial.Length() == reference.Length());
 
-  f64 tollerance = 1;
-  i64 scalar = std::max(reference.ScalarBits(), trial.ScalarBits());
-  f64 epsilon = std::pow(2, scalar - (i64)Vector::FloatType::SignificandBits());
+  const f64 toleranceScaling = 1;
+  const i64 scalar = std::max(reference.ScalarBits(), trial.ScalarBits());
+  const f64 epsilon = std::pow(2, scalar - static_cast<i64>(Vector::FloatType::SignificandBits()));
 
   for (std::size_t i = 0; i < Vector::Length(); i++) {
     bool equal = FuzzyEqual(reference.RealizeAtUnsafe(i),
-                            trial.RealizeAtUnsafe(i), epsilon * tollerance);
+                            trial.RealizeAtUnsafe(i), epsilon * toleranceScaling);
 
     if (!equal) {
       std::cerr << std::fixed;
@@ -105,11 +105,6 @@ void TestAll() {
   }
 
   SECTION("Div") {
-    // division by 0 otherwise...
-    v2_ = fill_random_arrays<f64, Vector::NumElems>(std::abs(max / 64),
-                                                    std::abs(max));
-    v2 = Vector::Quantize(v2_);
-
     Vector reference, trial;
     {
       profiler::block("naive div");

@@ -20,7 +20,7 @@ public:
     const f64 scaleFactorFloat = sqrt(sum_of_squares / BlockShape::TotalSize());
     const u32 scaleFactor = lround(scaleFactorFloat);
 
-    return scaleFactor;
+    return 1 << scaleFactor;
   }
 
   static std::string Identity() { return "L2NormQuantization"; }
