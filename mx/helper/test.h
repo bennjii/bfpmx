@@ -6,7 +6,7 @@
 #include <random>
 
 template <typename T, std::size_t N>
-std::array<T, N> fill_random_arrays(T low, T high) {
+static std::array<T, N> fill_random_arrays(const T low, const T high) {
   static std::mt19937_64 rng(25);
 
   std::array<T, N> v;

@@ -6,7 +6,7 @@
 
 #include "definition/prelude.h"
 
-using Factory = BlockFactory<BlockDims<2, 2, 2>, 16, fp8::E4M3Type,
+using Factory = BlockFactory<BlockDims<2, 2, 2>, u16, fp8::E4M3Type,
                              CPUArithmetic, MaximumFractionalQuantization>;
 
 TEST_CASE("Block Factory Size Correct", "[BlockFactory]") {

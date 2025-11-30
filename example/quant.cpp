@@ -7,9 +7,9 @@
 #include "definition/prelude.h"
 
 template <template <
-    std::size_t, BlockDimsType, IFloatRepr,
-    template <typename> typename ArithmeticPolicy_> typename QuantizationPolicy>
-using TestingBlock = Block<4, BlockDims<32>, fp8::E4M3Type, CPUArithmetic,
+    std::size_t, BlockDimsType, IFloatRepr
+> typename QuantizationPolicy>
+using TestingBlock = Block<u32, BlockDims<32>, fp8::E4M3Type, CPUArithmetic,
                            QuantizationPolicy>;
 
 int main() {

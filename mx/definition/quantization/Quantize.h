@@ -7,27 +7,23 @@
 
 #include "arch/prelude.h"
 
-template <
-    template <
-        std::size_t, BlockDimsType, IFloatRepr,
-        template <
-            typename> typename ArithmeticPolicy_> typename QuantizationPolicy,
-    std::size_t ScalarBytes,
-    typename BlockShape, // Concept can not be constrained
-    typename Float, template <typename> typename ArithmeticPolicy>
+template <template <std::size_t, BlockDimsType,
+                    IFloatRepr> typename QuantizationPolicy,
+          typename Scalar,
+          typename BlockShape, // Concept can not be constrained
+          typename Float, template <typename> typename ArithmeticPolicy>
 concept IQuantize =
     IFloatRepr<Float> && BlockDimsType<BlockShape> &&
     requires(std::array<f64, BlockShape::TotalSize()> &v,
-             Block<ScalarBytes, BlockShape, Float, ArithmeticPolicy,
+             Block<Scalar, BlockShape, Float, ArithmeticPolicy,
                    QuantizationPolicy> &b) {
       {
-        QuantizationPolicy<ScalarBytes, BlockShape, Float,
-                           ArithmeticPolicy>::QuantizerScaleFactor(v)
+        QuantizationPolicy<sizeof(Scalar), BlockShape,
+                           Float>::QuantizerScaleFactor(v)
       } -> std::convertible_to<f64>;
 
       {
-        QuantizationPolicy<ScalarBytes, BlockShape, Float,
-                           ArithmeticPolicy>::Identity()
+        QuantizationPolicy<sizeof(Scalar), BlockShape, Float>::Identity()
       } -> std::convertible_to<std::string>;
     };
 
