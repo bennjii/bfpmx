@@ -86,7 +86,7 @@ public:
   }
 
   void SetValue(const u16 index, f64 value) {
-    SetPackedBitsAtUnsafe(index, Float::Marshal(value/Scalar()));
+    SetPackedBitsAtUnsafe(index, Float::Marshal(value / Scalar()));
   }
 
   // A variant of `At` which runs on the provided assertions that
