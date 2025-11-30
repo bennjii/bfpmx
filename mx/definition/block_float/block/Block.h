@@ -101,6 +101,15 @@ public:
     return data_[index];
   }
 
+  template<typename T>
+  HD [[nodiscard]] T AtUnsafeBits(const u16 index) const {
+    auto d = data_[index];
+    T bits;
+    // memcpy is optimized at comp-time since aPacked.size() is a constexpr
+    std::memcpy(&bits, d.data(), d.size());
+    return bits;
+  }
+
   void SetPackedBitsAtUnsafe(const u16 index,
                              std::array<u8, Float::SizeBytes()> const &bits) {
     data_[index] = bits;

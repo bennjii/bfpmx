@@ -6,9 +6,9 @@
 #define BFPMX_JACOBI_H
 
 #define PROFILE 1
+#include "profiler/profiler.h"
 
 #include "prelude.h"
-#include "profiler/profiler.h"
 
 constexpr u32 TestingScalarSize = 4;
 using TestingFloat = fp8::E4M3Type;
