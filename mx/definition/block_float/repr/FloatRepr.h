@@ -10,9 +10,9 @@
 #include <array>
 #include <cmath>
 #include <concepts>
+#include <cstring>
 #include <sstream>
 #include <string>
-#include <cstring>
 
 #define BFPMX_FLOATREPR_H
 

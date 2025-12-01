@@ -12,12 +12,10 @@ constexpr u16 DEFAULT_BITS_SCALAR = 4;
 constexpr u16 BITS_IN_BYTE = 8;
 
 template <
-    BlockDimsType BlockShape, u16 BytesScalar, IFloatRepr Float,
+    BlockDimsType BlockShape, typename Scalar, IFloatRepr Float,
     template <typename> typename ArithmeticPolicy,
-    template <
-        std::size_t, BlockDimsType, IFloatRepr,
-        template <typename> typename ArithmeticPolicy_> typename QuantizePolicy>
-  requires IQuantize<QuantizePolicy, BytesScalar, BlockShape, Float,
+    template <std::size_t, BlockDimsType, IFloatRepr> typename QuantizePolicy>
+  requires IQuantize<QuantizePolicy, Scalar, BlockShape, Float,
                      ArithmeticPolicy>
 class BlockFactory {
 public:
@@ -28,11 +26,10 @@ public:
     return Float::Size() * BlockShape::TotalSize();
   }
 
-  static constexpr Block<BytesScalar, BlockShape, Float, ArithmeticPolicy,
+  static constexpr Block<Scalar, BlockShape, Float, ArithmeticPolicy,
                          QuantizePolicy>
   CreateBlock() {
-    return Block<BytesScalar, BlockShape, Float, ArithmeticPolicy,
-                 QuantizePolicy>();
+    return Block<Scalar, BlockShape, Float, ArithmeticPolicy, QuantizePolicy>();
   }
 };
 

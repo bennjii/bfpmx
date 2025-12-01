@@ -70,9 +70,7 @@ struct CPUArithmeticSingularValues {
   }
 
   template <OperationType op>
-  static inline f32 toMagicValue(const TA &a,
-                             const u16 aIdx, auto aBias, auto rBias) {
-    u32 aBits = a.template AtUnsafeBits<u32>(aIdx);
+  static inline f32 toMagicValue(u32 aBits, auto aBias, auto rBias) {
     u32 aFracExp = aBits & fracExpMask;
     u32 aSign = aBits & signMask;
     u32 aU32 = 0;
@@ -86,7 +84,8 @@ struct CPUArithmeticSingularValues {
   }
 
   template <OperationType op>
-  static inline u32 fromMagicValue(f32 rF32, auto rBias, auto aBias, auto bBias) {
+  static inline u32 fromMagicValue(f32 rF32, auto rBias, auto aBias,
+                                   auto bBias) {
     u32 rU32 = std::bit_cast<u32>(rF32);
     if constexpr (op == MulOp || op == DivOp) {
       u32 deltaBias = rBias - (op == MulOp ? aBias + bBias : aBias - bBias);
@@ -112,8 +111,10 @@ struct CPUArithmeticSingularValues {
   static inline void AnyOpAt(TR &r, const u16 rIdx, auto rBias, const TA &a,
                              const u16 aIdx, auto aBias, const TB &b,
                              const u16 bIdx, auto bBias) {
-    f32 aF32 = toMagicValue<op>(a, aIdx, aBias, rBias);
-    f32 bF32 = toMagicValue<op>(b, bIdx, bBias, rBias);
+    f32 aF32 =
+        toMagicValue<op>(a.template AtUnsafeBits<u32>(aIdx), aBias, rBias);
+    f32 bF32 =
+        toMagicValue<op>(b.template AtUnsafeBits<u32>(bIdx), aBias, rBias);
     f32 rF32;
     if constexpr (op == AddOp)
       rF32 = aF32 + bF32;

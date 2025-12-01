@@ -10,11 +10,11 @@
 
 #include "prelude.h"
 
-constexpr u32 TestingScalarSize = 4;
+using TestingScalar = u32;
 using TestingFloat = fp8::E4M3Type;
 
 template <typename Dimensions>
-using TestingBlock = Block<TestingScalarSize, Dimensions, TestingFloat,
+using TestingBlock = Block<TestingScalar, Dimensions, TestingFloat,
                            CPUArithmetic, SharedExponentQuantization>;
 
 // Somewhat opinionated port of Jacobi2D from PolyBench:

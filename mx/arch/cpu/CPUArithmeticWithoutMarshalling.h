@@ -3,7 +3,6 @@
 //
 #ifndef BFPMX_CPU_ARITHMETIC_WITHOUT_MARSHALLING_H
 #define BFPMX_CPU_ARITHMETIC_WITHOUT_MARSHALLING_H
-#include "arch/Arithmetic.h"
 #include "definition/alias.h"
 #include <cassert>
 
@@ -41,7 +40,7 @@ struct CPUArithmeticWithoutMarshalling {
     else
       static_assert(false);
 
-    T result{T::Uninitialized};
+    T result{typename T::Uninitialized{}};
     result.SetScalar(rBias);
     for (std::size_t i = 0; i < T::Length(); i++) {
       Arithmetic<T, T, T>::template AnyOpAt<op>(result, i, rBias, a, i, aBias,

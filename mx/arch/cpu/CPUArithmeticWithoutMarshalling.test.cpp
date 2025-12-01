@@ -12,117 +12,145 @@
 #include <iostream>
 #include <string>
 
-constexpr u32 TestingScalarSize = 4;
+using TestingScalar = u32;
 using TestingFloat = fp8::E4M3Type;
 
 template <typename Dimensions>
-using TestingBlock = Block<TestingScalarSize, Dimensions, TestingFloat,
+using TestingBlock = Block<TestingScalar, Dimensions, TestingFloat,
                            CPUArithmetic, SharedExponentQuantization>;
 
-template <typename Vector, typename ArithmeticImpl>
-static void run_arithmetic_test(f64 min, f64 max, size_t iterations) {
-  auto _v1 = fill_random_arrays<f64, Vector::NumElems>(min, max);
-  auto _v2 = fill_random_arrays<f64, Vector::NumElems>(min, max);
-  Vector v1 = Vector::Quantize(_v1);
-  Vector v2 = Vector::Quantize(_v2);
-  Vector resultTrue, resultNew;
-  f64 tolerance = 1.0;
-  std::string op = "(op)";
+constexpr size_t TestingSize = 10000;
+constexpr size_t TestIterations = 100;
 
-  SECTION("Add") {
-    op = "+";
-    for (size_t i = 0; i < iterations; i++) {
-      {
-        profiler::block("naive   add");
-        resultTrue = CPUArithmetic<Vector>::Add(v1, v2);
-      }
-      {
-        profiler::block("faster? add");
-        resultNew = ArithmeticImpl::Add(v1, v2);
-      }
-    }
-  }
+using Vector = TestingBlock<BlockDims<TestingSize>>;
 
-  SECTION("Sub") {
-    op = "-";
-    for (size_t i = 0; i < iterations; i++) {
-      {
-        profiler::block("naive   sub");
-        resultTrue = CPUArithmetic<Vector>::Sub(v1, v2);
-      }
-      {
-        profiler::block("faster? sub");
-        resultNew = ArithmeticImpl::Sub(v1, v2);
-      }
-    }
-  }
+constexpr f64 min = 1, max = 100.0;
+auto v1_ = fill_random_arrays<f64, Vector::NumElems>(min, max);
+auto v2_ = fill_random_arrays<f64, Vector::NumElems>(min, max);
 
-  SECTION("Mul") {
-    op = "*";
-    for (size_t i = 0; i < iterations; i++) {
-      {
-        profiler::block("naive   mul");
-        resultTrue = CPUArithmetic<Vector>::Mul(v1, v2);
-      }
-      {
-        profiler::block("faster? mul");
-        resultNew = ArithmeticImpl::Mul(v1, v2);
-      }
-    }
-  }
+Vector v1 = Vector::Quantize(v1_);
+Vector v2 = Vector::Quantize(v2_);
 
-  SECTION("Div") {
-    op = "/";
-    _v2 = fill_random_arrays<f64, Vector::NumElems>(std::abs(max / 64),
-                                                    std::abs(max));
-    v2 = Vector::Quantize(_v2);
+void Test(const std::string &operation, Vector reference, Vector trial) {
+  REQUIRE(trial.Length() == reference.Length());
 
-    for (size_t i = 0; i < iterations; i++) {
-      {
-        profiler::block("naive   div");
-        resultTrue = CPUArithmetic<Vector>::Div(v1, v2);
-      }
-      {
-        profiler::block("faster? div");
-        resultNew = ArithmeticImpl::Div(v1, v2);
-      }
-    }
-  }
+  const f64 toleranceScaling = 1;
+  const i64 scalar = std::max(reference.ScalarBits(), trial.ScalarBits());
+  const f64 epsilon = std::pow(
+      2, scalar - static_cast<i64>(Vector::FloatType::SignificandBits()));
 
-  i64 scalar = std::max(resultNew.ScalarBits(), resultTrue.ScalarBits());
-  f64 epsilon = std::pow(2, scalar - (i64)Vector::FloatType::SignificandBits());
-
-  REQUIRE(resultNew.Length() == resultTrue.Length());
-
-  for (std::size_t i = 0; i < resultTrue.Length(); i++) {
-    bool equal = FuzzyEqual(resultNew.RealizeAtUnsafe(i),
-                            resultTrue.RealizeAtUnsafe(i), epsilon * tolerance);
+  for (std::size_t i = 0; i < Vector::Length(); i++) {
+    bool equal =
+        FuzzyEqual(reference.RealizeAtUnsafe(i), trial.RealizeAtUnsafe(i),
+                   epsilon * toleranceScaling);
 
     if (!equal) {
       std::cerr << std::fixed;
-      std::cerr << i << ") " << _v1[i] << " " << op << " " << _v2[i] << " => "
-                << v1[i] << " " << op << " " << v2[i] << " == " << resultTrue[i]
-                << " != " << resultNew[i] << "\n";
+      std::cerr << "Assertion failed for element" << i << " of "
+                << Vector::Length() << " elements." << std::endl;
+      std::cerr << "Operation: " << operation << std::endl;
+
+      std::cerr << "Raw: " << v1_[i] << " " << operation << " " << v2_[i]
+                << std::endl;
+      std::cerr << "Block: " << v1[i] << " " << operation << " " << v2[i]
+                << std::endl;
+
+      std::cerr << "Reference Output: " << reference[i] << std::endl;
+      std::cerr << "Actual Output: " << trial[i] << std::endl;
     }
 
     REQUIRE(equal);
   }
 }
 
-TEST_CASE("Arithmetic Without Marshalling simulating") {
+template <template <typename, typename, typename> class Arithmetic =
+              CPUArithmeticSingularValues>
+void TestAll() {
+  SECTION("Add") {
+    Vector reference, trial;
+    {
+      profiler::block("naive add");
+      reference = CPUArithmetic<Vector>::Add(v1, v2);
+    }
+    {
+      profiler::block("no marshal/unmarshal add");
+      trial =
+          CPUArithmeticWithoutMarshalling<Vector,
+                                          CPUArithmeticSingularValues>::Add(v1,
+                                                                            v2);
+    }
+
+    Test("+", reference, trial);
+  }
+
+  SECTION("Sub") {
+    Vector reference, trial;
+    {
+      profiler::block("naive sub");
+      reference = CPUArithmetic<Vector>::Sub(v1, v2);
+    }
+    {
+      profiler::block("no marshal/unmarshal sub");
+      trial =
+          CPUArithmeticWithoutMarshalling<Vector,
+                                          CPUArithmeticSingularValues>::Sub(v1,
+                                                                            v2);
+    }
+
+    Test("-", reference, trial);
+  }
+
+  SECTION("Mul") {
+    Vector reference, trial;
+    {
+      profiler::block("naive mul");
+      reference = CPUArithmetic<Vector>::Mul(v1, v2);
+    }
+    {
+      profiler::block("no marshal/unmarshal mul");
+      trial =
+          CPUArithmeticWithoutMarshalling<Vector,
+                                          CPUArithmeticSingularValues>::Mul(v1,
+                                                                            v2);
+    }
+
+    Test("*", reference, trial);
+  }
+
+  SECTION("Div") {
+    Vector reference, trial;
+    {
+      profiler::block("naive div");
+      reference = CPUArithmetic<Vector>::Div(v1, v2);
+    }
+    {
+      profiler::block("no marshal/unmarshal div");
+      trial =
+          CPUArithmeticWithoutMarshalling<Vector,
+                                          CPUArithmeticSingularValues>::Div(v1,
+                                                                            v2);
+    }
+
+    Test("/", reference, trial);
+  }
+}
+
+TEST_CASE("Arithmetic Without Marshalling Simulating") {
   profiler::begin();
-  using Vector = TestingBlock<BlockDims<10000>>;
-  using ar =
-      CPUArithmeticWithoutMarshalling<Vector, CPUArithmeticSingularValuesSimulate>;
-  run_arithmetic_test<Vector, ar>(-1000.0, 1000.0, 100);
+
+  for (int i = 0; i < TestIterations; i++) {
+    TestAll<CPUArithmeticSingularValuesSimulate>();
+  }
+
   profiler::end_and_print();
 }
 
-TEST_CASE("Arithmetic Without Marshalling floats") {
+TEST_CASE("Arithmetic Without Marshalling") {
   profiler::begin();
-  using Vector = TestingBlock<BlockDims<10000>>;
-  using ar =
-      CPUArithmeticWithoutMarshalling<Vector, CPUArithmeticSingularValues>;
-  run_arithmetic_test<Vector, ar>(-1000.0, 1000.0, 100);
+
+  for (int i = 0; i < TestIterations; i++) {
+    TestAll<CPUArithmeticSingularValues>();
+  }
+
   profiler::end_and_print();
 }
