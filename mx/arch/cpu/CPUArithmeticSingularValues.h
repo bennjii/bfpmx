@@ -7,12 +7,7 @@
 #include <algorithm>
 #include <bit>
 #include <cassert>
-#include <cmath>
-#include <cstring>
 #include <type_traits>
-
-#define PROFILE 1
-#include "profiler/profiler.h"
 
 enum OperationType { AddOp, SubOp, MulOp, DivOp };
 
@@ -74,20 +69,12 @@ struct CPUArithmeticSingularValues {
     AnyOpAt<DivOp>(r, rIdx, rBias, a, aIdx, aBias, b, bIdx, bBias);
   }
 
-  // NOTE: the bias is passed directly since it is expensive to calculate
-  //       and remains always the same in consecutive calls!
   template <OperationType op>
-  static inline void AnyOpAt(TR &r, const u16 rIdx, auto rBias, const TA &a,
-                             const u16 aIdx, auto aBias, const TB &b,
-                             const u16 bIdx, auto bBias) {
+  static inline f32 toMagicValue(const TA &a,
+                             const u16 aIdx, auto aBias, auto rBias) {
     u32 aBits = a.template AtUnsafeBits<u32>(aIdx);
-    u32 bBits = b.template AtUnsafeBits<u32>(bIdx);
-
     u32 aFracExp = aBits & fracExpMask;
     u32 aSign = aBits & signMask;
-    u32 bFracExp = bBits & fracExpMask;
-    u32 bSign = bBits & signMask;
-
     u32 aU32 = 0;
     aU32 ^= aSign << (F32_SIGN_SHIFT - signShift);
     aU32 ^= aFracExp << (F32_EXP_SHIFT - expShift);
@@ -95,30 +82,11 @@ struct CPUArithmeticSingularValues {
       aU32 -= (rBias - aBias) << F32_EXP_SHIFT;
     else
       aU32 += expDiff;
+    return std::bit_cast<f32>(aU32);
+  }
 
-    f32 aF32 = std::bit_cast<f32>(aU32);
-
-    u32 bU32 = 0;
-    bU32 ^= bSign << (F32_SIGN_SHIFT - signShift);
-    bU32 ^= bFracExp << (F32_EXP_SHIFT - expShift);
-    if constexpr (op == AddOp || op == SubOp)
-      bU32 -= (rBias - bBias) << F32_EXP_SHIFT;
-    else
-      bU32 += expDiff;
-    f32 bF32 = std::bit_cast<f32>(bU32);
-
-    f32 rF32;
-    if constexpr (op == AddOp)
-      rF32 = aF32 + bF32;
-    else if constexpr (op == SubOp)
-      rF32 = aF32 - bF32;
-    else if constexpr (op == MulOp)
-      rF32 = aF32 * bF32;
-    else if constexpr (op == DivOp)
-      rF32 = aF32 / bF32;
-    else
-      static_assert(false);
-
+  template <OperationType op>
+  static inline u32 fromMagicValue(f32 rF32, auto rBias, auto aBias, auto bBias) {
     u32 rU32 = std::bit_cast<u32>(rF32);
     if constexpr (op == MulOp || op == DivOp) {
       u32 deltaBias = rBias - (op == MulOp ? aBias + bBias : aBias - bBias);
@@ -130,14 +98,34 @@ struct CPUArithmeticSingularValues {
     }
     u32 rFracExp = rU32 & fracExpMask32;
     u32 rSign = rU32 & signMask32;
-
     u32 rBits = 0;
     rBits ^= rSign >> (F32_SIGN_SHIFT - signShift);
     rBits ^= rFracExp >> (F32_EXP_SHIFT - expShift);
-
     assert((rFracExp >> (F32_EXP_SHIFT - expShift)) <
            signMask); // Exponent OF otherwise
+    return rBits;
+  }
 
+  // NOTE: the bias is passed directly since it is expensive to calculate
+  //       and remains always the same in consecutive calls!
+  template <OperationType op>
+  static inline void AnyOpAt(TR &r, const u16 rIdx, auto rBias, const TA &a,
+                             const u16 aIdx, auto aBias, const TB &b,
+                             const u16 bIdx, auto bBias) {
+    f32 aF32 = toMagicValue<op>(a, aIdx, aBias, rBias);
+    f32 bF32 = toMagicValue<op>(b, bIdx, bBias, rBias);
+    f32 rF32;
+    if constexpr (op == AddOp)
+      rF32 = aF32 + bF32;
+    else if constexpr (op == SubOp)
+      rF32 = aF32 - bF32;
+    else if constexpr (op == MulOp)
+      rF32 = aF32 * bF32;
+    else if constexpr (op == DivOp)
+      rF32 = aF32 / bF32;
+    else
+      static_assert(false);
+    u32 rBits = fromMagicValue<op>(rF32, rBias, aBias, bBias);
     r.SetBitsAtUnsafe(rIdx, rBits);
   }
 };
