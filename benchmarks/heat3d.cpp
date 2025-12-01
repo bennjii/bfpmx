@@ -7,12 +7,10 @@ using TestingScalar = u32;
 using TestingFloat = fp8::E4M3Type;
 
 template <typename Dimensions>
-using TestingBlock = Block<
-  TestingScalar, Dimensions, TestingFloat, CPUArithmetic, SharedExponentQuantization
->;
+using TestingBlock = Block<TestingScalar, Dimensions, TestingFloat,
+                           CPUArithmetic, SharedExponentQuantization>;
 
-template <size_t N>
-using TestingMatrix3D = TestingBlock<BlockDims<N, N, N>>;
+template <size_t N> using TestingMatrix3D = TestingBlock<BlockDims<N, N, N>>;
 
 template <size_t N>
 using NormalMatrix3D = std::array<std::array<std::array<f64, N>, N>, N>;
@@ -31,8 +29,7 @@ NormalMatrix3D<N> BlockToArray3D(const TestingMatrix3D<N> block) {
   for (u32 i = 0; i < N; i++) {
     for (u32 j = 0; j < N; j++) {
       for (u32 k = 0; k < N; k++) {
-        const u32 linear =
-            TestingMatrix3D<N>::Shape::CoordsToLinear({i, j, k});
+        const u32 linear = TestingMatrix3D<N>::Shape::CoordsToLinear({i, j, k});
         out[i][j][k] = block.RealizeAtUnsafe(linear);
       }
     }
@@ -82,9 +79,8 @@ f64 MeanAbsError3D(const NormalMatrix3D<N> A, const NormalMatrix3D<N> B) {
 // https://github.com/MatthiasJReisinger/PolyBenchC-4.2.1/blob/master/stencils/heat-3d/heat-3d.c
 template <size_t N>
 static NormalMatrix3D<N> HeatReference3D(const int steps, NormalMatrix3D<N> A,
-                                    NormalMatrix3D<N> B) {
+                                         NormalMatrix3D<N> B) {
   profiler::func();
-#pragma scop
   for (int t = 1; t <= steps; t++) {
     for (int i = 1; i < N - 1; i++) {
       for (int j = 1; j < N - 1; j++) {
@@ -110,18 +106,15 @@ static NormalMatrix3D<N> HeatReference3D(const int steps, NormalMatrix3D<N> A,
       }
     }
   }
-#pragma endscop
   return A;
 }
 
 // ----------------------------------------
 //    HEAT 3D STENCIL BLOCK VERSION
 // ----------------------------------------
-template <size_t N> TestingMatrix3D<N> HeatBlock3D(
-  const int steps,
-  TestingMatrix3D<N> A,
-  TestingMatrix3D<N> B
-) {
+template <size_t N>
+TestingMatrix3D<N> HeatBlock3D(const int steps, TestingMatrix3D<N> A,
+                               TestingMatrix3D<N> B) {
   profiler::func();
 
   for (u32 t = 0; t < steps; t++) {
