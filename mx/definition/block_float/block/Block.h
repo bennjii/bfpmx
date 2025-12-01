@@ -40,6 +40,7 @@ class Block
 public:
   using FloatType = Float;
   using ScalarType = Scalar;
+  using Coordinates = BlockShape;
 
   static constexpr size_t ScalarSizeBytes = sizeof(Scalar);
 
