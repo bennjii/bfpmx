@@ -45,28 +45,24 @@ struct CPUArithmeticSingularValues {
   static_assert(expShift <= F32_EXP_SHIFT);
   static_assert(signShift <= F32_SIGN_SHIFT);
 
-  static inline void AddAt(TR &r, const u16 rIdx, auto rBias, const TA &a,
-                           const u16 aIdx, auto aBias, const TB &b,
-                           const u16 bIdx, auto bBias) {
-    AnyOpAt<AddOp>(r, rIdx, rBias, a, aIdx, aBias, b, bIdx, bBias);
+  static inline void AddAt(TR &r, const u16 rIdx, const TA &a, const u16 aIdx,
+                           const TB &b, const u16 bIdx) {
+    AnyOpAt<AddOp>(r, rIdx, a, aIdx, b, bIdx);
   }
 
-  static inline void SubAt(TR &r, const u16 rIdx, auto rBias, const TA &a,
-                           const u16 aIdx, auto aBias, const TB &b,
-                           const u16 bIdx, auto bBias) {
-    AnyOpAt<SubOp>(r, rIdx, rBias, a, aIdx, aBias, b, bIdx, bBias);
+  static inline void SubAt(TR &r, const u16 rIdx, const TA &a, const u16 aIdx,
+                           const TB &b, const u16 bIdx) {
+    AnyOpAt<SubOp>(r, rIdx, a, aIdx, b, bIdx);
   }
 
-  static inline void MulAt(TR &r, const u16 rIdx, auto rBias, const TA &a,
-                           const u16 aIdx, auto aBias, const TB &b,
-                           const u16 bIdx, auto bBias) {
-    AnyOpAt<MulOp>(r, rIdx, rBias, a, aIdx, aBias, b, bIdx, bBias);
+  static inline void MulAt(TR &r, const u16 rIdx, const TA &a, const u16 aIdx,
+                           const TB &b, const u16 bIdx) {
+    AnyOpAt<MulOp>(r, rIdx, a, aIdx, b, bIdx);
   }
 
-  static inline void DivAt(TR &r, const u16 rIdx, auto rBias, const TA &a,
-                           const u16 aIdx, auto aBias, const TB &b,
-                           const u16 bIdx, auto bBias) {
-    AnyOpAt<DivOp>(r, rIdx, rBias, a, aIdx, aBias, b, bIdx, bBias);
+  static inline void DivAt(TR &r, const u16 rIdx, const TA &a, const u16 aIdx,
+                           const TB &b, const u16 bIdx) {
+    AnyOpAt<DivOp>(r, rIdx, a, aIdx, b, bIdx);
   }
 
   template <OperationType op>
@@ -108,9 +104,11 @@ struct CPUArithmeticSingularValues {
   // NOTE: the bias is passed directly since it is expensive to calculate
   //       and remains always the same in consecutive calls!
   template <OperationType op>
-  static inline void AnyOpAt(TR &r, const u16 rIdx, auto rBias, const TA &a,
-                             const u16 aIdx, auto aBias, const TB &b,
-                             const u16 bIdx, auto bBias) {
+  static inline void AnyOpAt(TR &r, const u16 rIdx, const TA &a, const u16 aIdx,
+                             const TB &b, const u16 bIdx) {
+    auto rBias = r.ScalarBits();
+    auto aBias = a.ScalarBits();
+    auto bBias = b.ScalarBits();
     f32 aF32 =
         toMagicValue<op>(a.template AtUnsafeBits<u32>(aIdx), aBias, rBias);
     f32 bF32 =
@@ -157,42 +155,37 @@ struct CPUArithmeticSingularValuesSimulate {
   static_assert(expShift <= F32_EXP_SHIFT);
   static_assert(signShift <= F32_SIGN_SHIFT);
 
-  static inline void AddAt(TR &r, const u16 rIdx, auto rBias, const TA &a,
-                           const u16 aIdx, auto aBias, const TB &b,
-                           const u16 bIdx, auto bBias) {
-    _AddOrSubAt<AddOp>(r, rIdx, rBias, a, aIdx, aBias, b, bIdx, bBias);
+  static inline void AddAt(TR &r, const u16 rIdx, const TA &a, const u16 aIdx,
+                           const TB &b, const u16 bIdx) {
+    _AddOrSubAt<AddOp>(r, rIdx, a, aIdx, b, bIdx);
   }
 
-  static inline void SubAt(TR &r, const u16 rIdx, auto rBias, const TA &a,
-                           const u16 aIdx, auto aBias, const TB &b,
-                           const u16 bIdx, auto bBias) {
-    _AddOrSubAt<SubOp>(r, rIdx, rBias, a, aIdx, aBias, b, bIdx, bBias);
+  static inline void SubAt(TR &r, const u16 rIdx, const TA &a, const u16 aIdx,
+                           const TB &b, const u16 bIdx) {
+    _AddOrSubAt<SubOp>(r, rIdx, a, aIdx, b, bIdx);
   }
 
-  static inline void MulAt(TR &r, const u16 rIdx, auto rBias, const TA &a,
-                           const u16 aIdx, auto aBias, const TB &b,
-                           const u16 bIdx, auto bBias) {
-    _MulOrDivAt<MulOp>(r, rIdx, rBias, a, aIdx, aBias, b, bIdx, bBias);
+  static inline void MulAt(TR &r, const u16 rIdx, const TA &a, const u16 aIdx,
+                           const TB &b, const u16 bIdx) {
+    _MulOrDivAt<MulOp>(r, rIdx, a, aIdx, b, bIdx);
   }
 
-  static inline void DivAt(TR &r, const u16 rIdx, auto rBias, const TA &a,
-                           const u16 aIdx, auto aBias, const TB &b,
-                           const u16 bIdx, auto bBias) {
-    _MulOrDivAt<DivOp>(r, rIdx, rBias, a, aIdx, aBias, b, bIdx, bBias);
+  static inline void DivAt(TR &r, const u16 rIdx, const TA &a, const u16 aIdx,
+                           const TB &b, const u16 bIdx) {
+    _MulOrDivAt<DivOp>(r, rIdx, a, aIdx, b, bIdx);
   }
 
   template <OperationType op>
-  static inline void AnyOpAt(TR &r, const u16 rIdx, auto rBias, const TA &a,
-                             const u16 aIdx, auto aBias, const TB &b,
-                             const u16 bIdx, auto bBias) {
+  static inline void AnyOpAt(TR &r, const u16 rIdx, const TA &a, const u16 aIdx,
+                             const TB &b, const u16 bIdx) {
     if constexpr (op == AddOp)
-      AddAt(r, rIdx, rBias, a, aIdx, aBias, b, bIdx, bBias);
+      AddAt(r, rIdx, a, aIdx, b, bIdx);
     else if constexpr (op == SubOp)
-      SubAt(r, rIdx, rBias, a, aIdx, aBias, b, bIdx, bBias);
+      SubAt(r, rIdx, a, aIdx, b, bIdx);
     else if constexpr (op == MulOp)
-      MulAt(r, rIdx, rBias, a, aIdx, aBias, b, bIdx, bBias);
+      MulAt(r, rIdx, a, aIdx, b, bIdx);
     else if constexpr (op == DivOp)
-      DivAt(r, rIdx, rBias, a, aIdx, aBias, b, bIdx, bBias);
+      DivAt(r, rIdx, a, aIdx, b, bIdx);
     else
       static_assert(false);
   }
@@ -200,9 +193,11 @@ struct CPUArithmeticSingularValuesSimulate {
   // NOTE: the bias is passed directly since it is expensive to calculate
   //       and remains always the same in consecutive calls!
   template <OperationType op>
-  static inline void _AddOrSubAt(TR &r, const u16 rIdx, auto rBias, const TA &a,
-                                 const u16 aIdx, auto aBias, const TB &b,
-                                 const u16 bIdx, auto bBias) {
+  static inline void _AddOrSubAt(TR &r, const u16 rIdx, const TA &a,
+                                 const u16 aIdx, const TB &b, const u16 bIdx) {
+    auto rBias = r.ScalarBits();
+    auto aBias = a.ScalarBits();
+    auto bBias = b.ScalarBits();
     u32 aBits = a.template AtUnsafeBits<u32>(aIdx);
     u32 bBits = b.template AtUnsafeBits<u32>(bIdx);
 
@@ -258,9 +253,12 @@ struct CPUArithmeticSingularValuesSimulate {
   // NOTE: the bias is passed directly since it is expensive to calculate
   //       and remains always the same in consecutive calls!
   template <OperationType op>
-  static inline void _MulOrDivAt(TR &r, const u16 rIdx, auto rBias, const TA &a,
-                                 const u16 aIdx, auto aBias, const TB &b,
-                                 const u16 bIdx, auto bBias) {
+  static inline void _MulOrDivAt(TR &r, const u16 rIdx, const TA &a,
+                                 const u16 aIdx, const TB &b, const u16 bIdx) {
+    auto rBias = r.ScalarBits();
+    auto aBias = a.ScalarBits();
+    auto bBias = b.ScalarBits();
+
     u32 aBits = a.template AtUnsafeBits<u32>(aIdx);
     u32 bBits = b.template AtUnsafeBits<u32>(bIdx);
 

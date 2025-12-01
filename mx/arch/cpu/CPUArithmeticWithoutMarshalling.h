@@ -43,8 +43,7 @@ struct CPUArithmeticWithoutMarshalling {
     T result{typename T::Uninitialized{}};
     result.SetScalar(rBias);
     for (std::size_t i = 0; i < T::Length(); i++) {
-      Arithmetic<T, T, T>::template AnyOpAt<op>(result, i, rBias, a, i, aBias,
-                                                b, i, bBias);
+      Arithmetic<T, T, T>::template AnyOpAt<op>(result, i, a, i, b, i);
     }
     return result;
   }
