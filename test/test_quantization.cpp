@@ -84,7 +84,7 @@ void TestAllQuantization(const std::array<f64, BlockSize::TotalSize()> &full_pre
 void TestAllArithmetic(const std::array<f64, BlockSize::TotalSize()> &full_precision) {
 #ifdef CPU_COMPATIBLE
     TestAllQuantization<CPUArithmetic>(full_precision);
-    TestAllQuantization<CPUArithmeticWithoutMarshalling>(full_precision);
+    TestAllQuantization<CPUArithmeticFastMarshalling>(full_precision);
 #endif
 
 #ifdef HAS_CUDA

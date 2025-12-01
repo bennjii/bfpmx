@@ -8,10 +8,9 @@
 
 #include "CPUArithmeticSingularValues.h"
 
-template <typename T, template <typename, typename, typename> class Arithmetic =
-                          CPUArithmeticSingularValues>
-struct CPUArithmeticWithoutMarshalling {
-
+template <typename T> struct CPUArithmeticFastMarshalling {
+  // using Arithmetic = CPUArithmeticSingularValuesSimulate<T, T, T>;
+  using Arithmetic = CPUArithmeticSingularValues<T, T, T>;
   using iT = i64;
   static auto Add(const T &a, const T &b) -> T { return _AnyOp<AddOp>(a, b); }
 
@@ -43,7 +42,7 @@ struct CPUArithmeticWithoutMarshalling {
     T result{typename T::Uninitialized{}};
     result.SetScalar(rBias);
     for (std::size_t i = 0; i < T::Length(); i++) {
-      Arithmetic<T, T, T>::template AnyOpAt<op>(result, i, a, i, b, i);
+      Arithmetic::template AnyOpAt<op>(result, i, a, i, b, i);
     }
     return result;
   }

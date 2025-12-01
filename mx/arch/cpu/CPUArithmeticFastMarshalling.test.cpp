@@ -2,7 +2,7 @@
 #include "profiler/profiler.h"
 
 #include "CPUArithmetic.h"
-#include "CPUArithmeticWithoutMarshalling.h"
+#include "CPUArithmeticFastMarshalling.h"
 #include "definition/block_float/block/Block.h"
 #include "definition/block_float/block/BlockDims.h"
 #include "definition/prelude.h"
@@ -63,8 +63,6 @@ void Test(const std::string &operation, Vector reference, Vector trial) {
   }
 }
 
-template <template <typename, typename, typename> class Arithmetic =
-              CPUArithmeticSingularValues>
 void TestAll() {
   SECTION("Add") {
     Vector reference, trial;
@@ -74,10 +72,7 @@ void TestAll() {
     }
     {
       profiler::block("no marshal/unmarshal add");
-      trial =
-          CPUArithmeticWithoutMarshalling<Vector,
-                                          CPUArithmeticSingularValues>::Add(v1,
-                                                                            v2);
+      trial = CPUArithmeticFastMarshalling<Vector>::Add(v1, v2);
     }
 
     Test("+", reference, trial);
@@ -91,10 +86,7 @@ void TestAll() {
     }
     {
       profiler::block("no marshal/unmarshal sub");
-      trial =
-          CPUArithmeticWithoutMarshalling<Vector,
-                                          CPUArithmeticSingularValues>::Sub(v1,
-                                                                            v2);
+      trial = CPUArithmeticFastMarshalling<Vector>::Sub(v1, v2);
     }
 
     Test("-", reference, trial);
@@ -108,10 +100,7 @@ void TestAll() {
     }
     {
       profiler::block("no marshal/unmarshal mul");
-      trial =
-          CPUArithmeticWithoutMarshalling<Vector,
-                                          CPUArithmeticSingularValues>::Mul(v1,
-                                                                            v2);
+      trial = CPUArithmeticFastMarshalling<Vector>::Mul(v1, v2);
     }
 
     Test("*", reference, trial);
@@ -125,31 +114,18 @@ void TestAll() {
     }
     {
       profiler::block("no marshal/unmarshal div");
-      trial =
-          CPUArithmeticWithoutMarshalling<Vector,
-                                          CPUArithmeticSingularValues>::Div(v1,
-                                                                            v2);
+      trial = CPUArithmeticFastMarshalling<Vector>::Div(v1, v2);
     }
 
     Test("/", reference, trial);
   }
 }
 
-TEST_CASE("Arithmetic Without Marshalling Simulating") {
+TEST_CASE("Arithmetic with fast marshalling") {
   profiler::begin();
 
   for (int i = 0; i < TestIterations; i++) {
-    TestAll<CPUArithmeticSingularValuesSimulate>();
-  }
-
-  profiler::end_and_print();
-}
-
-TEST_CASE("Arithmetic Without Marshalling") {
-  profiler::begin();
-
-  for (int i = 0; i < TestIterations; i++) {
-    TestAll<CPUArithmeticSingularValues>();
+    TestAll();
   }
 
   profiler::end_and_print();
