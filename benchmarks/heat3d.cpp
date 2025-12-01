@@ -32,7 +32,7 @@ NormalMatrix3D<N> BlockToArray3D(const TestingMatrix3D<N> block) {
     for (u32 j = 0; j < N; j++) {
       for (u32 k = 0; k < N; k++) {
         const u32 linear =
-            TestingMatrix3D<N>::Coordinates::CoordsToLinear({i, j, k});
+            TestingMatrix3D<N>::Shape::CoordsToLinear({i, j, k});
         out[i][j][k] = block.RealizeAtUnsafe(linear);
       }
     }
