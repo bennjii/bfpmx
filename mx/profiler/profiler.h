@@ -26,7 +26,9 @@
 
 #include "../mx/definition/alias.h"
 
+#ifndef __CUDA_ARCH__
 #include <format>
+#endif
 #include <iostream>
 
 #if defined(_WIN32)

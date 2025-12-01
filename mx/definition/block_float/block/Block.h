@@ -7,7 +7,10 @@
 
 #include <array>
 #include <cstddef>
-#include <format>
+#if !defined(__CUDACC__)
+    // Pure host (g++, clang++)
+    #include <format>
+#endif
 #include <string>
 
 #include "BlockDims.h"
@@ -36,6 +39,8 @@ public:
   static constexpr u32 NumDimensions = BlockShape::num_dims;
   static constexpr auto Dims = BlockShape::values;
   static constexpr u32 NumElems = BlockShape::TotalSize();
+  static constexpr u32 ScalarBytes = ScalarSizeBytes;
+
 
   using PackedFloat = std::array<u8, Float::SizeBytes()>;
   using ScalarType = std::array<u8, ScalarSizeBytes>;
@@ -231,6 +236,9 @@ public:
 
     return Block(blockScaledFloats, packedScalar);
   }
+
+  auto data() const { return data_; }
+  auto scalar() const { return scalar_; }
 
 private:
   // Using Row-Major ordering

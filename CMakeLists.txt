@@ -1,15 +1,15 @@
-cmake_minimum_required(VERSION 3.31.6)
+cmake_minimum_required(VERSION 3.28.3)
 project(bfpmx)
 
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-add_custom_target(fix_compile_commands ALL
-        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/fix-compile-commands.py
-        ${CMAKE_BINARY_DIR}/compile_commands.json
-        DEPENDS ${CMAKE_BINARY_DIR}/compile_commands.json
-        COMMENT "Fixing compile_commands.json for clang-tidy"
-)
-
+set(CMAKE_CXX_STANDARD 20)
+# set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+# add_custom_target(fix_compile_commands ALL
+#        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/fix-compile-commands.py
+#        ${CMAKE_BINARY_DIR}/compile_commands.json
+#        DEPENDS ${CMAKE_BINARY_DIR}/compile_commands.json
+#        COMMENT "Fixing compile_commands.json for clang-tidy"
+# )
+set(CMAKE_CUDA_HOST_COMPILER /usr/bin/g++-13)
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "mx/*.cpp")
 list(APPEND SOURCES ${HEADERS})
 
@@ -39,6 +39,7 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(Catch2)
+find_package(CUDAToolkit REQUIRED)
 
 # Required step: https://github.com/catchorg/Catch2/blob/devel/docs/cmake-integration.md#top
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
@@ -75,17 +76,19 @@ if (CMAKE_CUDA_COMPILER)
     enable_language(CUDA)
     # Variable to check in C++ code
     add_definitions(-DHAS_CUDA)
-    include_directories("${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
+    find_package(CUDAToolkit REQUIRED)
+    include_directories(${CUDAToolkit_INCLUDE_DIRS})
+    # include_directories("${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
     set(CMAKE_CUDA_STANDARD 20)
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
     set(CUDA_SEPARABLE_COMPILATION ON)
     # Experimental relaxed calling host constexpr in cuda device code
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
-    add_executable(example_cudatest example/cudatest.cu)
-    target_link_libraries(example_cudatest PRIVATE bfpmx)
+    # set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
 else()
     message(STATUS "No CUDA")
 endif()
+
+add_subdirectory(mx/arch/gpu)
 
 # Examples #
 add_executable(example_main example/main.cpp)
@@ -106,3 +109,18 @@ target_link_libraries(example_quant PRIVATE bfpmx)
 # Benchmarks #
 add_executable(jacobi2d benchmarks/jacobi.cpp)
 target_link_libraries(jacobi2d PRIVATE bfpmx)
+
+add_executable(example_cudatest example/cudatest.cpp)
+target_link_libraries(example_cudatest
+    PRIVATE
+    bfpmx
+    bfpmx_gpu
+    bfpmx_cuda_kernels
+    CUDA::cudart
+)
+# Collect all CUDA kernel source files
+set(GPU_KERNEL_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/ArithmeticKernels.cu
+    ${CMAKE_CURRENT_SOURCE_DIR}/SpreadKernel.cu
+)
+

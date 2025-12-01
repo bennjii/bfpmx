@@ -3,6 +3,49 @@
 #include "common.cuh"
 #include "ArithmeticKernels.cuh"
 #include "SpreadKernel.cuh"
+#include <cuda_runtime.h>
+
+template <typename BlockT>
+BlockView ToDeviceBlockView(const BlockT& block)
+{
+    constexpr int N = BlockT::NumElems;
+    constexpr int ElemSize = BlockT::FloatType::SizeBytes();
+    constexpr int ScalarBytes = BlockT::ScalarBytes;
+
+    // Allocate GPU buffers
+    uint8_t* d_data = nullptr;
+    uint8_t* d_scalar = nullptr;
+
+    cudaMalloc(&d_data, N * ElemSize);
+    cudaMalloc(&d_scalar, ScalarBytes);
+
+    // Copy CPU quantized block → GPU memory
+    cudaMemcpy(d_data,
+               block.data().data(),
+               N * ElemSize,
+               cudaMemcpyHostToDevice);
+
+    cudaMemcpy(d_scalar,
+               block.scalar().data(),
+               ScalarBytes,
+               cudaMemcpyHostToDevice);
+
+    // Fill BlockView
+    BlockView view;
+    view.data             = d_data;
+    view.scalar           = d_scalar;
+    view.num_elems        = N;
+    view.elem_size_bytes  = ElemSize;
+    view.scalar_size_bytes= ScalarBytes;
+
+    return view;
+}
+
+inline void FreeDeviceBlockView(const BlockView& v)
+{
+    cudaFree((void*)v.data);
+    cudaFree((void*)v.scalar);
+}
 
 template <typename T>
 struct GPUArithmeticNaive {
@@ -52,28 +95,24 @@ struct GPUArithmetic {
             size_t blockSizeBytes = T::SizeBytes();
             size_t flattenSizeBytes = N * sizeof(ElemType);
 
-            std::array<ElemType, N> result;
-            T *d_lhs, *d_rhs;
             ElemType *d_l, *d_r, *d_result;
+            cudaMalloc(&d_l, N * sizeof(ElemType));
+            cudaMalloc(&d_r, N * sizeof(ElemType));
+            cudaMalloc(&d_result, N * sizeof(ElemType));
 
-            cudaMalloc(&d_lhs, blockSizeBytes);
-            cudaMalloc(&d_rhs, blockSizeBytes);
-            cudaMalloc(&d_l, flattenSizeBytes);
-            cudaMalloc(&d_r, flattenSizeBytes);
-            cudaMalloc(&d_result, flattenSizeBytes);
+            std::array<ElemType, N> result;
+            const BlockView lhs_view = ToDeviceBlockView(lhs);
+            const BlockView rhs_view = ToDeviceBlockView(rhs);
 
-            cudaMemcpy(d_lhs, &lhs, blockSizeBytes, cudaMemcpyHostToDevice);
-            cudaMemcpy(d_rhs, &rhs, blockSizeBytes, cudaMemcpyHostToDevice);
-
-            LaunchSpreadKernel<T>(d_lhs, d_rhs, d_l, d_r);
+            LaunchSpreadKernel<T>(&lhs_view, &rhs_view, d_l, d_r);
             LaunchArithmeticKernel(d_l, d_r, d_result, N, op);
-
             cudaMemcpy(result.data(), d_result, flattenSizeBytes, cudaMemcpyDeviceToHost);
 
+            FreeDeviceBlockView(lhs_view);
+            FreeDeviceBlockView(rhs_view);
             cudaFree(d_l);
             cudaFree(d_r);
             cudaFree(d_result);
-
             return T(result);
         }
     }
