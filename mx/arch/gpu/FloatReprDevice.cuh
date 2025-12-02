@@ -10,7 +10,7 @@ struct PackedFormDevice {
 constexpr u16 F64_SIGNIFICAND_ = 52;
 constexpr u16 F64_BIAS_ = 1023;
 
-template <unsigned short Exponent, unsigned short Significand, unsigned short Sign>
+template <uint8_t Exponent, uint8_t Significand, uint8_t Sign>
 struct FloatReprDevice {
     // constants copied from your CPU version
     static __device__ __forceinline__ unsigned char SignificandBits() { return Significand; }
@@ -21,7 +21,7 @@ struct FloatReprDevice {
         return (1 << (Exponent - 1)) - 1;
     }
 
-    static __device__ __forceinline__ unsigned short ElementBits() {
+    static __device__ __forceinline__ uint8_t ElementBits() {
         return SignificandBits() + ExponentBits() + SignBits();
     }
 

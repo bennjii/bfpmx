@@ -5,14 +5,11 @@ set(GPU_KERNEL_SOURCES
 )
 
 # Compile kernels as an OBJECT library (device + host code)
-add_library(bfpmx_cuda_kernels OBJECT ${GPU_KERNEL_SOURCES})
+add_library(bfpmx_cuda_kernels STATIC ${GPU_KERNEL_SOURCES})
 
 # NVCC compile settings
 set_target_properties(bfpmx_cuda_kernels PROPERTIES
     CUDA_SEPARABLE_COMPILATION ON
-    POSITION_INDEPENDENT_CODE ON
-    CUDA_STANDARD 17
-    CUDA_STANDARD_REQUIRED ON
 )
 
 target_include_directories(bfpmx_cuda_kernels 
