@@ -2,7 +2,10 @@
 #define BFPMX_BLOCKDIMS_H
 #include <array>
 #include <cstddef>
-#include <format>
+#if !defined(__CUDACC__)
+    // Pure host (g++, clang++)
+    #include <format>
+#endif
 #include <string>
 
 #include "arch/prelude.h"

@@ -1,6 +1,7 @@
 #pragma once
 #include "definition/vector/MxVector.hpp"
 #include <optional>
+#include <omp.h>
 
 namespace mx::vector::ops {
     // For now we do not check the dimension of the vectors,
@@ -20,12 +21,12 @@ namespace mx::vector::ops {
 
     template <typename T>
     T Add(const T& a, const T& b) {
-        std::vector<typename T::BlockType> result_blocks;
-        result_blocks.reserve(a.NumBlocks());
+        std::vector<typename T::BlockType> result_blocks(a.NumBlocks());
+        #pragma omp parallel for
         for (auto i = 0; i < a.NumBlocks(); ++i) {
             const auto a_block = a.BlockAt(i);
             const auto b_block = b.BlockAt(i);
-            result_blocks.push_back(a_block + b_block);
+            result_blocks[i] = a_block + b_block;
         }
         return T(result_blocks, a.Size());
     }

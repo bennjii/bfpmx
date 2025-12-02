@@ -23,6 +23,12 @@ if you haven't already, with the following command.
 ```bash
 xcode-select --install
 ```
+### Set up conda (recommended)
+```
+conda create -n bfpmx
+conda activate bfpmx
+conda install -c conda-forge cmake=4.2.0 cuda=12.9
+```
 
 ### Linting
 

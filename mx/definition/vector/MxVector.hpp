@@ -4,17 +4,16 @@
 #include "definition/block_float/block/BlockDims.h"
 #include "definition/block_float/repr/FloatRepr.h"
 #include "definition/quantization/MaximumFractionalQuantization.h"
-
+#include "omp.h"
 namespace mx::vector {
-    template <OneDimensionalBlockDimsType BlockShape, size_t ScalarSizeBytes=1,
+    template <OneDimensionalBlockDimsType BlockShape, typename ScalarType = unsigned char,
         IFloatRepr Float=fp8::E4M3Type,
         template <typename> typename ArithmeticPolicy = CPUArithmetic,
-        template <std::size_t, BlockDimsType, 
-            IFloatRepr, template <typename> typename ArithmeticPolicy_> typename QuantizationPolicy = MaximumFractionalQuantization>
+        template <std::size_t, BlockDimsType, IFloatRepr> typename QuantizationPolicy = MaximumFractionalQuantization>
     class MxVector { 
         public:
         using BlockType =
-        Block<ScalarSizeBytes, BlockShape, Float, ArithmeticPolicy,           
+        Block<ScalarType, BlockShape, Float, ArithmeticPolicy,           
         QuantizationPolicy>;
 
         MxVector(size_t num_elements) {
@@ -28,6 +27,7 @@ namespace mx::vector {
             blocks_.resize(num_blocks);
             num_elements_ = data.size();
 
+            #pragma omp parallel for
             for (size_t blockId = 0; blockId < num_blocks; ++blockId) {
                 auto block_data = std::array<f64, BlockType::NumElems>{};
                 size_t start = blockId * BlockType::NumElems;

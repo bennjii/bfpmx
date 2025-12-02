@@ -1,17 +1,35 @@
-cmake_minimum_required(VERSION 3.31.6)
+cmake_minimum_required(VERSION 3.28.3)
 project(bfpmx)
 
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-add_custom_target(fix_compile_commands ALL
-        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/fix-compile-commands.py
-        ${CMAKE_BINARY_DIR}/compile_commands.json
-        DEPENDS ${CMAKE_BINARY_DIR}/compile_commands.json
-        COMMENT "Fixing compile_commands.json for clang-tidy"
-)
-
+set(CMAKE_CXX_STANDARD 20)
+# set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+# add_custom_target(fix_compile_commands ALL
+#        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/fix-compile-commands.py
+#        ${CMAKE_BINARY_DIR}/compile_commands.json
+#        DEPENDS ${CMAKE_BINARY_DIR}/compile_commands.json
+#        COMMENT "Fixing compile_commands.json for clang-tidy"
+# )
+set(CMAKE_CUDA_HOST_COMPILER /usr/bin/g++-13)
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "mx/*.cpp")
 list(APPEND SOURCES ${HEADERS})
+
+# CUDA
+include(CheckLanguage)
+check_language(CUDA)
+if (CMAKE_CUDA_COMPILER)
+    message(STATUS "CUDA is OK")
+    enable_language(CUDA)
+    add_definitions(-DHAS_CUDA)
+    find_package(CUDAToolkit REQUIRED)
+    include_directories(${CUDAToolkit_INCLUDE_DIRS})
+    set(CMAKE_CUDA_STANDARD 20)
+    set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+    set(CUDA_SEPARABLE_COMPILATION ON)
+    # Experimental relaxed calling host constexpr in cuda device code
+    # set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
+else()
+    message(STATUS "No CUDA")
+endif()
 
 # Remove any matching *.test.cpp
 foreach(f ${SOURCES})
@@ -29,6 +47,9 @@ set_target_properties(bfpmx PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/artifacts/bin"
 )
 
+find_package(OpenMP REQUIRED)
+target_link_libraries(bfpmx PRIVATE OpenMP::OpenMP_CXX)
+
 set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/.deps")
 Include(FetchContent)
 
@@ -40,28 +61,9 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(Catch2)
 
+
 # Required step: https://github.com/catchorg/Catch2/blob/devel/docs/cmake-integration.md#top
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
-
-include(FetchContent)
-
-FetchContent_Declare(
-    googlebenchmark
-    GIT_REPOSITORY https://github.com/google/benchmark.git
-    GIT_TAG v1.9.4
-)
-
-set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
-set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "" FORCE)
-
-FetchContent_MakeAvailable(googlebenchmark)
-
-# Link pthread on most platforms
-if(NOT WIN32)
-    set(BENCHMARK_LIBS benchmark::benchmark pthread)
-else()
-    set(BENCHMARK_LIBS benchmark::benchmark)
-endif()
 
 include(CTest)
 include(Catch)
@@ -86,24 +88,7 @@ endforeach()
 
 add_subdirectory(test)
 add_definitions(-DUNIT_TESTS)
-
-# CUDA
-include(CheckLanguage)
-check_language(CUDA)
-if (CMAKE_CUDA_COMPILER)
-    message(STATUS "CUDA is OK")
-    enable_language(CUDA)
-    # Variable to check in C++ code
-    add_definitions(-DHAS_CUDA)
-    include_directories("${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
-    set(CMAKE_CUDA_STANDARD 20)
-    set(CMAKE_CUDA_STANDARD_REQUIRED ON)
-    set(CUDA_SEPARABLE_COMPILATION ON)
-    add_executable(example_cudatest example/cudatest.cu mx/arch/gpu/GPUArithmetic.cu)
-    target_link_libraries(example_cudatest PRIVATE bfpmx)
-else()
-    message(STATUS "No CUDA")
-endif()
-
 add_subdirectory(example)
-add_subdirectory(bench)
+add_subdirectory(benchmarks)
+add_subdirectory(mx/arch/gpu)
+

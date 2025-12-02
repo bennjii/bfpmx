@@ -3,10 +3,15 @@
 
 #include "prelude.h"
 
-constexpr f64 LEEWAY = 2.0f;
+constexpr f64 LEEWAY = 2.0;
 
-template <IFloatRepr Float> bool FuzzyEqual(const f64 a, const f64 b) {
-  return std::abs(a - b) <= LEEWAY * Float::Epsilon();
+bool FuzzyEqual(const f64 a, const f64 b, const f64 maxDiff) {
+  return std::abs(a - b) <= maxDiff;
+}
+
+template <IFloatRepr Float>
+bool FuzzyEqual(const f64 a, const f64 b, const f64 leeway = LEEWAY) {
+  return FuzzyEqual(a, b, Float::Epsilon() * leeway);
 }
 
 #endif // BFPMX_UTIL_C

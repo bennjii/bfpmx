@@ -37,7 +37,7 @@ int main() {
     auto dot_prod = mx::vector::ops::Dot(mx_vec1, mx_vec2);
     std::cout << "Dot v1*v2 = " << dot_prod << std::endl;
     
-    std::cout << "Sum v1+v2 =";
+    std::cout << "Sum v1+v2 = ";
     mx::vector::ops::Add(mx_vec1, mx_vec2).asString();
     return 0;
 }

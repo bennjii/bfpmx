@@ -1,4 +1,7 @@
-#include "GPUArithmetic.cuh"
+#ifndef GPU_ARITHMETIC_KERNELS_CUH
+#define GPU_ARITHMETIC_KERNELS_CUH
+#include "common.cuh"
+#include "cuda_utils.h"
 
 // Don't parametrize kernels because of performance reasons
 __global__ void AddKernel(const ElemType* l, const ElemType* r, ElemType* result, size_t n) {
@@ -21,8 +24,7 @@ __global__ void DivKernel(const ElemType* l, const ElemType* r, ElemType* result
     if (idx < n) result[idx] = l[idx] / r[idx];
 }
 
-// hosts calls this, kernels stay in a .cu file
-void LaunchKernel(const ElemType* d_l, const ElemType* d_r, ElemType* d_out, size_t n, ArithmeticOp op) {
+void LaunchArithmeticKernel(const ElemType* d_l, const ElemType* d_r, ElemType* d_out, size_t n, ArithmeticOp op) {
     const int blockSize = 256;
     const int numBlocks = (n + blockSize - 1) / blockSize;
     switch(op) {
@@ -39,5 +41,6 @@ void LaunchKernel(const ElemType* d_l, const ElemType* d_r, ElemType* d_out, siz
             DivKernel<<<numBlocks, blockSize>>>(d_l, d_r, d_out, n);
             break;
     }
-    cudaDeviceSynchronize();
+    CUDA_CHECK_KERNEL();
 }
+#endif // GPU_ARITHMETIC_KERNELS_CUH

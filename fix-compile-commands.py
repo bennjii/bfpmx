@@ -3,7 +3,7 @@ import json
 import subprocess
 import sys
 
-def get_system_includes(compiler='clang++'):
+def get_system_includes(compiler='g++'):
     """Extract system include paths from compiler."""
     result = subprocess.run(
         [compiler, '-v', '-x', 'c++', '/dev/null', '-fsyntax-only'],

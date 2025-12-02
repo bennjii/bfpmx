@@ -10,9 +10,8 @@
 #include "Arithmetic.h"
 
 #include "cpu/CPUArithmetic.h"
-#ifdef HAS_CUDA
-#include "gpu/GPUArithmetic.cuh"
-#endif
+#include "cpu/CPUArithmeticWithoutMarshalling.h"
+
 // #if defined(__x86_64__) || defined(_M_X64)
 // #include "cpu/x86_64.cpp"
 // #elif defined(__aarch64__) || defined(_M_ARM64)
