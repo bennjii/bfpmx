@@ -17,24 +17,34 @@
 #include "arch/prelude.h"
 #include "definition/block_float/repr/FloatRepr.h"
 
-// Hook to simplify type definitions for wrapping a class
-// as supporting the custom prescribed arithmetic.
 template <template <typename> typename ImplPolicy> struct WithPolicy {
   template <typename T> using Type = ArithmeticEnabled<T, ImplPolicy<T>>;
 };
 
 template <
-    std::size_t ScalarSizeBytes, BlockDimsType BlockShape, IFloatRepr Float,
+    // The unsigned integer to use as the scalar
+    typename Scalar,
+    // The dimensionality of the block with regard to shape
+    BlockDimsType BlockShape,
+    // The representation of the floating point values within the block
+    IFloatRepr Float,
+    // The arithmetic policy to use for mathematical functions
     template <typename> typename ArithmeticPolicy,
-    template <
-        std::size_t, BlockDimsType, IFloatRepr,
-        template <
-            typename> typename ArithmeticPolicy_> typename QuantizationPolicy>
-class Block : public WithPolicy<ArithmeticPolicy>::template Type<
-                  Block<ScalarSizeBytes, BlockShape, Float, ArithmeticPolicy,
-                        QuantizationPolicy>> {
+    // The quantization policy to use
+    template <std::size_t, BlockDimsType,
+              IFloatRepr> typename QuantizationPolicy>
+class Block
+    : public WithPolicy<ArithmeticPolicy>::template Type<Block<
+          Scalar, BlockShape, Float, ArithmeticPolicy, QuantizationPolicy>> {
+  // Statically confirm the provided scalar is an unsigned integer value
+  static_assert(std::is_integral_v<Scalar> && std::is_unsigned_v<Scalar>,
+                "Template parameter T must be an unsigned integer.");
+
 public:
   using FloatType = Float;
+  using ScalarType = Scalar;
+
+  static constexpr size_t ScalarSizeBytes = sizeof(Scalar);
 
   static constexpr u32 NumDimensions = BlockShape::num_dims;
   static constexpr auto Dims = BlockShape::values;
@@ -43,31 +53,22 @@ public:
 
 
   using PackedFloat = std::array<u8, Float::SizeBytes()>;
-  using ScalarType = std::array<u8, ScalarSizeBytes>;
   using QuantizationPolicyType =
-      QuantizationPolicy<ScalarSizeBytes, BlockShape, Float, ArithmeticPolicy>;
+      QuantizationPolicy<ScalarSizeBytes, BlockShape, Float>;
 
   // Empty constructor
-  Block() {
-    // TODO: We would need a quantisation layer that we can callout to
-    //       ideally this is also pluggable, but could be a runtime dep
-    //       instead of a static, typename, injection.
-
+  explicit Block() {
     auto data = std::array<PackedFloat, NumElems>();
     data.fill(Float::Marshal(0));
 
     data_ = data;
-
-    auto scalar = std::array<u8, ScalarSizeBytes>();
-    scalar.fill(0);
-
-    scalar_ = scalar;
+    scalar_ = 0;
   }
 
-  struct _Uninitialized {};
-  static inline constexpr _Uninitialized Uninitialized{};
+  struct Uninitialized {};
+  static inline constexpr Uninitialized UninitializedUnit{};
   // Usage: `Block b{Block::Uninitialized};`
-  Block(_Uninitialized) noexcept {
+  explicit Block(Uninitialized) noexcept {
     // do not initialize data_
   }
 
@@ -75,7 +76,7 @@ public:
   explicit Block(std::array<f64, NumElems> v) : Block(Quantize(v)) {}
   explicit Block(std::array<PackedFloat, NumElems> init)
       : data_(init), scalar_(0) {}
-  explicit Block(std::array<PackedFloat, NumElems> data, ScalarType scalar)
+  explicit Block(std::array<PackedFloat, NumElems> data, Scalar scalar)
       : data_(data), scalar_(scalar) {}
 
   Block(const Block &) = default;
@@ -127,30 +128,15 @@ public:
   }
 
   HD [[nodiscard]] f64 RealizeAtUnsafe(const u16 index) const {
-    return Float::Unmarshal(AtUnsafe(index)) * Scalar();
+    return Float::Unmarshal(AtUnsafe(index)) * ScalarValue();
   }
 
-  void SetScalar(u64 scalar) {
-    // TODO: see ScalarBits
-    for (int i = 0; i < ScalarSizeBytes; i++) {
-      scalar_[i] = scalar >> (i * 8);
-    }
-  }
+  void SetScalar(Scalar scalar) { scalar_ = scalar; }
 
-  HD [[nodiscard]] u64 ScalarBits() const {
-    // TODO: can this be optimized with a simple cast,
-    //       like `if (ScalarSizeBytes == 1) return *(*u8) scalar_;`
-    //            `if (ScalarSizeBytes == 2) return *(*u16) scalar_;`
-    //       or even better: instead of specifying `ScalarSizeBytes` cannot we
-    //       specify a type, like u8, u16, u32 or u64?
-    u64 scalar = 0;
-    for (int i = 0; i < ScalarSizeBytes; i++) {
-      scalar |= scalar_[i] << (i * 8);
-    }
-    return scalar;
+  [[nodiscard]] constexpr Scalar inline ScalarBits() const { return scalar_; }
+  [[nodiscard]] constexpr Scalar inline ScalarValue() const {
+    return 1 << scalar_;
   }
-
-  HD [[nodiscard]] u64 Scalar() const { return 1 << ScalarBits(); }
 
   [[nodiscard]] std::array<f64, NumElems> Spread() const {
     std::array<f64, NumElems> blockUnscaledFloats;
@@ -166,7 +152,7 @@ public:
     std::array<f64, NumElems> fullPrecisionValues = Spread();
     std::string value;
 
-    value += "Scalar: " + std::to_string(Scalar()) + "\n";
+    value += "Scalar: " + std::to_string(ScalarValue()) + "\n";
     value += "Elements: [\n";
     for (int i = 0; i < NumElems; i++) {
       f64 fullPrecisionFloat = fullPrecisionValues[i];
@@ -228,13 +214,7 @@ public:
     }
 
     const u32 scaleFactorInt = lround(log2(scaleFactor));
-
-    std::array<u8, ScalarSizeBytes> packedScalar;
-    for (int i = 0; i < ScalarSizeBytes; i++) {
-      packedScalar[i] = static_cast<u8>(scaleFactorInt >> (i * 8));
-    }
-
-    return Block(blockScaledFloats, packedScalar);
+    return Block(blockScaledFloats, scaleFactorInt);
   }
 
   auto data() const { return data_; }
@@ -243,7 +223,7 @@ public:
 private:
   // Using Row-Major ordering
   std::array<PackedFloat, NumElems> data_;
-  std::array<u8, ScalarSizeBytes> scalar_;
+  Scalar scalar_;
 };
 
 #endif // BFPMX_BLOCK_H

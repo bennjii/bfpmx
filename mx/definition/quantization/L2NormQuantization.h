@@ -7,8 +7,7 @@
 
 #include <cstring>
 
-template <std::size_t ScalarBytes, BlockDimsType BlockShape, IFloatRepr Float,
-          template <typename> typename ArithmeticPolicy>
+template <std::size_t ScalarBytes, BlockDimsType BlockShape, IFloatRepr Float>
 class L2NormQuantization {
 public:
   static f64
@@ -21,7 +20,7 @@ public:
     const f64 scaleFactorFloat = sqrt(sum_of_squares / BlockShape::TotalSize());
     const u32 scaleFactor = lround(scaleFactorFloat);
 
-    return scaleFactor;
+    return 1 << scaleFactor;
   }
 
   static std::string Identity() { return "L2NormQuantization"; }
