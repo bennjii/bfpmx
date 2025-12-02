@@ -124,3 +124,5 @@ set(GPU_KERNEL_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/SpreadKernel.cu
 )
 
+add_executable(heat3d benchmarks/heat3d.cpp)
+target_link_libraries(heat3d PRIVATE bfpmx)

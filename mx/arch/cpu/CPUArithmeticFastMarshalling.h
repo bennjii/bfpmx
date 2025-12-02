@@ -8,9 +8,10 @@
 
 #include "CPUArithmeticSingularValues.h"
 
-template <typename T> struct CPUArithmeticWithoutMarshalling {
+template <typename T> struct CPUArithmeticFastMarshalling {
+  // using Arithmetic = CPUArithmeticSingularValuesSimulate<T, T, T>;
+  using Arithmetic = CPUArithmeticSingularValues<T, T, T>;
   using iT = i64;
-
   static auto Add(const T &a, const T &b) -> T { return _AnyOp<AddOp>(a, b); }
 
   static auto Sub(const T &a, const T &b) -> T { return _AnyOp<SubOp>(a, b); }
@@ -19,11 +20,11 @@ template <typename T> struct CPUArithmeticWithoutMarshalling {
 
   static auto Div(const T &a, const T &b) -> T { return _AnyOp<DivOp>(a, b); }
 
-  static const iT fracMask = (1ull << T::FloatType::SignificandBits()) - 1;
-  static const iT expShift = T::FloatType::SignificandBits();
-  static const iT expMask = (1ull << T::FloatType::ExponentBits()) - 1;
-  static const iT signShift = expShift + T::FloatType::ExponentBits();
-  static const iT signMask = (1ull << signShift);
+  static constexpr iT fracMask = (1ull << T::FloatType::SignificandBits()) - 1;
+  static constexpr iT expShift = T::FloatType::SignificandBits();
+  static constexpr iT expMask = (1ull << T::FloatType::ExponentBits()) - 1;
+  static constexpr iT signShift = expShift + T::FloatType::ExponentBits();
+  static constexpr iT signMask = (1ull << signShift);
 
   template <OperationType op> static auto _AnyOp(const T &a, const T &b) -> T {
     const auto aBias = a.ScalarBits();
@@ -38,16 +39,10 @@ template <typename T> struct CPUArithmeticWithoutMarshalling {
     else
       static_assert(false);
 
-    using UninitTag = typename T::Uninitialized;
-    T result{UninitTag{}};
+    T result{typename T::Uninitialized{}};
     result.SetScalar(rBias);
     for (std::size_t i = 0; i < T::Length(); i++) {
-      if constexpr (op == AddOp || op == SubOp)
-        CPUArithmeticSingularValues<T, T, T, iT>::template _AddOrSubAt<op>(
-            result, i, rBias, a, i, aBias, b, i, bBias);
-      else
-        CPUArithmeticSingularValues<T, T, T, iT>::template _MulOrDivAt<op>(
-            result, i, rBias, a, i, aBias, b, i, bBias);
+      Arithmetic::template AnyOpAt<op>(result, i, a, i, b, i);
     }
     return result;
   }
