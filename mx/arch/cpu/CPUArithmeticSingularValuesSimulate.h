@@ -3,6 +3,7 @@
 //
 #ifndef BFPMX_CPU_ARITHMETIC_SINGULAR_VALUE_H
 #define BFPMX_CPU_ARITHMETIC_SINGULAR_VALUE_H
+
 #include "definition/alias.h"
 #include <algorithm>
 #include <bit>
@@ -21,6 +22,7 @@ struct CPUArithmeticSingularValuesSimulate {
   using T = TR::FloatType;
 
   using iT = i64;
+
   static constexpr iT fracMask = ((iT)1 << T::SignificandBits()) - 1;
   static constexpr iT expShift = T::SignificandBits();
   static constexpr iT expMask = (((iT)1 << T::ExponentBits()) - 1) << expShift;

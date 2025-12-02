@@ -26,8 +26,7 @@ int main() {
     std::cout << "BlockSize=" << IBlock::Size() << "bits" << std::endl;
     std::cout << "BlockSize=" << IBlock::Size() / BITS_IN_BYTE << "bytes" << std::endl;
 
-    // Below will be const-folded into Block<4, 272>::Length(), which statically
-    // is known as 32.
+    // Below will be const-folded into Block<u32, 272>::Length().
     const auto block3 = IBlock::CreateBlock();
     std::cout << "BlockNumElems=" << block3.NumElems << " elements" << std::endl;
 

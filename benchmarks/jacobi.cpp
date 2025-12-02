@@ -10,6 +10,10 @@
 #include "prelude.h"
 #include "profiler/profiler.h"
 
+constexpr u32 N = 32;
+constexpr u32 Steps = 250;
+constexpr u32 Iterations = 100;
+
 using TestingScalar = u32;
 using TestingFloat = fp8::E4M3Type;
 
@@ -22,7 +26,7 @@ using TestingBlock = TestingBlockT<Dimensions, CPUArithmetic>;
 
 template <typename Dimensions>
 using TestingBlockNoMarshal =
-    TestingBlockT<Dimensions, CPUArithmeticWithoutMarshalling>;
+    TestingBlockT<Dimensions, CPUArithmeticFastMarshalling>;
 
 // Somewhat opinionated port of Jacobi2D from PolyBench:
 // https://github.com/MatthiasJReisinger/PolyBenchC-4.2.1/blob/3e872547cef7e5c9909422ef1e6af03cf4e56072/stencils/jacobi-2d/jacobi-2d.c
@@ -32,8 +36,7 @@ static void Jacobi2DArray(const int steps, std::array<std::array<f64, N>, N> &A,
   profiler::func();
   int t, i, j;
 
-  for (t = 0; t < steps; t++)
-  {
+  for (t = 0; t < steps; t++) {
     for (i = 1; i < N - 1; i++)
       for (j = 1; j < N - 1; j++)
         B[i][j] = 0.2f * (A[i][j] + A[i][j - 1] + A[i][1 + j] + A[1 + i][j] +
@@ -46,7 +49,8 @@ static void Jacobi2DArray(const int steps, std::array<std::array<f64, N>, N> &A,
 }
 
 template <size_t N>
-static void Jacobi2DNaiveBlock(const int steps, TestingBlock<BlockDims<N, N>> &A,
+static void Jacobi2DNaiveBlock(const int steps,
+                               TestingBlock<BlockDims<N, N>> &A,
                                TestingBlock<BlockDims<N, N>> &B) {
   profiler::func();
 
@@ -55,7 +59,7 @@ static void Jacobi2DNaiveBlock(const int steps, TestingBlock<BlockDims<N, N>> &A
   for (u32 t = 0; t < steps; t++) {
     for (u32 i = 1; i < N - 1; i++) {
       for (u32 j = 1; j < N - 1; j++) {
-        u32 coords = BlockDims<N, N>::CoordsToLinear({i, j});
+        u32 coords = Dimensions::CoordsToLinear({i, j});
         f64 newVal = 0.2f * (A[i, j] + A[i, j - 1] + A[i, 1 + j] + A[1 + i, j] +
                              A[i - 1, j]);
 
@@ -65,7 +69,7 @@ static void Jacobi2DNaiveBlock(const int steps, TestingBlock<BlockDims<N, N>> &A
 
     for (u32 i = 1; i < N - 1; i++) {
       for (u32 j = 1; j < N - 1; j++) {
-        u32 coords = BlockDims<N, N>::CoordsToLinear({i, j});
+        u32 coords = Dimensions::CoordsToLinear({i, j});
 
         f64 newVal = 0.2f * (B[i, j] + B[i, j - 1] + B[i, 1 + j] + B[1 + i, j] +
                              B[i - 1, j]);
@@ -77,8 +81,8 @@ static void Jacobi2DNaiveBlock(const int steps, TestingBlock<BlockDims<N, N>> &A
 
 template <size_t N>
 static void Jacobi2DSpreadBlockEach(const int steps,
-                                    TestingBlock<BlockDims<N, N>> A_block,
-                                    TestingBlock<BlockDims<N, N>> B_block) {
+                                    TestingBlock<BlockDims<N, N>> &A_block,
+                                    TestingBlock<BlockDims<N, N>> &B_block) {
   profiler::func();
 
   using Dimensions = BlockDims<N, N>;
@@ -124,8 +128,8 @@ static void Jacobi2DSpreadBlockEach(const int steps,
 
 template <size_t N>
 static void Jacobi2DSpreadBlockOnce(const int steps,
-                                    TestingBlock<BlockDims<N, N>> A_block,
-                                    TestingBlock<BlockDims<N, N>> B_block) {
+                                    TestingBlock<BlockDims<N, N>> &A_block,
+                                    TestingBlock<BlockDims<N, N>> &B_block) {
   profiler::func();
 
   using Dimensions = BlockDims<N, N>;
@@ -162,25 +166,20 @@ static void Jacobi2DSpreadBlockOnce(const int steps,
     }
   }
 
-  A_block = TestingBlock<BlockDims<N, N>>(a_spread);
-  B_block = TestingBlock<BlockDims<N, N>>(b_spread);
+  A_block = TestingBlock<Dimensions>(a_spread);
+  B_block = TestingBlock<Dimensions>(b_spread);
 }
 
-constexpr u32 N = 32;
-constexpr u32 Steps = 250;
-
-int main() {
-  profiler::begin();
-
+void Test() {
   using Size = BlockDims<N, N>;
   using Block = TestingBlock<Size>;
 
-  const auto a = std::array<std::array<f64, N>, N>{
+  auto a = std::array<std::array<f64, N>, N>{
       std::array<f64, N>{1.2f},
       std::array<f64, N>{3.4f},
   };
 
-  const auto b = std::array<std::array<f64, N>, N>{
+  auto b = std::array<std::array<f64, N>, N>{
       std::array<f64, N>{1.2f},
       std::array<f64, N>{3.4f},
   };
@@ -214,6 +213,14 @@ int main() {
   blockA = Block(aLinear);
   blockB = Block(bLinear);
   Jacobi2DSpreadBlockOnce<N>(Steps, blockA, blockB);
+}
+
+int main() {
+  profiler::begin();
+
+  for (int i = 0; i < Iterations; i++) {
+    Test();
+  }
 
   profiler::end_and_print();
   return 0;
