@@ -170,6 +170,48 @@ static void Jacobi2DSpreadBlockOnce(const int steps,
   B_block = TestingBlock<Dimensions>(b_spread);
 }
 
+template <size_t N>
+static void Jacobi2DAlwaysFastMarshal(const int steps,
+                                      TestingBlock<BlockDims<N, N>> &A_block,
+                                      TestingBlock<BlockDims<N, N>> &B_block) {
+  profiler::func();
+  using Dimensions = BlockDims<N, N>;
+
+  // TODO: block mulAt by scalar
+  const auto scalar = TestingBlock<BlockDims<1>>(std::array<f64, 1>{0.2f});
+
+  using TypeA = std::remove_reference_t<decltype(A_block)>;
+  using TypeS = decltype(scalar);
+
+#define AT(i, j) ((i) * N + (j))
+#define ADD(...)                                                               \
+  CPUArithmeticSingularValues<TypeA, TypeA, TypeA>::AddAt(__VA_ARGS__);
+#define MUL(...)                                                               \
+  CPUArithmeticSingularValues<TypeA, TypeA, TypeS>::MulAt(__VA_ARGS__);
+
+  for (u32 t = 0; t < steps; t++) {
+    for (u32 i = 1; i < N - 1; i++) {
+      for (u32 j = 1; j < N - 1; j++) {
+        ADD(B_block, AT(i, j), A_block, AT(i, j), A_block, AT(i, j - 1));
+        ADD(B_block, AT(i, j), B_block, AT(i, j), A_block, AT(i, j + 1));
+        ADD(B_block, AT(i, j), B_block, AT(i, j), A_block, AT(i + 1, j));
+        ADD(B_block, AT(i, j), B_block, AT(i, j), A_block, AT(i - 1, j));
+        MUL(B_block, AT(i, j), B_block, AT(i, j), scalar, 0);
+      }
+    }
+
+    for (u32 i = 1; i < N - 1; i++) {
+      for (u32 j = 1; j < N - 1; j++) {
+        ADD(A_block, AT(i, j), B_block, AT(i, j), B_block, AT(i, j - 1));
+        ADD(A_block, AT(i, j), A_block, AT(i, j), B_block, AT(i, j + 1));
+        ADD(A_block, AT(i, j), A_block, AT(i, j), B_block, AT(i + 1, j));
+        ADD(A_block, AT(i, j), A_block, AT(i, j), B_block, AT(i - 1, j));
+        MUL(A_block, AT(i, j), A_block, AT(i, j), scalar, 0);
+      }
+    }
+  }
+}
+
 void Test() {
   using Size = BlockDims<N, N>;
   using Block = TestingBlock<Size>;
@@ -198,21 +240,48 @@ void Test() {
     }
   }
 
+  // used to prevent compiler optimization on the calls
+  auto black_box_f64 = [&](auto &a, auto &b) {
+    f64 sum = 0;
+    for (u32 i = 0; i < N; i++)
+      for (u32 j = 0; j < N; j++)
+        sum += a[i][j] + b[i][j];
+    volatile f64 x = sum;
+  };
+
+  // used to prevent compiler optimization on the calls
+  auto black_box_block = [&](auto &a, auto &b) {
+    f64 sum = 0;
+    for (u32 i = 0; i < N; i++)
+      for (u32 j = 0; j < N; j++)
+        sum += a[i, j] + b[i, j];
+    volatile f64 x = sum;
+  };
+
   Jacobi2DArray<N>(Steps, a, b);
+  black_box_f64(a, b);
 
   Block blockA, blockB;
 
   blockA = Block(aLinear);
   blockB = Block(bLinear);
   Jacobi2DNaiveBlock<N>(Steps, blockA, blockB);
+  black_box_block(blockA, blockB);
 
   blockA = Block(aLinear);
   blockB = Block(bLinear);
   Jacobi2DSpreadBlockEach<N>(Steps, blockA, blockB);
+  black_box_block(blockA, blockB);
 
   blockA = Block(aLinear);
   blockB = Block(bLinear);
   Jacobi2DSpreadBlockOnce<N>(Steps, blockA, blockB);
+  black_box_block(blockA, blockB);
+
+  blockA = Block(aLinear);
+  blockB = Block(bLinear);
+  Jacobi2DAlwaysFastMarshal<N>(Steps, blockA, blockB);
+  black_box_block(blockA, blockB);
 }
 
 int main() {
