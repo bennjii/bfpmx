@@ -44,7 +44,7 @@ std::array<f64, N> Iteration(const std::array<f64, N> &array) {
 }
 
 std::array<f64, Iterations> Test() {
-  auto startingArray = fill_random_arrays<f64, N>(-10, 10);
+  const auto startingArray = fill_random_arrays<f64, N>(-10, 10);
   auto iterationArray = startingArray;
 
   std::array<f64, Iterations> error{};
@@ -60,9 +60,8 @@ std::array<f64, Iterations> Test() {
 int main() {
   profiler::begin();
 
-  for (int i = 0; i < Iterations; i++) {
-    Test();
-  }
+  const std::array<f64, Iterations> error = Test();
+  std::cout << "Mean absolute error: " << error[Iterations / 2] << std::endl;
 
   profiler::end_and_print();
   return 0;
