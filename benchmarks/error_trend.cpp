@@ -21,8 +21,19 @@ using TestingBlockT = Block<TestingScalar, Dimensions, TestingFloat,
                             ArithmeticPolicy, SharedExponentQuantization>;
 
 using TestingBlock = TestingBlockT<BlockDims<N>, CPUArithmetic>;
+using NormalVector = std::array<f64, N>;
 
 const std::array<f64, N> ReferenceArray = fill_known_arrays<f64, N>(2.0);
+
+f64 MeanAbsError(const NormalVector A, const NormalVector B) {
+  f64 sumAbs = 0.0;
+
+  for (size_t i = 0; i < N; i++) {
+      sumAbs += std::abs(A[i] - B[i]);
+  }
+
+  return sumAbs / N;
+}
 
 std::array<f64, N> Iteration(const std::array<f64, N> &array) {
   const auto referenceBlock = TestingBlock(ReferenceArray);
@@ -32,14 +43,18 @@ std::array<f64, N> Iteration(const std::array<f64, N> &array) {
   return addedBlocks.Spread();
 }
 
-void Test() {
+std::array<f64, Iterations> Test() {
   auto startingArray = fill_random_arrays<f64, N>(-10, 10);
   auto iterationArray = startingArray;
 
+  std::array<f64, Iterations> error{};
+
   for (int i = 0; i < Iterations; i++) {
     iterationArray = Iteration(iterationArray);
-    CalculateError(startingArray, iterationArray);
+    error[i] = MeanAbsError(startingArray, iterationArray);
   }
+
+  return error;
 }
 
 int main() {
