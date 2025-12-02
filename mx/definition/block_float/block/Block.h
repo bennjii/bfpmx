@@ -40,6 +40,7 @@ class Block
 public:
   using FloatType = Float;
   using ScalarType = Scalar;
+  using Shape = BlockShape;
 
   static constexpr size_t ScalarSizeBytes = sizeof(Scalar);
 
@@ -91,7 +92,7 @@ public:
   }
 
   void SetValue(const u16 index, f64 value) {
-    SetPackedBitsAtUnsafe(index, Float::Marshal(value));
+    SetPackedBitsAtUnsafe(index, Float::Marshal(value / ScalarValue()));
   }
 
   // A variant of `At` which runs on the provided assertions that
