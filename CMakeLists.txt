@@ -91,4 +91,3 @@ add_definitions(-DUNIT_TESTS)
 add_subdirectory(example)
 add_subdirectory(benchmarks)
 add_subdirectory(mx/arch/gpu)
-

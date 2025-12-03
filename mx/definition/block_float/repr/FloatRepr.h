@@ -10,6 +10,7 @@
 #include <array>
 #include <cmath>
 #include <concepts>
+#include <cstring>
 #include <sstream>
 #include <string>
 
@@ -232,8 +233,8 @@ public:
   HD [[nodiscard]] static constexpr f64
   Unmarshal(std::array<u8, SizeBytes()> v) {
     u64 bits = 0;
-    for (u32 i = 0; i < SizeBytes(); ++i)
-      bits |= static_cast<u64>(v[i]) << (8 * i);
+    // memcpy is optimized at comp-time since SizeBytes() is a constexpr
+    std::memcpy(&bits, &v, SizeBytes());
 
     const u64 fracMask = (1ull << SignificandBits()) - 1;
     const u64 frac = bits & fracMask;
@@ -257,8 +258,9 @@ public:
 
     // store to bytes
     std::array<u8, SizeBytes()> out{};
-    for (u32 i = 0; i < SizeBytes(); ++i)
-      out[i] = static_cast<u8>((encoded >> (8 * i)) & 0xFF);
+    // memcpy is optimized at comp-time since SizeBytes() is a constexpr
+    std::memcpy(&out, &encoded, SizeBytes());
+
     return out;
   }
 

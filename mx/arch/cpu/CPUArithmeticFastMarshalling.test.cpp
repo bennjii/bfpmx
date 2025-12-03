@@ -1,5 +1,8 @@
-#include "CPUArithmeticWithoutMarshalling.h"
+#define PROFILE 1
+#include "profiler/profiler.h"
+
 #include "CPUArithmetic.h"
+#include "CPUArithmeticFastMarshalling.h"
 #include "definition/block_float/block/Block.h"
 #include "definition/block_float/block/BlockDims.h"
 #include "definition/prelude.h"
@@ -8,9 +11,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
 #include <string>
-
-#define PROFILE 1
-#include "profiler/profiler.h"
 
 using TestingScalar = u32;
 using TestingFloat = fp8::E4M3Type;
@@ -72,7 +72,7 @@ void TestAll() {
     }
     {
       profiler::block("no marshal/unmarshal add");
-      trial = CPUArithmeticWithoutMarshalling<Vector>::Add(v1, v2);
+      trial = CPUArithmeticFastMarshalling<Vector>::Add(v1, v2);
     }
 
     Test("+", reference, trial);
@@ -86,7 +86,7 @@ void TestAll() {
     }
     {
       profiler::block("no marshal/unmarshal sub");
-      trial = CPUArithmeticWithoutMarshalling<Vector>::Sub(v1, v2);
+      trial = CPUArithmeticFastMarshalling<Vector>::Sub(v1, v2);
     }
 
     Test("-", reference, trial);
@@ -100,7 +100,7 @@ void TestAll() {
     }
     {
       profiler::block("no marshal/unmarshal mul");
-      trial = CPUArithmeticWithoutMarshalling<Vector>::Mul(v1, v2);
+      trial = CPUArithmeticFastMarshalling<Vector>::Mul(v1, v2);
     }
 
     Test("*", reference, trial);
@@ -114,14 +114,14 @@ void TestAll() {
     }
     {
       profiler::block("no marshal/unmarshal div");
-      trial = CPUArithmeticWithoutMarshalling<Vector>::Div(v1, v2);
+      trial = CPUArithmeticFastMarshalling<Vector>::Div(v1, v2);
     }
 
     Test("/", reference, trial);
   }
 }
 
-TEST_CASE("Arithmetic Without Marshalling") {
+TEST_CASE("Arithmetic with fast marshalling") {
   profiler::begin();
 
   for (int i = 0; i < TestIterations; i++) {

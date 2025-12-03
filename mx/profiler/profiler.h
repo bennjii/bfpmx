@@ -216,6 +216,20 @@ static inline void begin(void) {
   detail::global_profiler.anchors[0].elapsed_at_root = detail::read_CPU_timer();
 }
 
+static inline double get_elapsed_seconds(const std::string &function_name) {
+  for (u32 i = 1; i < _TIMINGS_MAX; i++) {
+    if (detail::global_profiler.anchors[i].label == NULL)
+      continue;
+
+    if (std::string(detail::global_profiler.anchors[i].label) ==
+        function_name) {
+      detail::ProfilerAnchor *el = &detail::global_profiler.anchors[i];
+      return (f64)el->elapsed_at_root / (f64)detail::profiler_cpu_freq;
+    }
+  }
+  return 0.0;
+}
+
 static inline void end_and_print(void) {
   detail::global_profiler.anchors[0].elapsed_at_root =
       detail::read_CPU_timer() -
@@ -237,9 +251,10 @@ static inline void end_and_print(void) {
       continue;
     detail::ProfilerAnchor *el = &detail::global_profiler.anchors[i];
     std::cout << "[PROFILER]    "
-              << std::format("{}[{}] : {} ({:.2f}%", el->label, el->hit_count,
-                             el->elapsed_at_root,
-                             (f64)el->elapsed_at_root * total_inv);
+              << std::format("{}[{}] : {} ({:.2f}%, {:.8f}ms", el->label,
+                             el->hit_count, el->elapsed_at_root,
+                             (f64)el->elapsed_at_root * total_inv,
+                             get_elapsed_seconds(el->label) * 1000);
     if (el->elapsed_at_root != el->elapsed_excl)
       std::cout << std::format(", {:.2f}% excl",
                                (f64)el->elapsed_excl * total_inv);
