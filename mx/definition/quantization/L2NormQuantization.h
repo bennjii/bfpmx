@@ -18,7 +18,7 @@ public:
     }
 
     if (sum_of_squares == 0.0) {
-        return 1.0;
+      return 1.0;
     }
 
     const f64 rms = sqrt(sum_of_squares / BlockShape::TotalSize());
