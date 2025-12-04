@@ -25,6 +25,8 @@
 #define BFPMX_PROFILER_H
 
 #include "../mx/definition/alias.h"
+#include <string>
+#include <vector>
 
 #include <format>
 #include <iostream>
