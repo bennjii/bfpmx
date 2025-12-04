@@ -16,4 +16,12 @@ static std::array<T, N> fill_random_arrays(const T low, const T high) {
   return v;
 }
 
+template <typename T, std::size_t N>
+static std::array<T, N> fill_known_arrays(const T value) {
+  std::array<T, N> v;
+  for (std::size_t i = 0; i < N; i++)
+    v[i] = value;
+  return v;
+}
+
 #endif // BFPMX_ARCH_TEST_H
