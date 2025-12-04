@@ -17,10 +17,14 @@ public:
       sum_of_squares += std::pow(vec[i], 2);
     }
 
-    const f64 scaleFactorFloat = sqrt(sum_of_squares / BlockShape::TotalSize());
-    const u32 scaleFactor = lround(scaleFactorFloat);
+    if (sum_of_squares == 0.0) {
+        return 1.0;
+    }
 
-    return 1 << scaleFactor;
+    const f64 rms = sqrt(sum_of_squares / BlockShape::TotalSize());
+
+    const int exponent = std::ceil(std::log2(rms));
+    return std::pow(2, exponent);
   }
 
   static std::string Identity() { return "L2NormQuantization"; }

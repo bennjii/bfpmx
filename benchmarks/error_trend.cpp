@@ -22,7 +22,7 @@ using TestingScalar = u32;
 
 template <IFloatRepr Float>
 using TestingBlockT = Block<TestingScalar, BlockDims<N>, Float,
-                            CPUArithmetic, MaximumFractionalQuantization>;
+                            CPUArithmetic, L2NormQuantization>;
 
 using NormalVector = std::array<f64, N>;
 
