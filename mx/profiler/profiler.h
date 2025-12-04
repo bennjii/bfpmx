@@ -248,6 +248,7 @@ static std::vector<ProfilerAnchor> dump_and_reset(void) {
     infos.push_back(*el);
     *el = {};
   }
+  detail::global_profiler.anchors[0].elapsed_at_root = detail::read_CPU_timer();
   return infos;
 }
 

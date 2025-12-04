@@ -45,13 +45,13 @@ static CsvInfo CsvInfo_mx(std::string stress_function, u64 input_size,
 }
 
 // template <T>
-static CsvInfo CsvInfo_mx(std::string stress_function, u64 input_size,
-                          u64 steps) {
-  // TODO: read values from T = Block<....>
-  //       sincerily I need help
-  return CsvInfo_mx(stress_function, input_size, steps, "" /*TODO*/, 0 /*TODO*/,
-                    "" /*TODO*/);
-}
+// static CsvInfo CsvInfo_mx(std::string stress_function, u64 input_size,
+//                           u64 steps) {
+//   // TODO: read values from T = Block<....>
+//   //       sincerily I need help
+//   return CsvInfo_mx(stress_function, input_size, steps, "" /*TODO*/,
+//                    0 /*TODO*/, "" /*TODO*/);
+// }
 
 class CsvWriter {
 public:

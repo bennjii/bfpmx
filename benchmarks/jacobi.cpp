@@ -301,7 +301,9 @@ int main() {
       to_dump.append_csv(y, x, 0);
     }
   }
+  // profiler::end_and_print();
 
+  // to_dump.dump("file_name");
   to_dump.dump(std::cout);
 
   return 0;
