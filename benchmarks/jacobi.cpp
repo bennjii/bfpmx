@@ -5,9 +5,10 @@
 #ifndef BFPMX_JACOBI_H
 #define BFPMX_JACOBI_H
 
-#define PROFILE 1
-
 #include "prelude.h"
+
+#define PROFILE 1
+#include "profiler/csv_info.h"
 #include "profiler/profiler.h"
 
 constexpr u32 N = 32;
@@ -285,13 +286,24 @@ void Test() {
 }
 
 int main() {
-  profiler::begin();
+  CsvWriter to_dump = CsvWriter();
+  CsvInfo f32_info = CsvInfo_f32("heat3d", N, Steps);
+  CsvInfo mx_info = CsvInfo_mx("heat3d", N, Steps, "E4M3", N * N,
+                               "SharedExponentQuantization");
 
+  profiler::begin();
   for (int i = 0; i < Iterations; i++) {
     Test();
+    to_dump.next_iteration();
+    auto infos = profiler::dump_and_reset();
+    for (auto &x : infos) {
+      auto &y = (std::string(x.label) == "Jacobi2DArray" ? f32_info : mx_info);
+      to_dump.append_csv(y, x, 0);
+    }
   }
 
-  profiler::end_and_print();
+  to_dump.dump(std::cout);
+
   return 0;
 }
 

@@ -67,6 +67,13 @@
 #endif
 
 namespace profiler {
+struct ProfilerAnchor {
+  u64 elapsed_at_root; // With children
+  u64 elapsed_excl;    // Without children
+  u64 hit_count;
+  u64 byte_count;
+  char const *label;
+};
 
 namespace detail {
 #if _WIN32
@@ -129,14 +136,6 @@ static inline u64 guess_CPU_freq(u64 milliseconds_to_wait) {
 }
 
 #define _TIMINGS_MAX 4096
-
-struct ProfilerAnchor {
-  u64 elapsed_at_root; // With children
-  u64 elapsed_excl;    // Without children
-  u64 hit_count;
-  u64 byte_count;
-  char const *label;
-};
 
 struct Profiler {
   ProfilerAnchor anchors[_TIMINGS_MAX];
@@ -214,18 +213,42 @@ static inline void begin(void) {
   detail::global_profiler.anchors[0].elapsed_at_root = detail::read_CPU_timer();
 }
 
-static inline double get_elapsed_seconds(const std::string &function_name) {
+static inline f64 clocks_to_seconds(u64 clocks) {
+  return (f64)clocks / (f64)detail::profiler_cpu_freq;
+}
+
+static inline f64 get_elapsed_seconds(const std::string &function_name) {
   for (u32 i = 1; i < _TIMINGS_MAX; i++) {
     if (detail::global_profiler.anchors[i].label == NULL)
       continue;
 
     if (std::string(detail::global_profiler.anchors[i].label) ==
         function_name) {
-      detail::ProfilerAnchor *el = &detail::global_profiler.anchors[i];
-      return (f64)el->elapsed_at_root / (f64)detail::profiler_cpu_freq;
+      ProfilerAnchor *el = &detail::global_profiler.anchors[i];
+      return clocks_to_seconds(el->elapsed_at_root);
     }
   }
   return 0.0;
+}
+
+static std::vector<ProfilerAnchor> dump_and_reset(void) {
+  detail::global_profiler.anchors[0].elapsed_at_root =
+      detail::read_CPU_timer() -
+      detail::global_profiler.anchors[0].elapsed_at_root;
+  std::vector<ProfilerAnchor> infos;
+  for (u32 i = 1;
+       // Catch2 or other libraries could use __COUNTER__ too
+       i <
+       _TIMINGS_MAX /* && detail::global_profiler.anchors[i].label != NULL */;
+       i++) {
+    // Catch2 or other libraries could use __COUNTER__ too
+    if (detail::global_profiler.anchors[i].label == NULL)
+      continue;
+    ProfilerAnchor *el = &detail::global_profiler.anchors[i];
+    infos.push_back(*el);
+    *el = {};
+  }
+  return infos;
 }
 
 static inline void end_and_print(void) {
@@ -247,12 +270,12 @@ static inline void end_and_print(void) {
     // Catch2 or other libraries could use __COUNTER__ too
     if (detail::global_profiler.anchors[i].label == NULL)
       continue;
-    detail::ProfilerAnchor *el = &detail::global_profiler.anchors[i];
+    ProfilerAnchor *el = &detail::global_profiler.anchors[i];
     std::cout << "[PROFILER]    "
-              << std::format("{}[{}] : {} ({:.2f}%, {:.8f}ms", el->label,
+              << std::format("{}[{}] : {} ({:.2f}%, {:.3f}ms", el->label,
                              el->hit_count, el->elapsed_at_root,
                              (f64)el->elapsed_at_root * total_inv,
-                             get_elapsed_seconds(el->label) * 1000);
+                             clocks_to_seconds(el->elapsed_at_root) * 1000);
     if (el->elapsed_at_root != el->elapsed_excl)
       std::cout << std::format(", {:.2f}% excl",
                                (f64)el->elapsed_excl * total_inv);
