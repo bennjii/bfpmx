@@ -271,6 +271,14 @@ public:
   }
 };
 
+namespace fp16 {
+using E6M9Type = FloatRepr<6, 9, 1>;
+constexpr auto E6M9 = E6M9Type();
+
+using E5M10Type = FloatRepr<5, 10, 1>;
+constexpr auto E5M10 = E5M10Type();
+} // namespace fp8
+
 namespace fp8 {
 using E4M3Type = FloatRepr<4, 3, 1>;
 constexpr auto E4M3 = E4M3Type();
