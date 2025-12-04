@@ -31,7 +31,7 @@ void print_bits(FloatRepr<E, M, S> repr, f64 value) {
 }
 
 int main() {
-    constexpr auto repr = fp8::E5M2;
+    constexpr auto repr = fp16::E5M10;
 
     while (true) {
         std::cout << "Enter value: ";

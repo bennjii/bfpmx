@@ -124,7 +124,13 @@ public:
   }
 
   HD [[nodiscard]] f64 RealizeAtUnsafe(const u16 index) const {
-    return Float::Unmarshal(AtUnsafe(index)) * ScalarValue();
+    PackedFloat packedFloat = AtUnsafe(index);
+    const f64 highPrecisionFloat = Float::Unmarshal(packedFloat);
+    const f64 trueValue = highPrecisionFloat * static_cast<f64>(ScalarValue());
+
+    // std::cerr << "Recovered value: " << trueValue << " from scalar " << ScalarValue() << " and base-float " << highPrecisionFloat << std::endl;
+
+    return trueValue;
   }
 
   void SetScalar(Scalar scalar) { scalar_ = scalar; }
@@ -201,15 +207,18 @@ public:
 
   static Block Quantize(const std::array<f64, BlockShape::TotalSize()> &vec) {
     f64 scaleFactor = QuantizationPolicyType::QuantizerScaleFactor(vec);
+    const u32 scaleFactorInt = lround(log2(scaleFactor));
+
+    // std::cerr << "Scale factor: " << scaleFactor << " as int: " << scaleFactorInt << std::endl;
 
     // Scale each element to become x_i = v_i / S.
     std::array<PackedFloat, BlockShape::TotalSize()> blockScaledFloats;
     for (int i = 0; i < BlockShape::TotalSize(); i++) {
       f64 scaledValue = vec[i] / scaleFactor;
+      // std::cerr << "Scaled value: " << scaledValue << " from " << vec[i] << std::endl;
       blockScaledFloats[i] = Float::Marshal(scaledValue);
     }
 
-    const u32 scaleFactorInt = lround(log2(scaleFactor));
     return Block(blockScaledFloats, scaleFactorInt);
   }
 
