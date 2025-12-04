@@ -10,6 +10,9 @@
 
 #include "prelude.h"
 #include "profiler/profiler.h"
+#include <cmath>
+#include <iomanip>
+#include <iostream>
 
 using TestingScalar = u32;
 using TestingFloat = fp8::E4M3Type;
@@ -28,8 +31,8 @@ using TestingBlockNoMarshal =
 // Somewhat opinionated port of Jacobi2D from PolyBench:
 // https://github.com/MatthiasJReisinger/PolyBenchC-4.2.1/blob/3e872547cef7e5c9909422ef1e6af03cf4e56072/stencils/jacobi-2d/jacobi-2d.c
 template <size_t N>
-static void Jacobi2DArray(const int steps, std::array<std::array<f64, N>, N> A,
-                          std::array<std::array<f64, N>, N> B) {
+static void Jacobi2DArray(const int steps, std::array<std::array<f64, N>, N> &A,
+                          std::array<std::array<f64, N>, N> &B) {
   profiler::func();
   int t, i, j;
 
@@ -48,8 +51,9 @@ static void Jacobi2DArray(const int steps, std::array<std::array<f64, N>, N> A,
 }
 
 template <size_t N>
-static void Jacobi2DNaiveBlock(const int steps, TestingBlock<BlockDims<N, N>> A,
-                               TestingBlock<BlockDims<N, N>> B) {
+static void Jacobi2DNaiveBlock(const int steps,
+                               TestingBlock<BlockDims<N, N>> &A,
+                               TestingBlock<BlockDims<N, N>> &B) {
   profiler::func();
 
   using Dimensions = BlockDims<N, N>;
@@ -78,9 +82,9 @@ static void Jacobi2DNaiveBlock(const int steps, TestingBlock<BlockDims<N, N>> A,
 }
 
 template <size_t N>
-static void Jacobi2DSpreadBlockEach(const int steps,
-                                    TestingBlock<BlockDims<N, N>> A_block,
-                                    TestingBlock<BlockDims<N, N>> B_block) {
+static void
+Jacobi2DSpreadBlockEach(const int steps, TestingBlock<BlockDims<N, N>> &A_block,
+                        TestingBlock<BlockDims<N, N>> &B_block) {
   profiler::func();
 
   using Dimensions = BlockDims<N, N>;
@@ -125,9 +129,10 @@ static void Jacobi2DSpreadBlockEach(const int steps,
 }
 
 template <size_t N>
-static void Jacobi2DSpreadBlockOnce(const int steps,
-                                    TestingBlock<BlockDims<N, N>> A_block,
-                                    TestingBlock<BlockDims<N, N>> B_block) {
+static void
+Jacobi2DSpreadBlockOnce(const int steps,
+                        TestingBlock<BlockDims<N, N>> &A_block,
+                        TestingBlock<BlockDims<N, N>> &B_block) {
   profiler::func();
 
   using Dimensions = BlockDims<N, N>;
@@ -171,53 +176,101 @@ static void Jacobi2DSpreadBlockOnce(const int steps,
 constexpr u32 N = 32;
 constexpr u32 Steps = 250;
 
-int main() {
-  profiler::begin();
+template <size_t N_>
+static f64 L2Norm(const std::array<std::array<f64, N_>, N_> &A,
+                  const std::array<f64, N_ * N_> &B_linear) {
+  f64 error = 0.0;
+  for (size_t i = 0; i < N_; ++i) {
+    for (size_t j = 0; j < N_; ++j) {
+      f64 diff = A[i][j] - B_linear[i * N_ + j];
+      error += diff * diff;
+    }
+  }
+  return std::sqrt(error);
+}
 
+template <size_t N_>
+static f64 L2Norm(const std::array<std::array<f64, N_>, N_> &A) {
+  f64 norm_sq = 0.0;
+  for (size_t i = 0; i < N_; ++i) {
+    for (size_t j = 0; j < N_; ++j) {
+      norm_sq += A[i][j] * A[i][j];
+    }
+  }
+  return std::sqrt(norm_sq);
+}
+
+int main() {
   using Size = BlockDims<N, N>;
   using Block = TestingBlock<Size>;
 
-  const auto a = std::array<std::array<f64, N>, N>{
-      std::array<f64, N>{1.2f},
-      std::array<f64, N>{3.4f},
-  };
+  // Create and fill arrays
+  auto a_base = std::array<std::array<f64, N>, N>{};
+  auto b_base = std::array<std::array<f64, N>, N>{};
 
-  const auto b = std::array<std::array<f64, N>, N>{
-      std::array<f64, N>{1.2f},
-      std::array<f64, N>{3.4f},
-  };
+  for (u32 i = 0; i < N; i++) {
+    a_base[i] = fill_random_arrays<f64, N>(-10, 10);
+    b_base[i] = fill_random_arrays<f64, N>(-10, 10);
+  }
 
-  std::array<f64, N * N> aLinear = {};
+  // Linearize for blocks
+  std::array<f64, N * N> aLinear_base = {};
   for (u32 i = 0; i < N; i++) {
     for (u32 j = 0; j < N; j++) {
-      aLinear[i * N + j] = a[i][j];
+      aLinear_base[i * N + j] = a_base[i][j];
     }
   }
 
-  std::array<f64, N * N> bLinear = {};
+  std::array<f64, N * N> bLinear_base = {};
   for (u32 i = 0; i < N; i++) {
     for (u32 j = 0; j < N; j++) {
-      bLinear[i * N + j] = b[i][j];
+      bLinear_base[i * N + j] = b_base[i][j];
     }
   }
 
-  Jacobi2DArray<N>(Steps, a, b);
+  // Get reference result
+  auto a_ref = a_base;
+  auto b_ref = b_base;
+  Jacobi2DArray<N>(Steps, a_ref, b_ref);
 
-  Block blockA, blockB;
+  profiler::begin();
 
-  blockA = Block(aLinear);
-  blockB = Block(bLinear);
-  Jacobi2DNaiveBlock<N>(Steps, blockA, blockB);
+  auto a_prof = a_base;
+  auto b_prof = b_base;
+  Jacobi2DArray<N>(Steps, a_prof, b_prof);
 
-  blockA = Block(aLinear);
-  blockB = Block(bLinear);
-  Jacobi2DSpreadBlockEach<N>(Steps, blockA, blockB);
+  Block blockA_naive(aLinear_base), blockB_naive(bLinear_base);
+  Jacobi2DNaiveBlock<N>(Steps, blockA_naive, blockB_naive);
 
-  blockA = Block(aLinear);
-  blockB = Block(bLinear);
-  Jacobi2DSpreadBlockOnce<N>(Steps, blockA, blockB);
+  Block blockA_spread_each(aLinear_base), blockB_spread_each(bLinear_base);
+  Jacobi2DSpreadBlockEach<N>(Steps, blockA_spread_each, blockB_spread_each);
+
+  Block blockA_spread_once(aLinear_base), blockB_spread_once(bLinear_base);
+  Jacobi2DSpreadBlockOnce<N>(Steps, blockA_spread_once, blockB_spread_once);
 
   profiler::end_and_print();
+
+  // --- Error Calculation ---
+  std::cout << std::fixed << std::setprecision(10);
+  std::cout << "Errors compared to f64 reference:" << std::endl;
+  std::cout << "(abs = L2 norm of error, rel = relative error %)" << std::endl;
+
+  const f64 norm_ref = L2Norm<N>(a_ref);
+
+  const auto print_error = [&](const std::string &name,
+                               const std::array<f64, N * N> &result) {
+    const f64 error_abs = L2Norm<N>(a_ref, result);
+    std::cout << " - " << name << ": " << error_abs << " (abs)";
+    if (norm_ref > 0) {
+      std::cout << ", " << (error_abs / norm_ref) * 100.0 << "% (rel)";
+    }
+    std::cout << std::endl;
+  };
+
+  print_error("Jacobi2DNaiveBlock", blockA_naive.Spread());
+  print_error("Jacobi2DSpreadBlockEach", blockA_spread_each.Spread());
+  print_error("Jacobi2DSpreadBlockOnce", blockA_spread_once.Spread());
+
   return 0;
 }
 
