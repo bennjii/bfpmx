@@ -277,7 +277,7 @@ constexpr auto E6M9 = E6M9Type();
 
 using E5M10Type = FloatRepr<5, 10, 1>;
 constexpr auto E5M10 = E5M10Type();
-} // namespace fp8
+} // namespace fp16
 
 namespace fp8 {
 using E4M3Type = FloatRepr<4, 3, 1>;
