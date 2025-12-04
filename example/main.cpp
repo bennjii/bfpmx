@@ -30,9 +30,11 @@ int main() {
     const auto block3 = IBlock::CreateBlock();
     std::cout << "BlockNumElems=" << block3.NumElems << " elements" << std::endl;
 
-    std::cout << "block3: " << block3.asString() << std::endl;
-    auto newBlock = block3 + block3;
-    newBlock(0, 0, 0) = fp8::E4M3Type::Marshal(1);
-    newBlock(1, 1, 1) = fp8::E4M3Type::Marshal(2);
-    std::cout << "new block: " << newBlock.asString() << std::endl;
+    // std::cout << "block3: " << block3.asString() << std::endl;
+    // auto newBlock = block3 + block3;
+    // newBlock.SetValue({0, 0, 0}, fp8::E4M3Type::Marshal(1));
+    // newBlock.SetValue({1, 1, 1}, fp8::E4M3Type::Marshal(2));
+    // // newBlock(0, 0, 0) = fp8::E4M3Type::Marshal(1);
+    // // newBlock(1, 1, 1) = fp8::E4M3Type::Marshal(2);
+    // std::cout << "new block: " << newBlock.asString() << std::endl;
 }

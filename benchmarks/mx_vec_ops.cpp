@@ -9,7 +9,7 @@ using MxVector = mx::vector::MxVector<BlockDims<32>, unsigned char,
     fp8::E4M3Type, GPUArithmeticNaive, MaximumFractionalQuantization>;
 
 static void BM_AddStdVector(benchmark::State& state) {
-    const size_t n = 100'000;
+    const size_t n = state.range(0);
 
     std::mt19937_64 rng(12345);
     std::uniform_real_distribution<double> dist(-5.0, 5.0);
@@ -28,8 +28,8 @@ static void BM_AddStdVector(benchmark::State& state) {
     state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(n * sizeof(double) * 2));
 }
 
-static void BM_AddMxVector(benchmark::State& state) {
-    const size_t n = 100'000;
+static void BM_AddMxVectorPointwiseGPU(benchmark::State& state) {
+    const size_t n = state.range(0);
 
     std::mt19937_64 rng(12345);
     std::uniform_real_distribution<double> dist(-5.0, 5.0);
@@ -43,7 +43,29 @@ static void BM_AddMxVector(benchmark::State& state) {
     MxVector mx1(v1), mx2(v2);
 
     for (auto _ : state) {
-        auto r = mx::vector::ops::Add(mx1, mx2);
+        auto r = mx::vector::ops::AddPointwiseGPU(mx1, mx2);
+        benchmark::DoNotOptimize(r);
+    }
+
+    state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(n * sizeof(double) * 2));
+}
+
+static void BM_AddMxVectorBlockwise(benchmark::State& state) {
+    const size_t n = state.range(0);
+
+    std::mt19937_64 rng(12345);
+    std::uniform_real_distribution<double> dist(-5.0, 5.0);
+
+    std::vector<double> v1(n), v2(n);
+    for (size_t i = 0; i < n; ++i) {
+        v1[i] = dist(rng);
+        v2[i] = dist(rng);
+    }
+
+    MxVector mx1(v1), mx2(v2);
+
+    for (auto _ : state) {
+        auto r = mx::vector::ops::AddBlockwise(mx1, mx2);
         benchmark::DoNotOptimize(r);
     }
 
@@ -51,6 +73,7 @@ static void BM_AddMxVector(benchmark::State& state) {
 }
 
 BENCHMARK(BM_AddStdVector)->Arg(10'000)->Arg(100'000)->Arg(1'000'000);
-BENCHMARK(BM_AddMxVector)->Arg(10'000)->Arg(100'000)->Arg(1'000'000);
+BENCHMARK(BM_AddMxVectorPointwiseGPU)->Arg(10'000)->Arg(100'000)->Arg(1'000'000);
+BENCHMARK(BM_AddMxVectorBlockwise)->Arg(10'000)->Arg(100'000)->Arg(1'000'000);
 
 BENCHMARK_MAIN();

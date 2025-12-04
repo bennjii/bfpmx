@@ -52,11 +52,11 @@ void Test(const std::string &operation, Vector reference, Vector trial) {
 
       std::cerr << "Raw: " << v1_[i] << " " << operation << " " << v2_[i]
                 << std::endl;
-      std::cerr << "Block: " << v1[i] << " " << operation << " " << v2[i]
+      std::cerr << "Block: " << v1(i) << " " << operation << " " << v2(i)
                 << std::endl;
 
-      std::cerr << "Reference Output: " << reference[i] << std::endl;
-      std::cerr << "Actual Output: " << trial[i] << std::endl;
+      std::cerr << "Reference Output: " << reference(i) << std::endl;
+      std::cerr << "Actual Output: " << trial(i) << std::endl;
     }
 
     REQUIRE(equal);

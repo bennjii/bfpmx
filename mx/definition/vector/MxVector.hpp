@@ -1,9 +1,6 @@
 #pragma once
 #include <functional>
-#include "definition/block_float/block/Block.h"
-#include "definition/block_float/block/BlockDims.h"
-#include "definition/block_float/repr/FloatRepr.h"
-#include "definition/quantization/MaximumFractionalQuantization.h"
+#include "prelude.h"
 #include "omp.h"
 namespace mx::vector {
     template <OneDimensionalBlockDimsType BlockShape, typename ScalarType = unsigned char,
@@ -80,6 +77,10 @@ namespace mx::vector {
 
         size_t SizeInBytes() const {
             return blocks_.size() * sizeof(BlockType);
+        }
+
+        size_t NumBlockElements() const {
+            return BlockType::NumElems;
         }
 
         void asString() const {

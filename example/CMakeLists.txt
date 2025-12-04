@@ -15,7 +15,11 @@ add_executable(example_quant quant.cpp)
 target_link_libraries(example_quant PRIVATE bfpmx)
 
 add_executable(example_mx_vector mx_vector.cpp)
-target_link_libraries(example_mx_vector PRIVATE bfpmx)
+target_link_libraries(example_mx_vector 
+    PRIVATE 
+    bfpmx
+    bfpmx_gpu
+)
 
 add_executable(example_cudatest cudatest.cpp)
 target_link_libraries(example_cudatest

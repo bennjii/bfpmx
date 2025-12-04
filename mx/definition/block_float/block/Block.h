@@ -194,41 +194,39 @@ public:
 
   // Templated for parameter packs
   template <typename... IndexTypes>
-  constexpr PackedFloat &operator()(IndexTypes... idxs) noexcept {
+  constexpr f64 operator()(IndexTypes... idxs) noexcept {
     static_assert(sizeof...(idxs) == BlockShape::num_dims,
                   "Incorrect number of indices for this Block");
     std::array<u32, sizeof...(idxs)> coords{static_cast<u32>(idxs)...};
     u32 linear = BlockShape::CoordsToLinear(coords);
-    return data_.at(linear);
-  }
-
-  // Templated for parameter packs
-  template <typename... IndexTypes>
-  constexpr const PackedFloat &operator()(IndexTypes... idxs) const noexcept {
-    static_assert(sizeof...(idxs) == BlockShape::num_dims,
-                  "Incorrect number of indices for this Block");
-    std::array<u32, sizeof...(idxs)> coords{static_cast<u32>(idxs)...};
-    u32 linear = BlockShape::CoordsToLinear(coords);
-    return data_.at(linear);
-  }
-
-  // Templated for parameter packs
-  template <typename... IndexTypes>
-  constexpr f64 operator[](IndexTypes... idxs) noexcept {
-    static_assert(sizeof...(idxs) == BlockShape::num_dims,
-                  "Incorrect number of indices for this Block");
-    std::array<u32, sizeof...(idxs)> coords{static_cast<u32>(idxs)...};
-    const u32 linear = BlockShape::CoordsToLinear(coords);
     return RealizeAtUnsafe(linear);
   }
 
   // Templated for parameter packs
   template <typename... IndexTypes>
-  constexpr const f64 &operator[](IndexTypes... idxs) const noexcept {
+  constexpr const f64 &operator()(IndexTypes... idxs) const noexcept {
     static_assert(sizeof...(idxs) == BlockShape::num_dims,
                   "Incorrect number of indices for this Block");
     std::array<u32, sizeof...(idxs)> coords{static_cast<u32>(idxs)...};
-    const u32 linear = BlockShape::CoordsToLinear(coords);
+    u32 linear = BlockShape::CoordsToLinear(coords);
+    return RealizeAt(linear);
+  }
+
+  // [] overloads for 1D blocks
+  template <typename IndexType>
+  constexpr f64 operator[](IndexType idx) noexcept {
+    static_assert(1 == BlockShape::num_dims,
+                  "Incorrect number of indices for this Block");
+    const u32 linear = BlockShape::CoordsToLinear({static_cast<u32>(idx)});
+    return RealizeAtUnsafe(linear);
+  }
+
+  // [] overloads for 1D blocks
+  template <typename IndexType>
+  constexpr const f64 &operator[](IndexType idx) const noexcept {
+    static_assert(1 == BlockShape::num_dims,
+                  "Incorrect number of indices for this Block");
+    const u32 linear = BlockShape::CoordsToLinear({static_cast<u32>(idx)});
     return RealizeAt(linear);
   }
 

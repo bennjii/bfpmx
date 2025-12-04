@@ -11,6 +11,7 @@
 
 #include "cpu/CPUArithmetic.h"
 #include "cpu/CPUArithmeticFastMarshalling.h"
+#include "gpu/preludeGPU.cuh"
 
 // #if defined(__x86_64__) || defined(_M_X64)
 // #include "cpu/x86_64.cpp"

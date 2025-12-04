@@ -127,10 +127,10 @@ TestingMatrix3D<N> HeatBlock3D(const int steps, TestingMatrix3D<N> A,
         u32 idx = offset_i + (j * stride_j) + 1;
         for (u32 k = 1; k < N - 1; k++) {
           f64 newVal =
-              0.125 * (A[i + 1, j, k] - 2.0 * A[i, j, k] + A[i - 1, j, k]) +
-              0.125 * (A[i, j + 1, k] - 2.0 * A[i, j, k] + A[i, j - 1, k]) +
-              0.125 * (A[i, j, k + 1] - 2.0 * A[i, j, k] + A[i, j, k - 1]) +
-              A[i, j, k];
+              0.125 * (A(i + 1, j, k) - 2.0 * A(i, j, k) + A(i - 1, j, k)) +
+              0.125 * (A(i, j + 1, k) - 2.0 * A(i, j, k) + A(i, j - 1, k)) +
+              0.125 * (A(i, j, k + 1) - 2.0 * A(i, j, k) + A(i, j, k - 1)) +
+              A(i, j, k);
 
           B.SetValue(idx, newVal);
           ++idx;
@@ -144,10 +144,10 @@ TestingMatrix3D<N> HeatBlock3D(const int steps, TestingMatrix3D<N> A,
         u32 idx = offset_i + (j * stride_j) + 1;
         for (u32 k = 1; k < N - 1; k++) {
           f64 newVal =
-              0.125 * (B[i + 1, j, k] - 2.0 * B[i, j, k] + B[i - 1, j, k]) +
-              0.125 * (B[i, j + 1, k] - 2.0 * B[i, j, k] + B[i, j - 1, k]) +
-              0.125 * (B[i, j, k + 1] - 2.0 * B[i, j, k] + B[i, j, k - 1]) +
-              B[i, j, k];
+              0.125 * (B(i + 1, j, k) - 2.0 * B(i, j, k) + B(i - 1, j, k)) +
+              0.125 * (B(i, j + 1, k) - 2.0 * B(i, j, k) + B(i, j - 1, k)) +
+              0.125 * (B(i, j, k + 1) - 2.0 * B(i, j, k) + B(i, j, k - 1)) +
+              B(i, j, k);
           A.SetValue(idx, newVal);
           ++idx;
         }

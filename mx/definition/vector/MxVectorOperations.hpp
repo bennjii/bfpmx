@@ -4,6 +4,7 @@
 #include <omp.h>
 
 namespace mx::vector::ops {
+    using ElemType = f64;
     // For now we do not check the dimension of the vectors,
     // as the dimension is dynamic and runtime check comes with 
     // performance cost. If the type are mismatched, it results in a
@@ -20,7 +21,7 @@ namespace mx::vector::ops {
     }
 
     template <typename T>
-    T Add(const T& a, const T& b) {
+    T AddBlockwise(const T& a, const T& b) {
         std::vector<typename T::BlockType> result_blocks(a.NumBlocks());
         #pragma omp parallel for
         for (auto i = 0; i < a.NumBlocks(); ++i) {
@@ -29,6 +30,11 @@ namespace mx::vector::ops {
             result_blocks[i] = a_block + b_block;
         }
         return T(result_blocks, a.Size());
+    }
+
+    template <typename T>
+    T AddPointwiseGPU(const T& a, const T& b) {
+        return AddPointwiseGPUWrapper(a, b);
     }
 } // namespace mx
 
