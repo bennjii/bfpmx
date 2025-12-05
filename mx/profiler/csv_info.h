@@ -19,11 +19,8 @@ struct CsvInfo {
   u64 steps;
 };
 
-static CsvInfo PrepareCsvPrimitive(
-  std::string const& stress_function,
-  const u64 input_size,
-  const u64 steps
-) {
+static CsvInfo PrepareCsvPrimitive(std::string const &stress_function,
+                                   const u64 input_size, const u64 steps) {
   CsvInfo ret = {};
 
   ret.format = "primitive";
@@ -37,11 +34,8 @@ static CsvInfo PrepareCsvPrimitive(
 }
 
 template <typename Block>
-static CsvInfo PrepareCsvBlock(
-  std::string const& stress_function,
-  const u64 input_size,
-  const u64 steps
-) {
+static CsvInfo PrepareCsvBlock(std::string const &stress_function,
+                               const u64 input_size, const u64 steps) {
   CsvInfo ret = {};
   ret.format = Block::FloatType::Nomenclature();
   ret.block_size = Block::Length();
@@ -66,7 +60,8 @@ public:
   void append_csv(CsvInfo const &basic_info,
                   profiler::ProfilerAnchor const &profiler_info,
                   f64 error /* TODO @benji */) {
-    const auto runtime_ms = profiler::clocks_to_seconds(profiler_info.elapsed_at_root) * 1000;
+    const auto runtime_ms =
+        profiler::clocks_to_seconds(profiler_info.elapsed_at_root) * 1000;
 
     csv += basic_info.format;
     csv += ", ";
@@ -98,7 +93,7 @@ public:
 
   void dump(std::ostream &out) const { out << csv; }
 
-  void dump(std::string const& file_name) const {
+  void dump(std::string const &file_name) const {
     std::ofstream file(file_name);
     dump(file);
   }
