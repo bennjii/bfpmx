@@ -30,7 +30,8 @@ template <
     template <typename> typename ArithmeticPolicy,
     // The quantization policy to use
     template <std::size_t, BlockDimsType,
-              IFloatRepr> typename QuantizationPolicy>
+              IFloatRepr> typename QuantizationPolicy
+>
 class Block
     : public WithPolicy<ArithmeticPolicy>::template Type<Block<
           Scalar, BlockShape, Float, ArithmeticPolicy, QuantizationPolicy>> {

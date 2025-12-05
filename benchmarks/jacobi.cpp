@@ -286,25 +286,30 @@ void Test() {
 }
 
 int main() {
-  CsvWriter to_dump = CsvWriter();
-  CsvInfo f32_info = CsvInfo_f32("heat3d", N, Steps);
-  CsvInfo mx_info = CsvInfo_mx("heat3d", N, Steps, "E4M3", N * N,
-                               "SharedExponentQuantization");
+  using Size = BlockDims<N, N>;
+  using Block = TestingBlock<Size>;
+
+  CsvInfo primitive = PrepareCsvPrimitive("jacobi2d:primitive", N, Steps);
+  CsvInfo block = PrepareCsvBlock<Block>("jacobi2d:block", N, Steps);
+
+  auto to_dump = CsvWriter();
 
   profiler::begin();
+
   for (int i = 0; i < Iterations; i++) {
     Test();
+
     to_dump.next_iteration();
     auto infos = profiler::dump_and_reset();
+
     for (auto &x : infos) {
-      auto &y = (std::string(x.label) == "Jacobi2DArray" ? f32_info : mx_info);
+      auto &y = (std::string(x.label) == "Jacobi2DArray" ? primitive : block);
       to_dump.append_csv(y, x, 0);
     }
   }
-  // profiler::end_and_print();
 
-  // to_dump.dump("file_name");
-  to_dump.dump(std::cout);
+  to_dump.dump("jacobi2d.csv");
+  // to_dump.dump(std::cout);
 
   return 0;
 }
