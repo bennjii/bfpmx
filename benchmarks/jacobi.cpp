@@ -5,7 +5,6 @@
 #ifndef BFPMX_JACOBI_H
 #define BFPMX_JACOBI_H
 
-
 #define PROFILE 1
 
 #include "prelude.h"
@@ -267,16 +266,10 @@ Iteration Test() {
   const auto error_spread_once = L2Norm<N>(a_ref, blockA_spread_once.Spread());
 
   return Iteration{
-    ElementWise{
-      error_naive,
-      error_spread_each,
-      error_spread_once
-    },
-    ElementWise{
-      collect_error_percent(error_naive),
-      collect_error_percent(error_spread_each),
-      collect_error_percent(error_spread_once)
-    },
+      ElementWise{error_naive, error_spread_each, error_spread_once},
+      ElementWise{collect_error_percent(error_naive),
+                  collect_error_percent(error_spread_each),
+                  collect_error_percent(error_spread_once)},
   };
 }
 
@@ -287,32 +280,34 @@ int main() {
   CsvInfo primitive = PrepareCsvPrimitive("jacobi2d:primitive", N, Steps);
   CsvInfo block = PrepareCsvBlock<Block>("jacobi2d:block", N, Steps);
 
-  auto to_dump = CsvWriter();
+  auto writer = CsvWriter();
 
   profiler::begin();
 
   for (int i = 0; i < Iterations; i++) {
     auto [percentage, absolute] = Test();
 
-    to_dump.next_iteration();
+    writer.next_iteration();
     auto infos = profiler::dump_and_reset();
 
     for (auto &x : infos) {
-      auto const& label = std::string(x.label);
+      auto const &label = std::string(x.label);
 
       if (label == "Jacobi2DArray") {
-        to_dump.append_csv(primitive, x, 0, 0);
+        writer.append_csv(primitive, x, 0, 0);
       } else if (label == "Jacobi2DNaiveBlock") {
-        to_dump.append_csv(block, x, percentage.naive, absolute.naive);
+        writer.append_csv(block, x, percentage.naive, absolute.naive);
       } else if (label == "Jacobi2DSpreadBlockEach") {
-        to_dump.append_csv(block, x, percentage.spread_each, absolute.spread_each);
+        writer.append_csv(block, x, percentage.spread_each,
+                          absolute.spread_each);
       } else if (label == "Jacobi2DSpreadBlockOnce") {
-        to_dump.append_csv(block, x, percentage.spread_once, absolute.spread_once);
+        writer.append_csv(block, x, percentage.spread_once,
+                          absolute.spread_once);
       }
     }
   }
 
-  to_dump.dump("jacobi2d.csv");
+  writer.dump("jacobi2d.csv");
   // to_dump.dump(std::cout);
 
   return 0;
