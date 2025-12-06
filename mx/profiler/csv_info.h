@@ -51,7 +51,7 @@ public:
   CsvWriter() {
     csv = "format, block_size, policy, stress_function, input_size, "
           "steps, iteration_id, label, clocks_inclusive, "
-          "clocks_exclusive, runtime (ms), hit_count, error\n";
+          "clocks_exclusive, runtime (ms), hit_count, error (%), error (+/-)\n";
     iteration_id = -1;
   }
 
@@ -59,7 +59,8 @@ public:
 
   void append_csv(CsvInfo const &basic_info,
                   profiler::ProfilerAnchor const &profiler_info,
-                  f64 error /* TODO @benji */) {
+                  const f64 error_percent,
+                  const f64 error_abs) {
     const auto runtime_ms =
         profiler::clocks_to_seconds(profiler_info.elapsed_at_root) * 1000;
 
@@ -87,7 +88,9 @@ public:
     csv += ", ";
     csv += std::to_string(profiler_info.hit_count);
     csv += ", ";
-    csv += std::to_string(error);
+    csv += std::to_string(error_percent);
+    csv += ", ";
+    csv += std::to_string(error_abs);
     csv += "\n";
   }
 
