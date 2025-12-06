@@ -5,14 +5,17 @@
 #ifndef BFPMX_JACOBI_H
 #define BFPMX_JACOBI_H
 
-#include "prelude.h"
 
 #define PROFILE 1
+
+#include "prelude.h"
+
 #include "profiler/csv_info.h"
 #include "profiler/profiler.h"
-#include <cmath>
-#include <iomanip>
-#include <iostream>
+
+constexpr u32 N = 32;
+constexpr u32 Steps = 250;
+constexpr u32 Iterations = 100;
 
 using TestingScalar = u32;
 using TestingFloat = fp8::E4M3Type;
@@ -170,9 +173,6 @@ static void Jacobi2DSpreadBlockOnce(const int steps,
   B_block = TestingBlock<BlockDims<N, N>>(b_spread);
 }
 
-constexpr u32 N = 32;
-constexpr u32 Steps = 250;
-
 template <size_t N_>
 static f64 L2Norm(const std::array<std::array<f64, N_>, N_> &A,
                   const std::array<f64, N_ * N_> &B_linear) {
@@ -197,7 +197,7 @@ static f64 L2Norm(const std::array<std::array<f64, N_>, N_> &A) {
   return std::sqrt(norm_sq);
 }
 
-int main() {
+int Test() {
   using Size = BlockDims<N, N>;
   using Block = TestingBlock<Size>;
 
@@ -246,11 +246,7 @@ int main() {
   Jacobi2DSpreadBlockOnce<N>(Steps, blockA_spread_once, blockB_spread_once);
 
   profiler::end_and_print();
-
-  // --- Error Calculation ---
-  std::cout << std::fixed << std::setprecision(10);
-  std::cout << "Errors compared to f64 reference:" << std::endl;
-  std::cout << "(abs = L2 norm of error, rel = relative error %)" << std::endl;
+}
 
 int main() {
   using Size = BlockDims<N, N>;
