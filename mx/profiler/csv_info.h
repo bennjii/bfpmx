@@ -19,46 +19,39 @@ struct CsvInfo {
   u64 steps;
 };
 
-static CsvInfo CsvInfo_f32(std::string stress_function, u64 input_size,
-                           u64 steps) {
+static CsvInfo PrepareCsvPrimitive(std::string const &stress_function,
+                                   const u64 input_size, const u64 steps) {
   CsvInfo ret = {};
-  ret.format = "f32";
+
+  ret.format = "primitive";
   ret.block_size = 0;
   ret.policy = "";
   ret.stress_function = stress_function;
   ret.input_size = input_size;
   ret.steps = steps;
+
   return ret;
 }
 
-static CsvInfo CsvInfo_mx(std::string stress_function, u64 input_size,
-                          u64 steps, std::string format, u64 block_size,
-                          std::string policy) {
+template <typename Block>
+static CsvInfo PrepareCsvBlock(std::string const &stress_function,
+                               const u64 input_size, const u64 steps) {
   CsvInfo ret = {};
-  ret.format = format;
-  ret.block_size = block_size;
-  ret.policy = policy;
+  ret.format = Block::FloatType::Nomenclature();
+  ret.block_size = Block::Length();
+  ret.policy = Block::QuantizationPolicyType::Identity();
   ret.stress_function = stress_function;
   ret.input_size = input_size;
   ret.steps = steps;
   return ret;
 }
-
-// template <T>
-// static CsvInfo CsvInfo_mx(std::string stress_function, u64 input_size,
-//                           u64 steps) {
-//   // TODO: read values from T = Block<....>
-//   //       sincerily I need help
-//   return CsvInfo_mx(stress_function, input_size, steps, "" /*TODO*/,
-//                    0 /*TODO*/, "" /*TODO*/);
-// }
 
 class CsvWriter {
 public:
   CsvWriter() {
     csv = "format, block_size, policy, stress_function, input_size, "
           "steps, iteration_id, label, clocks_inclusive, "
-          "clocks_exclusive, hit_count, error\n";
+          "clocks_exclusive, runtime (ms), hit_count, error\n";
     iteration_id = -1;
   }
 
@@ -67,6 +60,9 @@ public:
   void append_csv(CsvInfo const &basic_info,
                   profiler::ProfilerAnchor const &profiler_info,
                   f64 error /* TODO @benji */) {
+    const auto runtime_ms =
+        profiler::clocks_to_seconds(profiler_info.elapsed_at_root) * 1000;
+
     csv += basic_info.format;
     csv += ", ";
     csv += std::to_string(basic_info.block_size);
@@ -87,6 +83,8 @@ public:
     csv += ", ";
     csv += std::to_string(profiler_info.elapsed_excl);
     csv += ", ";
+    csv += std::to_string(runtime_ms);
+    csv += ", ";
     csv += std::to_string(profiler_info.hit_count);
     csv += ", ";
     csv += std::to_string(error);
@@ -95,8 +93,8 @@ public:
 
   void dump(std::ostream &out) const { out << csv; }
 
-  void dump(std::string file_name) const {
-    std::ofstream file("benchmarks/csv/jacobi-2d.csv");
+  void dump(std::string const &file_name) const {
+    std::ofstream file(file_name);
     dump(file);
   }
 
