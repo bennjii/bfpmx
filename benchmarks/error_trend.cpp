@@ -9,20 +9,22 @@
 
 #include "definition/block_float/block/BlockDims.h"
 #include "prelude.h"
+#include "profiler/csv_info.h"
 #include "profiler/profiler.h"
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <vector>
 
-constexpr u32 Iterations = 25;
-constexpr u32 N = 32;
+constexpr u64 Iterations = 250;
+constexpr u64 N = 32;
 
 using TestingScalar = u32;
 
-template <IFloatRepr Float>
+template <IFloatRepr Float, template <std::size_t, BlockDimsType,
+              IFloatRepr> typename QuantizationPolicy>
 using TestingBlockT = Block<TestingScalar, BlockDims<N>, Float, CPUArithmetic,
-                            L2NormQuantization>;
+                            QuantizationPolicy>;
 
 using NormalVector = std::array<f64, N>;
 
@@ -68,13 +70,14 @@ GetResults_Nominal(const NormalVector &startingArray) {
 }
 
 // Scenario 2: In-block computation. State is kept as a block.
-template <IFloatRepr Float>
+template <IFloatRepr Float, template <std::size_t, BlockDimsType,
+              IFloatRepr> typename QuantizationPolicy>
 std::vector<NormalVector>
 GetResults_InBlock(const NormalVector &startingArray) {
   std::vector<NormalVector> results;
   results.reserve(Iterations);
-  auto activeBlock = TestingBlockT<Float>(startingArray);
-  const auto referenceBlock = TestingBlockT<Float>(ReferenceArray);
+  auto activeBlock = TestingBlockT<Float, QuantizationPolicy>(startingArray);
+  const auto referenceBlock = TestingBlockT<Float, QuantizationPolicy>(ReferenceArray);
 
   for (int i = 0; i < Iterations; i++) {
     activeBlock = activeBlock + referenceBlock;
@@ -84,54 +87,45 @@ GetResults_InBlock(const NormalVector &startingArray) {
   return results;
 }
 
-int main() {
-  const auto startingArray = fill_known_arrays<f64, N>(0);
+constexpr f64 ReferenceValue = 0;
+const auto StartingArray = fill_known_arrays<f64, N>(ReferenceValue);
 
-  auto requant_results = GetResults_Nominal(startingArray);
+template <IFloatRepr Float, template <std::size_t, BlockDimsType,
+              IFloatRepr> typename QuantizationPolicy>
+void YieldTrend(CsvWriter& writer) {
+  const auto baseline = GetResults_Nominal(StartingArray);
+  const std::string label = Float::Nomenclature();
 
-  auto inblock_results_fp16 =
-      GetResults_InBlock<fp16::E5M10Type>(startingArray);
-  auto inblock_results_fp08 = GetResults_InBlock<fp8::E4M3Type>(startingArray);
-  auto inblock_results_fp06 = GetResults_InBlock<fp6::E2M3Type>(startingArray);
-  auto inblock_results_fp04 = GetResults_InBlock<fp4::E2M1Type>(startingArray);
+  const CsvInfo block = PrepareCsvBlock<TestingBlockT<Float, QuantizationPolicy>>(label, N, Iterations);
+  const auto results = GetResults_InBlock<Float, QuantizationPolicy>(StartingArray);
 
-  // --- Error Analysis ---
-  std::cout << std::fixed << std::setprecision(4);
-
-  std::cout << "\n--- Divergence from Re-quantized Strategy (Mean Absolute "
-               "Percentage Error) ---"
-            << std::endl;
-  std::cout << "Measures deviation from the re-quantized baseline to isolate "
-               "arithmetic error sources."
-            << std::endl;
-  std::cout << "Iter\tFP16 (%)\t\t\tFP8 (%)\t\t\t\tFP6 (%)\t\t\t\tFP4 (%)"
-            << std::endl;
   for (int i = 0; i < Iterations; i += 1) {
-    const auto &baseline = requant_results[i];
+    const f64 percentage = MeanAbsPercentageError(baseline[i], results[i]);
+    const f64 absolute = MeanAbsError(baseline[i], results[i]);
 
-    const f64 error1 =
-        MeanAbsPercentageError(baseline, inblock_results_fp16[i]);
-    const f64 error1_abs = MeanAbsError(baseline, inblock_results_fp16[i]);
-
-    const f64 error2 =
-        MeanAbsPercentageError(baseline, inblock_results_fp08[i]);
-    const f64 error2_abs = MeanAbsError(baseline, inblock_results_fp08[i]);
-
-    const f64 error3 =
-        MeanAbsPercentageError(baseline, inblock_results_fp06[i]);
-    const f64 error3_abs = MeanAbsError(baseline, inblock_results_fp06[i]);
-
-    const f64 error4 =
-        MeanAbsPercentageError(baseline, inblock_results_fp04[i]);
-    const f64 error4_abs = MeanAbsError(baseline, inblock_results_fp04[i]);
-
-    std::cout << (i + 1) << "\t" << error1 << " (" << "error=" << error1_abs
-              << ")" << "\t\t" << error2 << " (" << "error=" << error2_abs
-              << ")" << "\t\t" << error3 << " (" << "error=" << error3_abs
-              << ")" << "\t\t" << error4 << " (" << "error=" << error4_abs
-              << ")" << std::endl;
+    writer.write_err_only(block, label, i, percentage, absolute);
   }
+}
 
+template <template <std::size_t, BlockDimsType,
+              IFloatRepr> typename QuantizationPolicy>
+void TestQuantizationPolicy(CsvWriter& writer) {
+  YieldTrend<fp64::E11M52Type, QuantizationPolicy>(writer);
+  YieldTrend<fp32::E8M23Type, QuantizationPolicy>(writer);
+  YieldTrend<fp16::E5M10Type, QuantizationPolicy>(writer);
+  YieldTrend<fp8::E4M3Type, QuantizationPolicy>(writer);
+  YieldTrend<fp6::E2M3Type, QuantizationPolicy>(writer);
+  YieldTrend<fp4::E2M1Type, QuantizationPolicy>(writer);
+}
+
+int main() {
+  auto writer = CsvWriter();
+
+  TestQuantizationPolicy<L2NormQuantization>(writer);
+  TestQuantizationPolicy<SharedExponentQuantization>(writer);
+  TestQuantizationPolicy<MaximumFractionalQuantization>(writer);
+
+  writer.dump("error_trend.csv");
   return 0;
 }
 

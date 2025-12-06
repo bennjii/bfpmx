@@ -57,12 +57,27 @@ public:
 
   u64 next_iteration() { return ++iteration_id; }
 
-  void append_csv(CsvInfo const &basic_info,
-                  profiler::ProfilerAnchor const &profiler_info,
-                  const f64 error_percent, const f64 error_abs) {
-    const auto runtime_ms =
-        profiler::clocks_to_seconds(profiler_info.elapsed_at_root) * 1000;
+  void write_err_only(
+      CsvInfo const &basic_info,
+      std::string const& label,
+      const f64 iteration,
+      const f64 error_percent,
+      const f64 error_abs
+  ) {
+    write_line(basic_info, label, -1, -1, -1, iteration, -1, error_percent, error_abs);
+  }
 
+  void write_line(
+    CsvInfo const &basic_info,
+    std::string const& label,
+    const f64 elapsed,
+    const f64 elapsed_exclusive,
+    const f64 hit_count,
+    const f64 iteration,
+    const f64 runtime_ms,
+    const f64 error_percent,
+    const f64 error_abs
+  ) {
     csv += basic_info.format;
     csv += ", ";
     csv += std::to_string(basic_info.block_size);
@@ -75,22 +90,41 @@ public:
     csv += ", ";
     csv += std::to_string(basic_info.steps);
     csv += ", ";
-    csv += std::to_string(iteration_id);
+    csv += std::to_string(iteration);
     csv += ", ";
-    csv += std::string(profiler_info.label);
+    csv += std::string(label);
     csv += ", ";
-    csv += std::to_string(profiler_info.elapsed_at_root);
+    csv += std::to_string(elapsed);
     csv += ", ";
-    csv += std::to_string(profiler_info.elapsed_excl);
+    csv += std::to_string(elapsed_exclusive);
     csv += ", ";
     csv += std::to_string(runtime_ms);
     csv += ", ";
-    csv += std::to_string(profiler_info.hit_count);
+    csv += std::to_string(hit_count);
     csv += ", ";
     csv += std::to_string(error_percent);
     csv += ", ";
     csv += std::to_string(error_abs);
     csv += "\n";
+  }
+
+  void append_csv(CsvInfo const &basic_info,
+                  profiler::ProfilerAnchor const &profiler_info,
+                  const f64 error_percent, const f64 error_abs) {
+    const auto runtime_ms =
+        profiler::clocks_to_seconds(profiler_info.elapsed_at_root) * 1000;
+
+    write_line(
+      basic_info,
+      profiler_info.label,
+      profiler_info.elapsed_at_root,
+      profiler_info.elapsed_excl,
+      profiler_info.hit_count,
+      iteration_id,
+      runtime_ms,
+      error_percent,
+      error_abs
+    );
   }
 
   void dump(std::ostream &out) const { out << csv; }
