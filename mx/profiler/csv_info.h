@@ -57,27 +57,18 @@ public:
 
   u64 next_iteration() { return ++iteration_id; }
 
-  void write_err_only(
-      CsvInfo const &basic_info,
-      std::string const& label,
-      const f64 iteration,
-      const f64 error_percent,
-      const f64 error_abs
-  ) {
-    write_line(basic_info, label, -1, -1, -1, iteration, -1, error_percent, error_abs);
+  void write_err_only(CsvInfo const &basic_info, std::string const &label,
+                      const f64 iteration, const f64 error_percent,
+                      const f64 error_abs) {
+    write_line(basic_info, label, -1, -1, -1, iteration, -1, error_percent,
+               error_abs);
   }
 
-  void write_line(
-    CsvInfo const &basic_info,
-    std::string const& label,
-    const f64 elapsed,
-    const f64 elapsed_exclusive,
-    const f64 hit_count,
-    const f64 iteration,
-    const f64 runtime_ms,
-    const f64 error_percent,
-    const f64 error_abs
-  ) {
+  void write_line(CsvInfo const &basic_info, std::string const &label,
+                  const f64 elapsed, const f64 elapsed_exclusive,
+                  const f64 hit_count, const f64 iteration,
+                  const f64 runtime_ms, const f64 error_percent,
+                  const f64 error_abs) {
     csv += basic_info.format;
     csv += ", ";
     csv += std::to_string(basic_info.block_size);
@@ -114,17 +105,9 @@ public:
     const auto runtime_ms =
         profiler::clocks_to_seconds(profiler_info.elapsed_at_root) * 1000;
 
-    write_line(
-      basic_info,
-      profiler_info.label,
-      profiler_info.elapsed_at_root,
-      profiler_info.elapsed_excl,
-      profiler_info.hit_count,
-      iteration_id,
-      runtime_ms,
-      error_percent,
-      error_abs
-    );
+    write_line(basic_info, profiler_info.label, profiler_info.elapsed_at_root,
+               profiler_info.elapsed_excl, profiler_info.hit_count,
+               iteration_id, runtime_ms, error_percent, error_abs);
   }
 
   void dump(std::ostream &out) const { out << csv; }

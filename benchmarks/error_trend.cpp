@@ -22,13 +22,29 @@ constexpr u64 N = 32;
 using TestingScalar = u32;
 
 template <IFloatRepr Float, template <std::size_t, BlockDimsType,
-              IFloatRepr> typename QuantizationPolicy>
+                                      IFloatRepr> typename QuantizationPolicy>
 using TestingBlockT = Block<TestingScalar, BlockDims<N>, Float, CPUArithmetic,
                             QuantizationPolicy>;
 
 using NormalVector = std::array<f64, N>;
 
 const std::array<f64, N> ReferenceArray = fill_known_arrays<f64, N>(2.0);
+
+constexpr std::string StringOfOperation(const OperationType opera) {
+  switch (opera) {
+  case AddOp:
+    return "Add";
+  case SubOp:
+    return "Sub";
+  case MulOp:
+    return "Mul";
+  case DivOp:
+    return "Div";
+  }
+
+  std::cerr << "Invalid /Unknown operation type: " << opera << std::endl;
+  exit(1);
+}
 
 f64 MeanAbsError(const NormalVector &A, const NormalVector &B) {
   f64 sumAbs = 0.0;
@@ -54,15 +70,24 @@ f64 MeanAbsPercentageError(const NormalVector &A, const NormalVector &B) {
 }
 
 // Scenario 1: State is kept as f64.
-std::vector<NormalVector>
-GetResults_Nominal(const NormalVector &startingArray) {
+std::vector<NormalVector> GetResults_Nominal(const NormalVector &startingArray,
+                                             const OperationType operation) {
   std::vector<NormalVector> results;
   results.reserve(Iterations);
   auto iterationArray = startingArray;
 
   for (int i = 0; i < Iterations; i++) {
     for (size_t j = 0; j < N; j++) {
-      iterationArray[j] += ReferenceArray[j];
+      switch (operation) {
+      case AddOp:
+        iterationArray[j] += ReferenceArray[j];
+      case SubOp:
+        iterationArray[j] -= ReferenceArray[j];
+      case MulOp:
+        iterationArray[j] *= ReferenceArray[j];
+      case DivOp:
+        iterationArray[j] /= ReferenceArray[j];
+      }
     }
     results.push_back(iterationArray);
   }
@@ -71,16 +96,27 @@ GetResults_Nominal(const NormalVector &startingArray) {
 
 // Scenario 2: In-block computation. State is kept as a block.
 template <IFloatRepr Float, template <std::size_t, BlockDimsType,
-              IFloatRepr> typename QuantizationPolicy>
-std::vector<NormalVector>
-GetResults_InBlock(const NormalVector &startingArray) {
+                                      IFloatRepr> typename QuantizationPolicy>
+std::vector<NormalVector> GetResults_InBlock(const NormalVector &startingArray,
+                                             const OperationType operation) {
   std::vector<NormalVector> results;
   results.reserve(Iterations);
   auto activeBlock = TestingBlockT<Float, QuantizationPolicy>(startingArray);
-  const auto referenceBlock = TestingBlockT<Float, QuantizationPolicy>(ReferenceArray);
+  const auto referenceBlock =
+      TestingBlockT<Float, QuantizationPolicy>(ReferenceArray);
 
   for (int i = 0; i < Iterations; i++) {
-    activeBlock = activeBlock + referenceBlock;
+    switch (operation) {
+    case AddOp:
+      activeBlock = activeBlock + referenceBlock;
+    case SubOp:
+      activeBlock = activeBlock - referenceBlock;
+    case MulOp:
+      activeBlock = activeBlock * referenceBlock;
+    case DivOp:
+      activeBlock = activeBlock / referenceBlock;
+    }
+
     results.push_back(activeBlock.Spread());
   }
 
@@ -91,39 +127,46 @@ constexpr f64 ReferenceValue = 0;
 const auto StartingArray = fill_known_arrays<f64, N>(ReferenceValue);
 
 template <IFloatRepr Float, template <std::size_t, BlockDimsType,
-              IFloatRepr> typename QuantizationPolicy>
-void YieldTrend(CsvWriter& writer) {
-  const auto baseline = GetResults_Nominal(StartingArray);
+                                      IFloatRepr> typename QuantizationPolicy>
+void YieldTrend(CsvWriter &writer, OperationType operation) {
+  const auto baseline = GetResults_Nominal(StartingArray, operation);
   const std::string label = Float::Nomenclature();
 
-  const CsvInfo block = PrepareCsvBlock<TestingBlockT<Float, QuantizationPolicy>>(label, N, Iterations);
-  const auto results = GetResults_InBlock<Float, QuantizationPolicy>(StartingArray);
+  const CsvInfo block =
+      PrepareCsvBlock<TestingBlockT<Float, QuantizationPolicy>>(label, N,
+                                                                Iterations);
+  const auto results =
+      GetResults_InBlock<Float, QuantizationPolicy>(StartingArray, operation);
 
   for (int i = 0; i < Iterations; i += 1) {
     const f64 percentage = MeanAbsPercentageError(baseline[i], results[i]);
     const f64 absolute = MeanAbsError(baseline[i], results[i]);
 
-    writer.write_err_only(block, label, i, percentage, absolute);
+    writer.write_err_only(block, StringOfOperation(operation), i, percentage, absolute);
   }
 }
 
 template <template <std::size_t, BlockDimsType,
-              IFloatRepr> typename QuantizationPolicy>
-void TestQuantizationPolicy(CsvWriter& writer) {
-  YieldTrend<fp64::E11M52Type, QuantizationPolicy>(writer);
-  YieldTrend<fp32::E8M23Type, QuantizationPolicy>(writer);
-  YieldTrend<fp16::E5M10Type, QuantizationPolicy>(writer);
-  YieldTrend<fp8::E4M3Type, QuantizationPolicy>(writer);
-  YieldTrend<fp6::E2M3Type, QuantizationPolicy>(writer);
-  YieldTrend<fp4::E2M1Type, QuantizationPolicy>(writer);
+                    IFloatRepr> typename QuantizationPolicy>
+void TestQuantizationPolicy(CsvWriter &writer, const OperationType operation) {
+  YieldTrend<fp32::E8M23Type, QuantizationPolicy>(writer, operation);
+  YieldTrend<fp16::E5M10Type, QuantizationPolicy>(writer, operation);
+  YieldTrend<fp8::E4M3Type, QuantizationPolicy>(writer, operation);
+  YieldTrend<fp6::E2M3Type, QuantizationPolicy>(writer, operation);
+  YieldTrend<fp4::E2M1Type, QuantizationPolicy>(writer, operation);
+}
+
+void TestVariants(CsvWriter &writer) {
+  for (constexpr std::array operations = {AddOp, SubOp, MulOp, DivOp}; const auto operation : operations) {
+    TestQuantizationPolicy<L2NormQuantization>(writer, operation);
+    TestQuantizationPolicy<SharedExponentQuantization>(writer, operation);
+    TestQuantizationPolicy<MaximumFractionalQuantization>(writer, operation);
+  }
 }
 
 int main() {
   auto writer = CsvWriter();
-
-  TestQuantizationPolicy<L2NormQuantization>(writer);
-  TestQuantizationPolicy<SharedExponentQuantization>(writer);
-  TestQuantizationPolicy<MaximumFractionalQuantization>(writer);
+  TestVariants(writer);
 
   writer.dump("error_trend.csv");
   return 0;

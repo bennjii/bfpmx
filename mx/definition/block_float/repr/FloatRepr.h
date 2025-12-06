@@ -276,7 +276,7 @@ public:
 namespace fp64 {
 using E11M52Type = FloatRepr<11, 52, 1>;
 constexpr auto E11M52 = E11M52Type();
-} // namespace fp32
+} // namespace fp64
 
 namespace fp32 {
 using E8M23Type = FloatRepr<8, 23, 1>;

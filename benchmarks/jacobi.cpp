@@ -5,7 +5,6 @@
 #ifndef BFPMX_JACOBI_H
 #define BFPMX_JACOBI_H
 
-
 #define PROFILE 1
 
 #include "prelude.h"
@@ -267,16 +266,10 @@ Iteration Test() {
   const auto error_spread_once = L2Norm<N>(a_ref, blockA_spread_once.Spread());
 
   return Iteration{
-    ElementWise{
-      error_naive,
-      error_spread_each,
-      error_spread_once
-    },
-    ElementWise{
-      collect_error_percent(error_naive),
-      collect_error_percent(error_spread_each),
-      collect_error_percent(error_spread_once)
-    },
+      ElementWise{error_naive, error_spread_each, error_spread_once},
+      ElementWise{collect_error_percent(error_naive),
+                  collect_error_percent(error_spread_each),
+                  collect_error_percent(error_spread_once)},
   };
 }
 
@@ -298,16 +291,18 @@ int main() {
     auto infos = profiler::dump_and_reset();
 
     for (auto &x : infos) {
-      auto const& label = std::string(x.label);
+      auto const &label = std::string(x.label);
 
       if (label == "Jacobi2DArray") {
         writer.append_csv(primitive, x, 0, 0);
       } else if (label == "Jacobi2DNaiveBlock") {
         writer.append_csv(block, x, percentage.naive, absolute.naive);
       } else if (label == "Jacobi2DSpreadBlockEach") {
-        writer.append_csv(block, x, percentage.spread_each, absolute.spread_each);
+        writer.append_csv(block, x, percentage.spread_each,
+                          absolute.spread_each);
       } else if (label == "Jacobi2DSpreadBlockOnce") {
-        writer.append_csv(block, x, percentage.spread_once, absolute.spread_once);
+        writer.append_csv(block, x, percentage.spread_once,
+                          absolute.spread_once);
       }
     }
   }
