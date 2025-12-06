@@ -5,7 +5,6 @@
 #ifndef BFPMX_JACOBI_H
 #define BFPMX_JACOBI_H
 
-
 #define PROFILE 1
 
 #include "prelude.h"
@@ -197,7 +196,18 @@ static f64 L2Norm(const std::array<std::array<f64, N_>, N_> &A) {
   return std::sqrt(norm_sq);
 }
 
-int Test() {
+struct ElementWise {
+  f64 naive;
+  f64 spread_each;
+  f64 spread_once;
+};
+
+struct Iteration {
+  ElementWise percentage;
+  ElementWise absolute;
+};
+
+Iteration Test() {
   using Size = BlockDims<N, N>;
   using Block = TestingBlock<Size>;
 
@@ -245,7 +255,22 @@ int Test() {
   Block blockA_spread_once(aLinear_base), blockB_spread_once(bLinear_base);
   Jacobi2DSpreadBlockOnce<N>(Steps, blockA_spread_once, blockB_spread_once);
 
-  profiler::end_and_print();
+  auto norm_ref = L2Norm(a_base);
+
+  const auto collect_error_percent = [&](const f64 error_abs) {
+    return (error_abs / norm_ref) * 100.0;
+  };
+
+  const auto error_naive = L2Norm<N>(a_ref, blockA_naive.Spread());
+  const auto error_spread_each = L2Norm<N>(a_ref, blockA_spread_each.Spread());
+  const auto error_spread_once = L2Norm<N>(a_ref, blockA_spread_once.Spread());
+
+  return Iteration{
+      ElementWise{error_naive, error_spread_each, error_spread_once},
+      ElementWise{collect_error_percent(error_naive),
+                  collect_error_percent(error_spread_each),
+                  collect_error_percent(error_spread_once)},
+  };
 }
 
 int main() {
@@ -255,23 +280,34 @@ int main() {
   CsvInfo primitive = PrepareCsvPrimitive("jacobi2d:primitive", N, Steps);
   CsvInfo block = PrepareCsvBlock<Block>("jacobi2d:block", N, Steps);
 
-  auto to_dump = CsvWriter();
+  auto writer = CsvWriter();
 
   profiler::begin();
 
   for (int i = 0; i < Iterations; i++) {
-    Test();
+    auto [percentage, absolute] = Test();
 
-    to_dump.next_iteration();
+    writer.next_iteration();
     auto infos = profiler::dump_and_reset();
 
     for (auto &x : infos) {
-      auto &y = (std::string(x.label) == "Jacobi2DArray" ? primitive : block);
-      to_dump.append_csv(y, x, 0);
+      auto const &label = std::string(x.label);
+
+      if (label == "Jacobi2DArray") {
+        writer.append_csv(primitive, x, 0, 0);
+      } else if (label == "Jacobi2DNaiveBlock") {
+        writer.append_csv(block, x, percentage.naive, absolute.naive);
+      } else if (label == "Jacobi2DSpreadBlockEach") {
+        writer.append_csv(block, x, percentage.spread_each,
+                          absolute.spread_each);
+      } else if (label == "Jacobi2DSpreadBlockOnce") {
+        writer.append_csv(block, x, percentage.spread_once,
+                          absolute.spread_once);
+      }
     }
   }
 
-  to_dump.dump("jacobi2d.csv");
+  writer.dump("jacobi2d.csv");
   // to_dump.dump(std::cout);
 
   return 0;
