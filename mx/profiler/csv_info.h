@@ -59,8 +59,7 @@ public:
 
   void append_csv(CsvInfo const &basic_info,
                   profiler::ProfilerAnchor const &profiler_info,
-                  const f64 error_percent,
-                  const f64 error_abs) {
+                  const f64 error_percent, const f64 error_abs) {
     const auto runtime_ms =
         profiler::clocks_to_seconds(profiler_info.elapsed_at_root) * 1000;
 
