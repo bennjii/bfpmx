@@ -96,7 +96,7 @@ public:
   void dump(std::ostream &out) const { out << csv; }
 
   void dump(std::string file_name) const {
-    std::ofstream file("benchmarks/csv/jacobi-2d.csv");
+    std::ofstream file(file_name);
     dump(file);
   }
 
