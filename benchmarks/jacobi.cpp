@@ -5,14 +5,17 @@
 #ifndef BFPMX_JACOBI_H
 #define BFPMX_JACOBI_H
 
-#include "definition/block_float/block/BlockDims.h"
+
 #define PROFILE 1
 
 #include "prelude.h"
+
+#include "profiler/csv_info.h"
 #include "profiler/profiler.h"
-#include <cmath>
-#include <iomanip>
-#include <iostream>
+
+constexpr u32 N = 32;
+constexpr u32 Steps = 250;
+constexpr u32 Iterations = 100;
 
 using TestingScalar = u32;
 using TestingFloat = fp8::E4M3Type;
@@ -170,9 +173,6 @@ static void Jacobi2DSpreadBlockOnce(const int steps,
   B_block = TestingBlock<BlockDims<N, N>>(b_spread);
 }
 
-constexpr u32 N = 32;
-constexpr u32 Steps = 250;
-
 template <size_t N_>
 static f64 L2Norm(const std::array<std::array<f64, N_>, N_> &A,
                   const std::array<f64, N_ * N_> &B_linear) {
@@ -197,7 +197,7 @@ static f64 L2Norm(const std::array<std::array<f64, N_>, N_> &A) {
   return std::sqrt(norm_sq);
 }
 
-int main() {
+int Test() {
   using Size = BlockDims<N, N>;
   using Block = TestingBlock<Size>;
 
@@ -246,27 +246,33 @@ int main() {
   Jacobi2DSpreadBlockOnce<N>(Steps, blockA_spread_once, blockB_spread_once);
 
   profiler::end_and_print();
+}
 
-  // --- Error Calculation ---
-  std::cout << std::fixed << std::setprecision(10);
-  std::cout << "Errors compared to f64 reference:" << std::endl;
-  std::cout << "(abs = L2 norm of error, rel = relative error %)" << std::endl;
+int main() {
+  using Size = BlockDims<N, N>;
+  using Block = TestingBlock<Size>;
 
-  const f64 norm_ref = L2Norm<N>(a_ref);
+  CsvInfo primitive = PrepareCsvPrimitive("jacobi2d:primitive", N, Steps);
+  CsvInfo block = PrepareCsvBlock<Block>("jacobi2d:block", N, Steps);
 
-  const auto print_error = [&](const std::string &name,
-                               const std::array<f64, N * N> &result) {
-    const f64 error_abs = L2Norm<N>(a_ref, result);
-    std::cout << " - " << name << ": " << error_abs << " (abs)";
-    if (norm_ref > 0) {
-      std::cout << ", " << (error_abs / norm_ref) * 100.0 << "% (rel)";
+  auto to_dump = CsvWriter();
+
+  profiler::begin();
+
+  for (int i = 0; i < Iterations; i++) {
+    Test();
+
+    to_dump.next_iteration();
+    auto infos = profiler::dump_and_reset();
+
+    for (auto &x : infos) {
+      auto &y = (std::string(x.label) == "Jacobi2DArray" ? primitive : block);
+      to_dump.append_csv(y, x, 0);
     }
-    std::cout << std::endl;
-  };
+  }
 
-  print_error("Jacobi2DNaiveBlock", blockA_naive.Spread());
-  print_error("Jacobi2DSpreadBlockEach", blockA_spread_each.Spread());
-  print_error("Jacobi2DSpreadBlockOnce", blockA_spread_once.Spread());
+  to_dump.dump("jacobi2d.csv");
+  // to_dump.dump(std::cout);
 
   return 0;
 }
