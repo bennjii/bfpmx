@@ -2,6 +2,7 @@
 set(GPU_KERNEL_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/ArithmeticKernels.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/SpreadKernel.cu
+    ${CMAKE_CURRENT_SOURCE_DIR}/PackKernel.cu
 )
 
 # Compile kernels as an OBJECT library (device + host code)

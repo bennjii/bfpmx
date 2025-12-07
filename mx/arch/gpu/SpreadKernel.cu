@@ -7,8 +7,7 @@ template <typename FloatD, typename BlockViewT>
 __global__ void SpreadKernel(const BlockViewT* left_view,
                              const BlockViewT* right_view,
                              ElemType* d_l,
-                             ElemType* d_r)
-{
+                             ElemType* d_r) {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx < left_view->num_elems) {
         d_l[idx] = FloatD::UnmarshalDevice(left_view->data + idx * left_view->elem_size_bytes) * left_view->scalar;
@@ -23,8 +22,7 @@ template <typename BlockViewT>
 void LaunchSpreadKernel(const BlockViewT* d_lhs,
                         const BlockViewT* d_rhs,
                         ElemType* d_l,
-                        ElemType* d_r)
-{
+                        ElemType* d_r) {
     const int blockSize = 256;
     const int numBlocks = (d_lhs->num_elems + blockSize - 1) / blockSize;
 
@@ -34,7 +32,7 @@ void LaunchSpreadKernel(const BlockViewT* d_lhs,
 
     SpreadKernel<FloatTypeD, BlockViewT>
         <<<numBlocks, blockSize>>>(d_lhs, d_rhs, d_l, d_r);
-
+    // This call included cudaDeviceSynchronize()
     CUDA_CHECK_KERNEL();
 }
 

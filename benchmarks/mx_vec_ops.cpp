@@ -72,7 +72,7 @@ static void BM_AddMxVectorBlockwise(benchmark::State& state) {
     state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(n * sizeof(double) * 2));
 }
 
-BENCHMARK(BM_AddStdVector)->Arg(10'000)->Arg(100'000)->Arg(1'000'000);
+// BENCHMARK(BM_AddStdVector)->Arg(10'000)->Arg(100'000)->Arg(1'000'000);
 BENCHMARK(BM_AddMxVectorPointwiseGPU)->Arg(10'000)->Arg(100'000)->Arg(1'000'000);
 BENCHMARK(BM_AddMxVectorBlockwise)->Arg(10'000)->Arg(100'000)->Arg(1'000'000);
 

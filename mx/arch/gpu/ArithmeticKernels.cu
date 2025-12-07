@@ -41,6 +41,7 @@ void LaunchArithmeticKernel(const ElemType* d_l, const ElemType* d_r, ElemType* 
             DivKernel<<<numBlocks, blockSize>>>(d_l, d_r, d_out, n);
             break;
     }
+    // This call included cudaDeviceSynchronize()
     CUDA_CHECK_KERNEL();
 }
 #endif // GPU_ARITHMETIC_KERNELS_CUH

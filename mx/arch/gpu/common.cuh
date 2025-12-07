@@ -19,7 +19,7 @@ struct BlockView {
     static constexpr uint8_t SignificandBits = Significand;
     static constexpr uint8_t SignBits = Sign;
 
-    const uint8_t* data;      // pointer to packed quantized bytes (GPU memory)
+    uint8_t* data;      // pointer to packed quantized bytes (GPU memory)
     uint8_t scalar;    // pointer to scalar exponent bytes (GPU memory)
     uint32_t num_elems;            // number of packed elements
     uint8_t elem_size_bytes;      // bytes per element (FloatRepr::SizeBytes())

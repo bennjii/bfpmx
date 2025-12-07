@@ -7,6 +7,7 @@
 #include "common.cuh"
 #include "GPUArithmetic.cuh"
 #include "SpreadKernel.cuh"
+#include "PackKernel.cuh"
 #include "mxvector/GPUArithmetic.cuh"
 #endif
 

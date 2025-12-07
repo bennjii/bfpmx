@@ -42,7 +42,8 @@ namespace mx::vector {
         f64 ItemAt(size_t index) const {
             size_t block_index = index / BlockType::NumElems;
             size_t elem_index = index % BlockType::NumElems;
-            return blocks_[block_index].RealizeAt(elem_index);
+            auto result = blocks_[block_index].RealizeAt(elem_index);
+            return result.value_or(0.0);  // Unwrap optional, default to 0.0 if empty
         }
 
         const BlockType& BlockAt(size_t block_index) const noexcept{
@@ -69,6 +70,11 @@ namespace mx::vector {
 
         size_t Size() const {
             return num_elements_;
+        }
+
+        // For GPU usage, we should change it for security/abstraction later
+        std::vector<BlockType> getBlocks() const {
+            return blocks_;
         }
 
         size_t NumBlocks() const {

@@ -3,6 +3,7 @@
 #include "common.cuh"
 #include "ArithmeticKernels.cuh"
 #include "SpreadKernel.cuh"
+#include "cuda_utils.h"
 #include <cuda_runtime.h>
 #include <iostream>
 
@@ -17,18 +18,18 @@ auto ToDeviceBlockView(const BlockT& block)
     uint8_t d_scalar;
     uint8_t blockScalar = block.ScalarValue();
 
-    cudaMalloc(&d_data_ptr, N * ElemSize);
+    CUDA_CHECK(cudaMalloc(&d_data_ptr, N * ElemSize));
 
     // Copy CPU quantized block → GPU memory
-    cudaMemcpy(d_data_ptr,
+    CUDA_CHECK(cudaMemcpy(d_data_ptr,
                block.data().data(),
                N * ElemSize,
-               cudaMemcpyHostToDevice);
+               cudaMemcpyHostToDevice));
 
-    cudaMemcpy(&d_scalar,
+    CUDA_CHECK(cudaMemcpy(&d_scalar,
                &blockScalar,
                sizeof(blockScalar),
-               cudaMemcpyHostToDevice);
+               cudaMemcpyHostToDevice));
 
     // Fill BlockView
     using BV = BlockView<
