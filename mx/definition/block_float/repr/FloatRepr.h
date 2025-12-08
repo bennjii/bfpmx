@@ -24,10 +24,10 @@ constexpr u16 F64_BITS_SIGNIFICAND = 52;
 constexpr u16 F64_BIAS = 1023;
 
 enum class RoundingMode {
-    Truncate,          // Round towards zero (default)
-    NearestEven,       // Round to nearest, ties to even (default IEEE 754)
-    NearestAwayZero,   // Round to nearest, ties away from zero
-    Stochastic         // Stochastic rounding (randomized rounding)
+  Truncate,        // Round towards zero (default)
+  NearestEven,     // Round to nearest, ties to even (default IEEE 754)
+  NearestAwayZero, // Round to nearest, ties away from zero
+  Stochastic       // Stochastic rounding (randomized rounding)
 };
 
 template <typename T>
@@ -103,7 +103,9 @@ concept IFloatRepr = requires(f64 v, std::array<u8, T::SizeBytes()> a) {
  * as specified in 5.3 of the OCP Microscaling Format Specification.
  *
  */
-template <u16 Exponent, u16 Significand, u16 Sign, RoundingMode RMode = RoundingMode::NearestEven> class FloatRepr {
+template <u16 Exponent, u16 Significand, u16 Sign,
+          RoundingMode RMode = RoundingMode::NearestEven>
+class FloatRepr {
 public:
   using PackedForm =
       std::tuple<u64 /*sign*/, u64 /*exponent*/, u64 /*fraction*/>;
@@ -113,14 +115,22 @@ public:
     oss << "FP" << +ElementBits() // the + ensures u8 prints as a number
         << " "
         << "E" << +ExponentBits() << "M" << +SignificandBits();
-    
+
     switch (RMode) {
-      case RoundingMode::Truncate: oss << " (Trunc)"; break;
-      case RoundingMode::NearestEven: oss << " (RNE)"; break;
-      case RoundingMode::NearestAwayZero: oss << " (RNAZ)"; break;
-      case RoundingMode::Stochastic: oss << " (Stoch)"; break;
+    case RoundingMode::Truncate:
+      oss << " (Trunc)";
+      break;
+    case RoundingMode::NearestEven:
+      oss << " (RNE)";
+      break;
+    case RoundingMode::NearestAwayZero:
+      oss << " (RNAZ)";
+      break;
+    case RoundingMode::Stochastic:
+      oss << " (Stoch)";
+      break;
     }
-    
+
     return oss.str();
   }
 
@@ -208,59 +218,61 @@ public:
         newFrac = 0;
       } else {
         newExp = static_cast<u32>(e);
-        
+
         // --- Rounding Logic ---
         constexpr u16 shift = srcSigBits - SignificandBits();
         constexpr u64 mask = (1ULL << shift) - 1;
         constexpr u64 half = 1ULL << (shift - 1);
-        
+
         const u64 residual = frac & mask;
         newFrac = frac >> shift; // Default Truncate
 
         bool roundUp = false;
 
         if constexpr (RMode == RoundingMode::NearestEven) {
-             if (residual > half) {
-                 roundUp = true;
-             } else if (residual == half) {
-                 // Tie: round to even (if LSB is 1, add 1 to make it 0/even)
-                 if (newFrac & 1) roundUp = true; 
-             }
+          if (residual > half) {
+            roundUp = true;
+          } else if (residual == half) {
+            // Tie: round to even (if LSB is 1, add 1 to make it 0/even)
+            if (newFrac & 1)
+              roundUp = true;
+          }
         } else if constexpr (RMode == RoundingMode::NearestAwayZero) {
-            if (residual >= half) {
-                roundUp = true;
-            }
+          if (residual >= half) {
+            roundUp = true;
+          }
         } else if constexpr (RMode == RoundingMode::Stochastic) {
-            if (!std::is_constant_evaluated()) {
-                // Runtime stochastic rounding
-                // We use a local static generator for simplicity in this header-only context
-                static thread_local std::mt19937 gen(std::random_device{}());
-                std::uniform_real_distribution<double> dist(0.0, 1.0);
-                
-                // Probability of rounding up is proportional to the residual
-                double prob = static_cast<double>(residual) / (1ULL << shift);
-                if (dist(gen) < prob) {
-                    roundUp = true;
-                }
-            } else {
-                // Fallback for compile-time evaluation (deterministic truncate)
-                // This branch is taken when Pack is called in a constexpr context
-                // where stochastic rounding is impossible.
+          if (!std::is_constant_evaluated()) {
+            // Runtime stochastic rounding
+            // We use a local static generator for simplicity in this
+            // header-only context
+            static thread_local std::mt19937 gen(std::random_device{}());
+            std::uniform_real_distribution<double> dist(0.0, 1.0);
+
+            // Probability of rounding up is proportional to the residual
+            double prob = static_cast<double>(residual) / (1ULL << shift);
+            if (dist(gen) < prob) {
+              roundUp = true;
             }
+          } else {
+            // Fallback for compile-time evaluation (deterministic truncate)
+            // This branch is taken when Pack is called in a constexpr context
+            // where stochastic rounding is impossible.
+          }
         }
-        
+
         if (roundUp) {
-            newFrac++;
-            // Handle mantissa overflow
-            if (newFrac >= (1ULL << SignificandBits())) {
-                newFrac = 0;
-                newExp++;
-                // Handle exponent overflow
-                if (newExp >= (1u << ExponentBits()) - 1) {
-                    newExp = (1u << ExponentBits()) - 1;
-                    newFrac = 0; // Inf
-                }
+          newFrac++;
+          // Handle mantissa overflow
+          if (newFrac >= (1ULL << SignificandBits())) {
+            newFrac = 0;
+            newExp++;
+            // Handle exponent overflow
+            if (newExp >= (1u << ExponentBits()) - 1) {
+              newExp = (1u << ExponentBits()) - 1;
+              newFrac = 0; // Inf
             }
+          }
         }
       }
     }
