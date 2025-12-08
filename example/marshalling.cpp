@@ -11,9 +11,10 @@
 template<
     u16 E,
     u16 M,
-    u16 S
+    u16 S,
+    RoundingMode R
 >
-void test_round_trip(FloatRepr<E, M, S> repr, f64 value, f64 range) {
+void test_round_trip(FloatRepr<E, M, S, R> repr, f64 value, f64 range) {
     auto bytes = repr.Marshal(value);
     auto decoded = repr.Unmarshal(bytes);
 
