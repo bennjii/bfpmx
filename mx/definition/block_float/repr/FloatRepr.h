@@ -154,7 +154,7 @@ public:
     // TODO: this way we are not able to store in a compact way 6 or 4 bits
     // floats (e.g. E2M3, E3M2, E2M1)in a Block
     //       we still use 8 bits per significan instead of 6 (or 4).
-    return Size() / 8;
+    return (Size() + 7) / 8;
   }
 
   [[nodiscard]] static constexpr PackedForm Pack(const f64 value) {

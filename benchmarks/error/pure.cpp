@@ -36,20 +36,19 @@ f64 MeanAbsError(const NormalVector &A, const NormalVector &B) {
   return sumAbs / N;
 }
 
-f64 MeanAbsPercentageError(const NormalVector& A, const NormalVector& B) {
-  constexpr f64 eps = 1e-12;
-
+f64 MeanAbsPercentageError(const NormalVector &A, const NormalVector &B) {
   f64 sumPerc = 0.0;
-  size_t nonZeroCount = 0;
-
+  f64 nonZeroCount = 0;
   for (size_t i = 0; i < N; i++) {
-    if (std::abs(A[i]) > eps) {
+    if (A[i] != 0.0) {
       sumPerc += std::abs((A[i] - B[i]) / A[i]);
       nonZeroCount++;
     }
   }
-
-  return (nonZeroCount == 0) ? 0.0 : (sumPerc / nonZeroCount) * 100.0;
+  if (nonZeroCount == 0) {
+    return 0.0;
+  }
+  return (sumPerc / nonZeroCount) * 100.0;
 }
 
 template <IFloatRepr Float, template <std::size_t, BlockDimsType,
@@ -65,7 +64,7 @@ void YieldPureError(CsvWriter &writer) {
   // Logarithmic steps: 10^-3 (0.001) to 10^6 (1,000,000)
   const f64 start_exp = -3.0; 
   const f64 end_exp = 6.0;    
-  const f64 step_exp = 0.1;
+  const f64 step_exp = 0.01;
 
   for (f64 exp = start_exp; exp <= end_exp + 1e-9; exp += step_exp) {
       f64 v = std::pow(10.0, exp);
@@ -89,7 +88,7 @@ void YieldPureError(CsvWriter &writer) {
 template <template <std::size_t, BlockDimsType,
                     IFloatRepr> typename QuantizationPolicy>
 void TestQuantizationPolicy(CsvWriter &writer) {
-  // YieldPureError<fp32::E8M23Type, QuantizationPolicy>(writer);
+  YieldPureError<fp32::E8M23Type, QuantizationPolicy>(writer);
   YieldPureError<fp16::E5M10Type, QuantizationPolicy>(writer);
   YieldPureError<fp8::E4M3Type, QuantizationPolicy>(writer);
   YieldPureError<fp6::E3M2Type, QuantizationPolicy>(writer);
@@ -97,8 +96,8 @@ void TestQuantizationPolicy(CsvWriter &writer) {
 }
 
 void TestVariants(CsvWriter &writer) {
-  TestQuantizationPolicy<L2NormQuantization>(writer);
-  TestQuantizationPolicy<SharedExponentQuantization>(writer);
+  // TestQuantizationPolicy<L2NormQuantization>(writer);
+  // TestQuantizationPolicy<SharedExponentQuantization>(writer);
   TestQuantizationPolicy<MaximumFractionalQuantization>(writer);
 }
 
