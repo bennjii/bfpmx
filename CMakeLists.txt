@@ -110,5 +110,8 @@ target_link_libraries(jacobi2d PRIVATE bfpmx)
 add_executable(heat3d benchmarks/heat3d.cpp)
 target_link_libraries(heat3d PRIVATE bfpmx)
 
-add_executable(error_trend benchmarks/error_trend.cpp)
-target_link_libraries(error_trend PRIVATE bfpmx)
+add_executable(drift benchmarks/error/drift.cpp)
+target_link_libraries(drift PRIVATE bfpmx)
+
+add_executable(pure benchmarks/error/pure.cpp)
+target_link_libraries(pure PRIVATE bfpmx)

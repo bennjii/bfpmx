@@ -16,7 +16,9 @@
 #include <iostream>
 #include <vector>
 
-constexpr u64 Iterations = 250;
+enum Operation { Add, Sub, Mul, Div };
+
+constexpr u64 Iterations = 50;
 constexpr u64 N = 32;
 
 using TestingScalar = u32;
@@ -28,17 +30,17 @@ using TestingBlockT = Block<TestingScalar, BlockDims<N>, Float, CPUArithmetic,
 
 using NormalVector = std::array<f64, N>;
 
-const std::array<f64, N> ReferenceArray = fill_known_arrays<f64, N>(2.0);
+const std::array<f64, N> ReferenceArray = fill_known_arrays<f64, N>(1.5);
 
-constexpr std::string StringOfOperation(const OperationType opera) {
+constexpr std::string StringOfOperation(const Operation opera) {
   switch (opera) {
-  case AddOp:
+  case Add:
     return "Add";
-  case SubOp:
+  case Sub:
     return "Sub";
-  case MulOp:
+  case Mul:
     return "Mul";
-  case DivOp:
+  case Div:
     return "Div";
   }
 
@@ -71,24 +73,35 @@ f64 MeanAbsPercentageError(const NormalVector &A, const NormalVector &B) {
 
 // Scenario 1: State is kept as f64.
 std::vector<NormalVector> GetResults_Nominal(const NormalVector &startingArray,
-                                             const OperationType operation) {
+                                             const Operation operation) {
   std::vector<NormalVector> results;
   results.reserve(Iterations);
-  auto iterationArray = startingArray;
+  NormalVector iterationArray = startingArray;
 
   for (int i = 0; i < Iterations; i++) {
     for (size_t j = 0; j < N; j++) {
-      switch (operation) {
-      case AddOp:
+      switch (operation)
+      {
+      case Add:
         iterationArray[j] += ReferenceArray[j];
-      case SubOp:
+        break;
+      case Sub:
         iterationArray[j] -= ReferenceArray[j];
-      case MulOp:
+        break;
+      case Mul:
         iterationArray[j] *= ReferenceArray[j];
-      case DivOp:
+        break;
+      case Div:
         iterationArray[j] /= ReferenceArray[j];
+        break;
+      default:
+        {
+          std::cerr << "Invalid /Unknown operation type: " << operation << std::endl;
+          exit(1);
+        }
       }
     }
+
     results.push_back(iterationArray);
   }
   return results;
@@ -98,7 +111,7 @@ std::vector<NormalVector> GetResults_Nominal(const NormalVector &startingArray,
 template <IFloatRepr Float, template <std::size_t, BlockDimsType,
                                       IFloatRepr> typename QuantizationPolicy>
 std::vector<NormalVector> GetResults_InBlock(const NormalVector &startingArray,
-                                             const OperationType operation) {
+                                             const Operation operation) {
   std::vector<NormalVector> results;
   results.reserve(Iterations);
   auto activeBlock = TestingBlockT<Float, QuantizationPolicy>(startingArray);
@@ -107,14 +120,18 @@ std::vector<NormalVector> GetResults_InBlock(const NormalVector &startingArray,
 
   for (int i = 0; i < Iterations; i++) {
     switch (operation) {
-    case AddOp:
+    case Add:
       activeBlock = activeBlock + referenceBlock;
-    case SubOp:
+      break;
+    case Sub:
       activeBlock = activeBlock - referenceBlock;
-    case MulOp:
+      break;
+    case Mul:
       activeBlock = activeBlock * referenceBlock;
-    case DivOp:
+      break;
+    case Div:
       activeBlock = activeBlock / referenceBlock;
+      break;
     }
 
     results.push_back(activeBlock.Spread());
@@ -123,12 +140,12 @@ std::vector<NormalVector> GetResults_InBlock(const NormalVector &startingArray,
   return results;
 }
 
-constexpr f64 ReferenceValue = 0;
+constexpr f64 ReferenceValue = 2;
 const auto StartingArray = fill_known_arrays<f64, N>(ReferenceValue);
 
 template <IFloatRepr Float, template <std::size_t, BlockDimsType,
                                       IFloatRepr> typename QuantizationPolicy>
-void YieldTrend(CsvWriter &writer, OperationType operation) {
+void YieldTrend(CsvWriter &writer, Operation operation) {
   const auto baseline = GetResults_Nominal(StartingArray, operation);
   const std::string label = Float::Nomenclature();
 
@@ -148,18 +165,18 @@ void YieldTrend(CsvWriter &writer, OperationType operation) {
 
 template <template <std::size_t, BlockDimsType,
                     IFloatRepr> typename QuantizationPolicy>
-void TestQuantizationPolicy(CsvWriter &writer, const OperationType operation) {
+void TestQuantizationPolicy(CsvWriter &writer, const Operation operation) {
   YieldTrend<fp32::E8M23Type, QuantizationPolicy>(writer, operation);
   YieldTrend<fp16::E5M10Type, QuantizationPolicy>(writer, operation);
   YieldTrend<fp8::E4M3Type, QuantizationPolicy>(writer, operation);
-  YieldTrend<fp6::E2M3Type, QuantizationPolicy>(writer, operation);
+  YieldTrend<fp6::E3M2Type, QuantizationPolicy>(writer, operation);
   YieldTrend<fp4::E2M1Type, QuantizationPolicy>(writer, operation);
 }
 
 void TestVariants(CsvWriter &writer) {
-  for (constexpr std::array operations = {AddOp, SubOp, MulOp, DivOp}; const auto operation : operations) {
-    TestQuantizationPolicy<L2NormQuantization>(writer, operation);
-    TestQuantizationPolicy<SharedExponentQuantization>(writer, operation);
+  for (constexpr std::array operations = {Mul}; const auto operation : operations) {
+    // TestQuantizationPolicy<L2NormQuantization>(writer, operation);
+    // TestQuantizationPolicy<SharedExponentQuantization>(writer, operation);
     TestQuantizationPolicy<MaximumFractionalQuantization>(writer, operation);
   }
 }
@@ -169,6 +186,7 @@ int main() {
   TestVariants(writer);
 
   writer.dump("error_trend.csv");
+  std::cout << "Written file";
   return 0;
 }
 
