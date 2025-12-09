@@ -65,8 +65,8 @@ public:
   }
 
   void write_line(CsvInfo const &basic_info, std::string const &label,
-                  const f64 elapsed, const f64 elapsed_exclusive,
-                  const f64 hit_count, const f64 iteration,
+                  const i64 elapsed, const i64 elapsed_exclusive,
+                  const i64 hit_count, const i64 iteration,
                   const f64 runtime_ms, const f64 error_percent,
                   const f64 error_abs) {
     csv += basic_info.format;

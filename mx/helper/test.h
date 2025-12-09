@@ -6,8 +6,8 @@
 #include <random>
 
 template <typename T, std::size_t N>
-static std::array<T, N> fill_random_arrays(const T low, const T high) {
-  static std::mt19937_64 rng(25);
+static std::array<T, N> fill_random_arrays(const T low, const T high, const int seed = 25) {
+  static std::mt19937_64 rng(seed);
 
   std::array<T, N> v;
   std::uniform_real_distribution<T> dist(low, high);

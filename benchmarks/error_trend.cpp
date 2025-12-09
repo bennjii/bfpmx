@@ -32,14 +32,18 @@ const std::array<f64, N> ReferenceArray = fill_known_arrays<f64, N>(2.0);
 
 constexpr std::string StringOfOperation(const OperationType opera) {
   switch (opera) {
-  case AddOp:
+  case AddOp: {
     return "Add";
-  case SubOp:
+  } break;
+  case SubOp: {
     return "Sub";
-  case MulOp:
+  } break;
+  case MulOp: {
     return "Mul";
-  case DivOp:
+  } break;
+  case DivOp: {
     return "Div";
+  } break;
   }
 
   std::cerr << "Invalid /Unknown operation type: " << opera << std::endl;
@@ -77,17 +81,27 @@ std::vector<NormalVector> GetResults_Nominal(const NormalVector &startingArray,
   auto iterationArray = startingArray;
 
   for (int i = 0; i < Iterations; i++) {
-    for (size_t j = 0; j < N; j++) {
-      switch (operation) {
-      case AddOp:
+    switch (operation) {
+    case AddOp: {
+      profiler::block("Add_f64");
+      for (size_t j = 0; j < N; j++)
         iterationArray[j] += ReferenceArray[j];
-      case SubOp:
+    } break;
+    case SubOp: {
+      profiler::block("Sub_f64");
+      for (size_t j = 0; j < N; j++)
         iterationArray[j] -= ReferenceArray[j];
-      case MulOp:
+    } break;
+    case MulOp: {
+      profiler::block("Mul_f64");
+      for (size_t j = 0; j < N; j++)
         iterationArray[j] *= ReferenceArray[j];
-      case DivOp:
+    } break;
+    case DivOp: {
+      profiler::block("Div_f64");
+      for (size_t j = 0; j < N; j++)
         iterationArray[j] /= ReferenceArray[j];
-      }
+    } break;
     }
     results.push_back(iterationArray);
   }
@@ -107,14 +121,22 @@ std::vector<NormalVector> GetResults_InBlock(const NormalVector &startingArray,
 
   for (int i = 0; i < Iterations; i++) {
     switch (operation) {
-    case AddOp:
+    case AddOp: {
+      profiler::block("Add_block");
       activeBlock = activeBlock + referenceBlock;
-    case SubOp:
+    } break;
+    case SubOp: {
+      profiler::block("Sub_block");
       activeBlock = activeBlock - referenceBlock;
-    case MulOp:
+    } break;
+    case MulOp: {
+      profiler::block("Mul_block");
       activeBlock = activeBlock * referenceBlock;
-    case DivOp:
+    } break;
+    case DivOp: {
+      profiler::block("Div_block");
       activeBlock = activeBlock / referenceBlock;
+    } break;
     }
 
     results.push_back(activeBlock.Spread());
@@ -142,7 +164,8 @@ void YieldTrend(CsvWriter &writer, OperationType operation) {
     const f64 percentage = MeanAbsPercentageError(baseline[i], results[i]);
     const f64 absolute = MeanAbsError(baseline[i], results[i]);
 
-    writer.write_err_only(block, StringOfOperation(operation), i, percentage, absolute);
+    writer.write_err_only(block, StringOfOperation(operation), i, percentage,
+                          absolute);
   }
 }
 
@@ -157,7 +180,8 @@ void TestQuantizationPolicy(CsvWriter &writer, const OperationType operation) {
 }
 
 void TestVariants(CsvWriter &writer) {
-  for (constexpr std::array operations = {AddOp, SubOp, MulOp, DivOp}; const auto operation : operations) {
+  for (constexpr std::array operations = {AddOp, SubOp, MulOp, DivOp};
+       const auto operation : operations) {
     TestQuantizationPolicy<L2NormQuantization>(writer, operation);
     TestQuantizationPolicy<SharedExponentQuantization>(writer, operation);
     TestQuantizationPolicy<MaximumFractionalQuantization>(writer, operation);
@@ -166,7 +190,9 @@ void TestVariants(CsvWriter &writer) {
 
 int main() {
   auto writer = CsvWriter();
+  profiler::begin();
   TestVariants(writer);
+  profiler::end_and_print();
 
   writer.dump("error_trend.csv");
   return 0;
