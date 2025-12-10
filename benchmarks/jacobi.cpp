@@ -13,7 +13,7 @@
 #include "profiler/profiler.h"
 
 constexpr u32 N = 32;
-constexpr u32 Steps = 250;
+constexpr std::array<u32,4> StepsArray = {5,10,50,100};
 constexpr u32 Iterations = 100;
 
 using TestingScalar = u32;
@@ -207,7 +207,7 @@ struct Iteration {
   ElementWise absolute;
 };
 
-Iteration Test() {
+Iteration Test(u32 Steps) {
   using Size = BlockDims<N, N>;
   using Block = TestingBlock<Size>;
 
@@ -276,38 +276,39 @@ Iteration Test() {
 int main() {
   using Size = BlockDims<N, N>;
   using Block = TestingBlock<Size>;
-
-  CsvInfo primitive = PrepareCsvPrimitive("jacobi2d:primitive", N, Steps);
-  CsvInfo block = PrepareCsvBlock<Block>("jacobi2d:block", N, Steps);
-
   auto writer = CsvWriter();
+  for (u32 Steps: StepsArray){
+    CsvInfo primitive = PrepareCsvPrimitive("jacobi2d:primitive", N, Steps);
+    CsvInfo block = PrepareCsvBlock<Block>("jacobi2d:block", N, Steps);
 
-  profiler::begin();
 
-  for (int i = 0; i < Iterations; i++) {
-    auto [percentage, absolute] = Test();
+    profiler::begin();
 
-    writer.next_iteration();
-    auto infos = profiler::dump_and_reset();
+    for (int i = 0; i < Iterations; i++) {
+      auto [percentage, absolute] = Test(Steps);
 
-    for (auto &x : infos) {
-      auto const &label = std::string(x.label);
+      writer.next_iteration();
+      auto infos = profiler::dump_and_reset();
 
-      if (label == "Jacobi2DArray") {
-        writer.append_csv(primitive, x, 0, 0);
-      } else if (label == "Jacobi2DNaiveBlock") {
-        writer.append_csv(block, x, percentage.naive, absolute.naive);
-      } else if (label == "Jacobi2DSpreadBlockEach") {
-        writer.append_csv(block, x, percentage.spread_each,
-                          absolute.spread_each);
-      } else if (label == "Jacobi2DSpreadBlockOnce") {
-        writer.append_csv(block, x, percentage.spread_once,
-                          absolute.spread_once);
+      for (auto &x : infos) {
+        auto const &label = std::string(x.label);
+
+        if (label == "Jacobi2DArray") {
+          writer.append_csv(primitive, x, 0, 0);
+        } else if (label == "Jacobi2DNaiveBlock") {
+          writer.append_csv(block, x, percentage.naive, absolute.naive);
+        } else if (label == "Jacobi2DSpreadBlockEach") {
+          writer.append_csv(block, x, percentage.spread_each,
+                            absolute.spread_each);
+        } else if (label == "Jacobi2DSpreadBlockOnce") {
+          writer.append_csv(block, x, percentage.spread_once,
+                            absolute.spread_once);
+        }
       }
     }
   }
 
-  writer.dump("jacobi2d.csv");
+  writer.dump("../benchmarks/jacobi2d.csv");
   // to_dump.dump(std::cout);
 
   return 0;
