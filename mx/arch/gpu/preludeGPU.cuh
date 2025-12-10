@@ -5,7 +5,7 @@
 #ifdef HAS_CUDA
 #include "ArithmeticKernels.cuh"
 #include "common.cuh"
-#include "GPUArithmetic.cuh"
+#include "GPUArithmeticBlock.cuh"
 #include "SpreadKernel.cuh"
 #include "PackKernel.cuh"
 #include "mxvector/GPUArithmetic.cuh"

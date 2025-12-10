@@ -50,7 +50,7 @@ static void BM_AddMxVectorPointwiseGPU(benchmark::State& state) {
     state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(n * sizeof(double) * 2));
 }
 
-static void BM_AddMxVectorBlockwise(benchmark::State& state) {
+static void BM_AddMxVectorPointwiseGPUNaive(benchmark::State& state) {
     const size_t n = state.range(0);
 
     std::mt19937_64 rng(12345);
@@ -65,6 +65,55 @@ static void BM_AddMxVectorBlockwise(benchmark::State& state) {
     MxVector mx1(v1), mx2(v2);
 
     for (auto _ : state) {
+        auto r = mx::vector::ops::AddPointwiseGPUNaive(mx1, mx2);
+        benchmark::DoNotOptimize(r);
+    }
+
+    state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(n * sizeof(double) * 2));
+}
+
+static void BM_AddMxVectorPointwiseGPUFused(benchmark::State& state) {
+    const size_t n = state.range(0);
+
+    std::mt19937_64 rng(12345);
+    std::uniform_real_distribution<double> dist(-5.0, 5.0);
+
+    std::vector<double> v1(n), v2(n);
+    for (size_t i = 0; i < n; ++i) {
+        v1[i] = dist(rng);
+        v2[i] = dist(rng);
+    }
+
+    MxVector mx1(v1), mx2(v2);
+
+    for (auto _ : state) {
+        auto r = mx::vector::ops::AddPointwiseGPUFused(mx1, mx2);
+        benchmark::DoNotOptimize(r);
+    }
+
+    state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(n * sizeof(double) * 2));
+}
+
+static void BM_AddMxVectorBlockwise(benchmark::State& state) {
+    const size_t n = state.range(0);
+
+    std::mt19937_64 rng(12345);
+    std::uniform_real_distribution<double> dist(-5.0, 5.0);
+
+    std::vector<double> v1(n), v2(n);
+    for (size_t i = 0; i < n; ++i) {
+        v1[i] = dist(rng);
+        v2[i] = dist(rng);
+    }
+
+    MxVector mx1(v1), mx2(v2);
+
+    // Warm up
+    for (int i = 0; i < 10; ++i) {
+        auto r = mx::vector::ops::AddBlockwise(mx1, mx2);
+    }
+
+    for (auto _ : state) {
         auto r = mx::vector::ops::AddBlockwise(mx1, mx2);
         benchmark::DoNotOptimize(r);
     }
@@ -72,8 +121,13 @@ static void BM_AddMxVectorBlockwise(benchmark::State& state) {
     state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(n * sizeof(double) * 2));
 }
 
-// BENCHMARK(BM_AddStdVector)->Arg(10'000)->Arg(100'000)->Arg(1'000'000);
-BENCHMARK(BM_AddMxVectorPointwiseGPU)->Arg(10'000)->Arg(100'000)->Arg(1'000'000);
-BENCHMARK(BM_AddMxVectorBlockwise)->Arg(10'000)->Arg(100'000)->Arg(1'000'000);
 
+
+BENCHMARK(BM_AddStdVector)->Arg(1'000'000)->Arg(5'000'000)
+    ->Arg(10'000'000)->Arg(100'000'000)->Unit(benchmark::kMillisecond);
+// BENCHMARK(BM_AddMxVectorPointwiseGPU)->Arg(10'000)->Arg(100'000)->Arg(1'000'000);
+// BENCHMARK(BM_AddMxVectorBlockwise)->Arg(10'000)->Arg(100'000)->Arg(1'000'000);
+// BENCHMARK(BM_AddMxVectorPointwiseGPUNaive)->Arg(10'000)->Arg(100'000)->Arg(1'000'000);
+BENCHMARK(BM_AddMxVectorPointwiseGPUFused)->Arg(1'000'000)
+    ->Arg(5'000'000)->Arg(10'000'000)->Arg(100'000'000)->Unit(benchmark::kMillisecond);
 BENCHMARK_MAIN();

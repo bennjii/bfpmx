@@ -36,5 +36,15 @@ namespace mx::vector::ops {
     T AddPointwiseGPU(const T& a, const T& b) {
         return AddPointwiseGPUMxVector(a, b);
     }
+
+    template <typename T>
+    T AddPointwiseGPUNaive(const T& a, const T& b) {
+        return AddPointwiseGPUMxVectorNaive(a, b);
+    }
+
+    template <typename T>
+    T AddPointwiseGPUFused(const T& a, const T& b) {
+        return AddPointwiseGPUMxVectorFused(a, b);
+    }
 } // namespace mx
 
