@@ -124,10 +124,10 @@ static void BM_AddMxVectorBlockwise(benchmark::State& state) {
 
 
 BENCHMARK(BM_AddStdVector)->Arg(1'000'000)->Arg(5'000'000)
-    ->Arg(10'000'000)->Arg(100'000'000)->Unit(benchmark::kMillisecond);
+    ->Arg(10'000'000)->Arg(50'000'000)->Arg(100'000'000)->Unit(benchmark::kMillisecond);
 // BENCHMARK(BM_AddMxVectorPointwiseGPU)->Arg(10'000)->Arg(100'000)->Arg(1'000'000);
 // BENCHMARK(BM_AddMxVectorBlockwise)->Arg(10'000)->Arg(100'000)->Arg(1'000'000);
 // BENCHMARK(BM_AddMxVectorPointwiseGPUNaive)->Arg(10'000)->Arg(100'000)->Arg(1'000'000);
 BENCHMARK(BM_AddMxVectorPointwiseGPUFused)->Arg(1'000'000)
-    ->Arg(5'000'000)->Arg(10'000'000)->Arg(100'000'000)->Unit(benchmark::kMillisecond);
+    ->Arg(5'000'000)->Arg(10'000'000)->Arg(50'000'000)->Arg(100'000'000)->Unit(benchmark::kMillisecond);
 BENCHMARK_MAIN();

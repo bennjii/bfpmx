@@ -338,7 +338,7 @@ MxVectorT AddPointwiseGPUMxVectorFused(const MxVectorT& lhs, const MxVectorT& rh
     const uint32_t num_blocks = d_l.numBlocks;
     const uint32_t elems_per_block = lhs.NumBlockElements();
 
-    LaunchFusedBlockArithmeticKernel<BlockViewT>(d_l.blocks, d_r.blocks, d_result.blocks, num_blocks, elems_per_block, ArithmeticOp::Add);
+    LaunchFusedBlockArithmeticKernel<BlockViewT, ArithmeticOp::Add>(d_l.blocks, d_r.blocks, d_result.blocks, num_blocks, elems_per_block);
 
     stream_pool.Release(compute_stream);
 
