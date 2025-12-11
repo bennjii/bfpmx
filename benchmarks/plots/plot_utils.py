@@ -67,7 +67,7 @@ def lineplot(df, x, y, hue, figsize=(10,6), title="", subtitle="",label_display_
 
 
 def multi_distribution_plots(df, metric, hue = 'label'):
-    df['algorithm'] = df['label'].str.replace('Jacobi2D', '')
+    df['algorithm'] = df['label'].str.replace(r'(Jacobi2D|Heat3D)', '', regex=True)
     plt.figure(figsize=(14,10))
 
     # Box plot by algorithm
@@ -76,7 +76,8 @@ def multi_distribution_plots(df, metric, hue = 'label'):
     ax1.set_title('Box plot')
     ax1.set_xlabel('Algorithm')
     ax1.set_ylabel(metric.replace('_',' ').capitalize())
-    ax1.get_legend().remove()
+    if ax1.get_legend():
+        ax1.get_legend().remove()
 
     # Violin plot
     ax2 = plt.subplot(2, 2, 2)
@@ -84,7 +85,8 @@ def multi_distribution_plots(df, metric, hue = 'label'):
     ax2.set_title('Violin plot')
     ax2.set_xlabel('Algorithm')
     ax2.set_ylabel(metric.replace('_',' ').capitalize())
-    ax2.get_legend().remove()
+    if ax2.get_legend():
+        ax2.get_legend().remove()
 
 
     # Histogram
@@ -93,7 +95,6 @@ def multi_distribution_plots(df, metric, hue = 'label'):
     ax3.set_title('Histogram(bins=50)')
     ax3.set_xlabel(metric.replace('_',' ').capitalize())
     ax3.set_ylabel('Frequency')
-    ax3.get_legend().remove()
 
     # Distribution for top 2 algorithms (individual)
     top_algorithms = df.groupby('algorithm')[metric].mean().nsmallest(2).index.tolist()
@@ -110,10 +111,10 @@ def multi_distribution_plots(df, metric, hue = 'label'):
         sns.kdeplot(data=data, label=algo, ax=ax4, color=color)
 
 
-    ax4.set_title('Top 2 Algorithms (KDE)')
+    ax4.set_title('Top Algorithms (KDE)')
     ax4.set_xlabel(metric.replace('_',' ').capitalize())
     ax4.set_ylabel('Density')
-    ax4.legend()
+    ax4.get_legend()
 
 
     plt.tight_layout(pad=3.0)
