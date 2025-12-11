@@ -79,14 +79,18 @@ std::vector<NormalVector> GetResults_Nominal(const NormalVector &startingArray,
   for (int i = 0; i < Iterations; i++) {
     for (size_t j = 0; j < N; j++) {
       switch (operation) {
-      case AddOp:
+      case AddOp: {
         iterationArray[j] += ReferenceArray[j];
-      case SubOp:
+      } break;
+      case SubOp: {
         iterationArray[j] -= ReferenceArray[j];
-      case MulOp:
+      } break;
+      case MulOp: {
         iterationArray[j] *= ReferenceArray[j];
-      case DivOp:
+      } break;
+      case DivOp: {
         iterationArray[j] /= ReferenceArray[j];
+      } break;
       }
     }
     results.push_back(iterationArray);
@@ -107,14 +111,18 @@ std::vector<NormalVector> GetResults_InBlock(const NormalVector &startingArray,
 
   for (int i = 0; i < Iterations; i++) {
     switch (operation) {
-    case AddOp:
+    case AddOp: {
       activeBlock = activeBlock + referenceBlock;
-    case SubOp:
+    } break;
+    case SubOp: {
       activeBlock = activeBlock - referenceBlock;
-    case MulOp:
+    } break;
+    case MulOp: {
       activeBlock = activeBlock * referenceBlock;
-    case DivOp:
+    } break;
+    case DivOp: {
       activeBlock = activeBlock / referenceBlock;
+    } break;
     }
 
     results.push_back(activeBlock.Spread());
@@ -142,7 +150,8 @@ void YieldTrend(CsvWriter &writer, OperationType operation) {
     const f64 percentage = MeanAbsPercentageError(baseline[i], results[i]);
     const f64 absolute = MeanAbsError(baseline[i], results[i]);
 
-    writer.write_err_only(block, StringOfOperation(operation), i, percentage, absolute);
+    writer.write_err_only(block, StringOfOperation(operation), i, percentage,
+                          absolute);
   }
 }
 
@@ -157,7 +166,8 @@ void TestQuantizationPolicy(CsvWriter &writer, const OperationType operation) {
 }
 
 void TestVariants(CsvWriter &writer) {
-  for (constexpr std::array operations = {AddOp, SubOp, MulOp, DivOp}; const auto operation : operations) {
+  for (constexpr std::array operations = {AddOp, SubOp, MulOp, DivOp};
+       const auto operation : operations) {
     TestQuantizationPolicy<L2NormQuantization>(writer, operation);
     TestQuantizationPolicy<SharedExponentQuantization>(writer, operation);
     TestQuantizationPolicy<MaximumFractionalQuantization>(writer, operation);
