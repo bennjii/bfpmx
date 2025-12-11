@@ -119,6 +119,14 @@ void TestAll() {
 
     Test("/", reference, trial);
   }
+
+  SECTION("DotProduct") {
+    volatile f64 reference;
+    {
+      profiler::block("naive DotProduct");
+      reference = CPUArithmetic<Vector>::DotProduct(v1, v2);
+    }
+  }
 }
 
 TEST_CASE("Arithmetic with fast marshalling") {

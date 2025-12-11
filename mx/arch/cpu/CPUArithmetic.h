@@ -21,18 +21,6 @@ template <typename T> struct CPUArithmetic {
     for (std::size_t i = 0; i < T::Length(); ++i)
       result[i] = l[i] + r[i];
     return T(result);
-
-    // NOTE: slightly faster?
-    /* const auto rB = std::max(lhs.ScalarBits(), rhs.ScalarBits()) + 1;
-    T result{T::Uninitialized};
-    result.SetScalar(rB);
-    for (std::size_t i = 0; i < T::Length(); i++) {
-        auto a = lhs.RealizeAtUnsafe(i);
-        auto b = rhs.RealizeAtUnsafe(i);
-        auto r = T::FloatType::Marshal((a+b)/(1ull<<rB));
-        result.SetPackedBitsAt(i, r);
-    }
-    return result; */
   }
 
   static auto Sub(const T &lhs, const T &rhs) -> T {
@@ -72,6 +60,14 @@ template <typename T> struct CPUArithmetic {
       result[i] = l[i] / r[i];
 
     return T(result);
+  }
+
+  template <typename OutT = f64>
+  static auto DotProduct(const T &lhs, const T &rhs) -> OutT {
+    OutT result = 0;
+    for (std::size_t i = 0; i < T::Length(); ++i)
+      result += lhs.RealizeAtUnsafe(i) * rhs.RealizeAtUnsafe(i);
+    return result;
   }
 
   template <typename MatrixBlockType, typename InT, typename OutT>

@@ -112,3 +112,6 @@ target_link_libraries(heat3d PRIVATE bfpmx)
 
 add_executable(error_trend benchmarks/error_trend.cpp)
 target_link_libraries(error_trend PRIVATE bfpmx)
+
+add_executable(micro benchmarks/micro.cpp)
+target_link_libraries(micro PRIVATE bfpmx)
