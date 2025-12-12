@@ -1,6 +1,6 @@
 from plot_utils import *
 
-path_to_csv = "<<path-to-jacobi2d.csv>>"
+path_to_csv = "<<path-to-heat3d.csv>>"
 df = load_profiler_csv(path_to_csv)
 
 lineplot(
@@ -9,7 +9,7 @@ lineplot(
     y = 'runtime (ms)',
     hue = 'label',
     title = 'Runtime [ms] vs Steps',
-    subtitle = "Intel Core i7-13700H, 2.4GHz, N=32, Block=fp8::m4e3"
+    subtitle = "Intel Core i7-13700H, 2.4GHz, N=16, Block=fp8::m4e3"
     # you can extend this for customization (see label_display_names and labels_offset in plot_utils.py)
 )
 
