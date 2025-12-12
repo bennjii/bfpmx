@@ -9,6 +9,10 @@ add_custom_target(fix_compile_commands ALL
         DEPENDS ${CMAKE_BINARY_DIR}/compile_commands.json
         COMMENT "Fixing compile_commands.json for clang-tidy"
 )
+add_compile_options( -Wall -Wextra -Wconversion -Wshadow -Wstrict-overflow -Wfloat-equal -Wformat=2 -Wstrict-aliasing -Wcast-align -Wpointer-arith -Wundef -Wnull-dereference 
+    -Wno-unused-function
+    # -fanalyzer -Wno-analyzer-use-of-uninitialized-value -Wno-analyzer-malloc-leak # slow and buggy
+)
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "mx/*.cpp")
 list(APPEND SOURCES ${HEADERS})

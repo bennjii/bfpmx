@@ -19,8 +19,8 @@ TEST_CASE("Blank Block Construction") {
   const TestingBlock blankBlock;
 
   // Should all be 0's
-  REQUIRE(*blankBlock.RealizeAt(0) == 0.0f);
-  REQUIRE(*blankBlock.RealizeAt(31) == 0.0f);
+  REQUIRE(std::fpclassify(*blankBlock.RealizeAt(0)) == FP_ZERO);
+  REQUIRE(std::fpclassify(*blankBlock.RealizeAt(31)) == FP_ZERO);
 
   // Values outside the bounds must be invalid
   REQUIRE(blankBlock.RealizeAt(-1) == std::nullopt);

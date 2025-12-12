@@ -85,8 +85,6 @@ template <typename T> struct CPUArithmetic {
     // get dims
     const auto rows = MatrixBlockType::Dims[0];
     const auto cols = MatrixBlockType::Dims[1];
-    const auto input_size = InT::Dims[0];
-    const auto output_size = OutT::Dims[0];
 
     using ElemType = f64;
     std::array<ElemType, rows> result;
@@ -117,7 +115,6 @@ template <typename T> struct CPUArithmetic {
     // get dims
     const auto a_rows = MatAType::Dims[0];
     const auto a_cols = MatAType::Dims[1];
-    const auto b_rows = MatBType::Dims[0];
     const auto b_cols = MatBType::Dims[1];
     const auto o_rows = OutT::Dims[0];
     const auto o_cols = OutT::Dims[1];

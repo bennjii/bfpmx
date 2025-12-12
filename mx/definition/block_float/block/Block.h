@@ -78,13 +78,13 @@ public:
 
   Block(const Block &) = default;
 
-  [[nodiscard]] static constexpr std::size_t Length() { return NumElems; }
+  [[nodiscard]] static constexpr u32 Length() { return NumElems; }
 
   [[nodiscard]] static constexpr std::size_t SizeBytes() {
     return NumElems * Float::SizeBytes() + ScalarSizeBytes;
   }
 
-  [[nodiscard]] std::optional<PackedFloat> At(const u16 index) const {
+  [[nodiscard]] std::optional<PackedFloat> At(const u32 index) const {
     if (index >= NumElems) {
       return std::nullopt;
     }
@@ -92,17 +92,17 @@ public:
     return AtUnsafe(index);
   }
 
-  void SetValue(const u16 index, f64 value) {
+  void SetValue(const u32 index, f64 value) {
     SetPackedBitsAtUnsafe(index, Float::Marshal(value / ScalarValue()));
   }
 
   // A variant of `At` which runs on the provided assertions that
   // the underlying data must exist at the index.
-  HD [[nodiscard]] PackedFloat AtUnsafe(const u16 index) const {
+  HD [[nodiscard]] PackedFloat AtUnsafe(const u32 index) const {
     return data_[index];
   }
 
-  template <typename T> HD [[nodiscard]] T AtUnsafeBits(const u16 index) const {
+  template <typename T> HD [[nodiscard]] T AtUnsafeBits(const u32 index) const {
     auto d = data_[index];
     T bits;
     // memcpy is optimized at comp-time since aPacked.size() is a constexpr
@@ -110,19 +110,19 @@ public:
     return bits;
   }
 
-  void SetPackedBitsAtUnsafe(const u16 index,
+  void SetPackedBitsAtUnsafe(const u32 index,
                              std::array<u8, Float::SizeBytes()> const &bits) {
     data_[index] = bits;
   }
 
-  void SetBitsAtUnsafe(const u16 index, const u64 bits) {
+  void SetBitsAtUnsafe(const u32 index, const u64 bits) {
     std::array<u8, Float::SizeBytes()> out{};
     // memcpy is optimized at comp-time since Float::SizeBytes() is a constexpr
     std::memcpy(&out[0], &bits, Float::SizeBytes());
     SetPackedBitsAtUnsafe(index, out);
   }
 
-  [[nodiscard]] std::optional<f64> RealizeAt(const u16 index) const {
+  [[nodiscard]] std::optional<f64> RealizeAt(const u32 index) const {
     if (index >= NumElems) {
       return std::nullopt;
     }
@@ -130,7 +130,7 @@ public:
     return RealizeAtUnsafe(index);
   }
 
-  HD [[nodiscard]] f64 RealizeAtUnsafe(const u16 index) const {
+  HD [[nodiscard]] f64 RealizeAtUnsafe(const u32 index) const {
     return Float::Unmarshal(AtUnsafe(index)) * ScalarValue();
   }
 
@@ -143,7 +143,7 @@ public:
 
   [[nodiscard]] std::array<f64, NumElems> Spread() const {
     std::array<f64, NumElems> blockUnscaledFloats;
-    for (int i = 0; i < NumElems; i++) {
+    for (u32 i = 0; i < NumElems; i++) {
       blockUnscaledFloats[i] = RealizeAtUnsafe(i);
     }
 
@@ -157,7 +157,7 @@ public:
 
     value += "Scalar: " + std::to_string(ScalarValue()) + "\n";
     value += "Elements: [\n";
-    for (int i = 0; i < NumElems; i++) {
+    for (u32 i = 0; i < NumElems; i++) {
       f64 fullPrecisionFloat = fullPrecisionValues[i];
       value += std::format("\t ({}) {:.3f} \n", i, fullPrecisionFloat);
     }
@@ -211,12 +211,12 @@ public:
 
     // Scale each element to become x_i = v_i / S.
     std::array<PackedFloat, BlockShape::TotalSize()> blockScaledFloats;
-    for (int i = 0; i < BlockShape::TotalSize(); i++) {
+    for (u32 i = 0; i < BlockShape::TotalSize(); i++) {
       f64 scaledValue = vec[i] / scaleFactor;
       blockScaledFloats[i] = Float::Marshal(scaledValue);
     }
 
-    const u32 scaleFactorInt = lround(log2(scaleFactor));
+    const u32 scaleFactorInt = (u32)lround(log2(scaleFactor));
     return Block(blockScaledFloats, scaleFactorInt);
   }
 

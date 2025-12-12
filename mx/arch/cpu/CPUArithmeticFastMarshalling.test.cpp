@@ -39,7 +39,7 @@ void Test(const std::string &operation, Vector reference, Vector trial) {
   const f64 epsilon = std::pow(
       2, scalar - static_cast<i64>(Vector::FloatType::SignificandBits()));
 
-  for (std::size_t i = 0; i < Vector::Length(); i++) {
+  for (u32 i = 0; i < Vector::Length(); i++) {
     bool equal =
         FuzzyEqual(reference.RealizeAtUnsafe(i), trial.RealizeAtUnsafe(i),
                    epsilon * toleranceScaling);
@@ -124,7 +124,7 @@ void TestAll() {
 TEST_CASE("Arithmetic with fast marshalling") {
   profiler::begin();
 
-  for (int i = 0; i < TestIterations; i++) {
+  for (size_t i = 0; i < TestIterations; i++) {
     TestAll();
   }
 

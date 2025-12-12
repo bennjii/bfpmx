@@ -18,8 +18,8 @@
 
 enum Operation { Add, Sub, Mul, Div };
 
-constexpr u64 Iterations = 50;
-constexpr u64 N = 32;
+constexpr u32 Iterations = 50;
+constexpr u32 N = 32;
 
 using TestingScalar = u32;
 
@@ -60,12 +60,12 @@ f64 MeanAbsPercentageError(const NormalVector &A, const NormalVector &B) {
   f64 sumPerc = 0.0;
   f64 nonZeroCount = 0;
   for (size_t i = 0; i < N; i++) {
-    if (A[i] != 0.0) {
+      if (std::fpclassify(A[i]) != FP_ZERO) {
       sumPerc += std::abs((A[i] - B[i]) / A[i]);
       nonZeroCount++;
     }
   }
-  if (nonZeroCount == 0) {
+  if (std::fpclassify(nonZeroCount) == FP_ZERO) {
     return 0.0;
   }
   return (sumPerc / nonZeroCount) * 100.0;
@@ -78,7 +78,7 @@ std::vector<NormalVector> GetResults_Nominal(const NormalVector &startingArray,
   results.reserve(Iterations);
   NormalVector iterationArray = startingArray;
 
-  for (int i = 0; i < Iterations; i++) {
+  for (u32 i = 0; i < Iterations; i++) {
     for (size_t j = 0; j < N; j++) {
       switch (operation)
       {
@@ -118,7 +118,7 @@ std::vector<NormalVector> GetResults_InBlock(const NormalVector &startingArray,
   const auto referenceBlock =
       TestingBlockT<Float, QuantizationPolicy>(ReferenceArray);
 
-  for (int i = 0; i < Iterations; i++) {
+  for (u32 i = 0; i < Iterations; i++) {
     switch (operation) {
     case Add:
       activeBlock = activeBlock + referenceBlock;
@@ -155,7 +155,7 @@ void YieldTrend(CsvWriter &writer, Operation operation) {
   const auto results =
       GetResults_InBlock<Float, QuantizationPolicy>(StartingArray, operation);
 
-  for (int i = 0; i < Iterations; i += 1) {
+  for (u32 i = 0; i < Iterations; i += 1) {
     const f64 percentage = MeanAbsPercentageError(baseline[i], results[i]);
     const f64 absolute = MeanAbsError(baseline[i], results[i]);
 

@@ -78,13 +78,13 @@ f64 MeanAbsError3D(const NormalMatrix3D<N> A, const NormalMatrix3D<N> B) {
 // ref:
 // https://github.com/MatthiasJReisinger/PolyBenchC-4.2.1/blob/master/stencils/heat-3d/heat-3d.c
 template <size_t N>
-static NormalMatrix3D<N> HeatReference3D(const int steps, NormalMatrix3D<N> A,
+static NormalMatrix3D<N> HeatReference3D(const u32 steps, NormalMatrix3D<N> A,
                                          NormalMatrix3D<N> B) {
   profiler::func();
-  for (int t = 1; t <= steps; t++) {
-    for (int i = 1; i < N - 1; i++) {
-      for (int j = 1; j < N - 1; j++) {
-        for (int k = 1; k < N - 1; k++) {
+  for (u32 t = 1; t <= steps; t++) {
+    for (u32 i = 1; i < N - 1; i++) {
+      for (u32 j = 1; j < N - 1; j++) {
+        for (u32 k = 1; k < N - 1; k++) {
           B[i][j][k] =
               0.125 * (A[i + 1][j][k] - 2.0 * A[i][j][k] + A[i - 1][j][k]) +
               0.125 * (A[i][j + 1][k] - 2.0 * A[i][j][k] + A[i][j - 1][k]) +
@@ -94,9 +94,9 @@ static NormalMatrix3D<N> HeatReference3D(const int steps, NormalMatrix3D<N> A,
       }
     }
 
-    for (int i = 1; i < N - 1; i++) {
-      for (int j = 1; j < N - 1; j++) {
-        for (int k = 1; k < N - 1; k++) {
+    for (u32 i = 1; i < N - 1; i++) {
+      for (u32 j = 1; j < N - 1; j++) {
+        for (u32 k = 1; k < N - 1; k++) {
           A[i][j][k] =
               0.125 * (B[i + 1][j][k] - 2.0 * B[i][j][k] + B[i - 1][j][k]) +
               0.125 * (B[i][j + 1][k] - 2.0 * B[i][j][k] + B[i][j - 1][k]) +
@@ -113,7 +113,7 @@ static NormalMatrix3D<N> HeatReference3D(const int steps, NormalMatrix3D<N> A,
 //    HEAT 3D STENCIL BLOCK VERSION
 // ----------------------------------------
 template <size_t N>
-TestingMatrix3D<N> HeatBlock3D(const int steps, TestingMatrix3D<N> A,
+TestingMatrix3D<N> HeatBlock3D(const u32 steps, TestingMatrix3D<N> A,
                                TestingMatrix3D<N> B) {
   profiler::func();
 
@@ -157,7 +157,7 @@ TestingMatrix3D<N> HeatBlock3D(const int steps, TestingMatrix3D<N> A,
   return A;
 }
 
-f64 Test(const size_t steps) {
+f64 Test(const u32 steps) {
   using Size = BlockDims<N, N, N>;
   using Block = TestingBlock<Size>;
 
@@ -198,15 +198,15 @@ f64 Test(const size_t steps) {
   return MeanAbsError3D<N>(referenceResult, blockAsArray);
 }
 
-constexpr size_t Steps = 10;
-constexpr size_t Iterations = 100;
+constexpr u32 Steps = 10;
+constexpr u32 Iterations = 100;
 
 int main() {
   f64 totalError = 0.0;
 
   profiler::begin();
 
-  for (int i = 0; i < Iterations; i++) {
+  for (u32 i = 0; i < Iterations; i++) {
     totalError += Test(Steps);
   }
 

@@ -45,23 +45,23 @@ struct CPUArithmeticSingularValues {
   static_assert(expShift <= F32_EXP_SHIFT);
   static_assert(signShift <= F32_SIGN_SHIFT);
 
-  static inline void AddAt(TR &r, const u16 rIdx, const TA &a, const u16 aIdx,
-                           const TB &b, const u16 bIdx) {
+  static inline void AddAt(TR &r, const u32 rIdx, const TA &a, const u32 aIdx,
+                           const TB &b, const u32 bIdx) {
     AnyOpAt<AddOp>(r, rIdx, a, aIdx, b, bIdx);
   }
 
-  static inline void SubAt(TR &r, const u16 rIdx, const TA &a, const u16 aIdx,
-                           const TB &b, const u16 bIdx) {
+  static inline void SubAt(TR &r, const u32 rIdx, const TA &a, const u32 aIdx,
+                           const TB &b, const u32 bIdx) {
     AnyOpAt<SubOp>(r, rIdx, a, aIdx, b, bIdx);
   }
 
-  static inline void MulAt(TR &r, const u16 rIdx, const TA &a, const u16 aIdx,
-                           const TB &b, const u16 bIdx) {
+  static inline void MulAt(TR &r, const u32 rIdx, const TA &a, const u32 aIdx,
+                           const TB &b, const u32 bIdx) {
     AnyOpAt<MulOp>(r, rIdx, a, aIdx, b, bIdx);
   }
 
-  static inline void DivAt(TR &r, const u16 rIdx, const TA &a, const u16 aIdx,
-                           const TB &b, const u16 bIdx) {
+  static inline void DivAt(TR &r, const u32 rIdx, const TA &a, const u32 aIdx,
+                           const TB &b, const u32 bIdx) {
     AnyOpAt<DivOp>(r, rIdx, a, aIdx, b, bIdx);
   }
 
@@ -104,8 +104,8 @@ struct CPUArithmeticSingularValues {
   // NOTE: the bias is passed directly since it is expensive to calculate
   //       and remains always the same in consecutive calls!
   template <OperationType op>
-  static inline void AnyOpAt(TR &r, const u16 rIdx, const TA &a, const u16 aIdx,
-                             const TB &b, const u16 bIdx) {
+  static inline void AnyOpAt(TR &r, const u32 rIdx, const TA &a, const u32 aIdx,
+                             const TB &b, const u32 bIdx) {
     auto rBias = r.ScalarBits();
     auto aBias = a.ScalarBits();
     auto bBias = b.ScalarBits();

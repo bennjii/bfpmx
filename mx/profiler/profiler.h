@@ -78,7 +78,7 @@ struct ProfilerAnchor {
 };
 
 namespace detail {
-#if _WIN32
+#if defined(_WIN32)
 
 static inline u64 get_OS_timer_freq(void) {
   LARGE_INTEGER Freq;
@@ -171,7 +171,6 @@ static inline void block_end(ProfilerBlock *pb) {
 static inline f64 to_GbS(u64 elapsed, u64 bytes) {
   f64 seconds = (f64)elapsed / profiler_cpu_freq;
   f64 bytes_per_second = (f64)bytes / seconds;
-  f64 megabytes = (f64)bytes / (f64)(1024 * 1024);
   f64 gigabytes_per_second = bytes_per_second / (f64)(1024 * 1024 * 1024);
   return gigabytes_per_second;
 }
@@ -303,7 +302,7 @@ static inline void end_and_print(void) {
 #else // PROFILE
 
 #ifndef PROFILE
-#if _WIN32
+#if defined(_WIN32)
 #pragma message("including the profiler without previously defining `PROFILE`")
 #else
 #warning "Including the profiler without previously defining `PROFILE`"
