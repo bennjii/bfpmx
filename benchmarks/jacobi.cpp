@@ -262,10 +262,10 @@ Iteration Test(u32 Steps) {
   const auto error_spread_once = L2Norm<N>(a_ref, blockA_spread_once.Spread());
 
   return Iteration{
-      ElementWise{error_naive, error_spread_each, error_spread_once},
       ElementWise{collect_error_percent(error_naive),
                   collect_error_percent(error_spread_each),
                   collect_error_percent(error_spread_once)},
+      ElementWise{error_naive, error_spread_each, error_spread_once},
   };
 }
 

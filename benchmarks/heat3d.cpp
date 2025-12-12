@@ -2,9 +2,12 @@
 
 #include "prelude.h"
 #include "profiler/profiler.h"
+#include "profiler/csv_info.h"
 
 using TestingScalar = u32;
 using TestingFloat = fp8::E4M3Type;
+constexpr std::array<u32,4> StepsArray = {1,5,10,40};
+constexpr u32 Iterations = 100;
 
 template <typename Dimensions>
 using TestingBlock = Block<TestingScalar, Dimensions, TestingFloat,
@@ -15,12 +18,11 @@ template <size_t N> using TestingMatrix3D = TestingBlock<BlockDims<N, N, N>>;
 template <size_t N>
 using NormalMatrix3D = std::array<std::array<std::array<f64, N>, N>, N>;
 
-constexpr u32 N = 32; // grid size (32x32x32)
+constexpr u32 N = 20; // grid size (NxNxN)
 
 // ----------------------------------------
 //          UTILITY FUNCTIONS
 // ----------------------------------------
-
 // BlockToArray3D: Convert a 3Dim blockedFP format into a 3D array of f64
 template <size_t N>
 NormalMatrix3D<N> BlockToArray3D(const TestingMatrix3D<N> block) {
@@ -38,48 +40,42 @@ NormalMatrix3D<N> BlockToArray3D(const TestingMatrix3D<N> block) {
   return out;
 }
 
-// MaxAbsError3D: Compute maximum absolute difference between two 3D arrays of
-// the same size
-template <size_t N>
-f64 MaxAbsError3D(const NormalMatrix3D<N> A, const NormalMatrix3D<N> B) {
-  f64 maxErr = 0.0;
-
-  for (size_t i = 0; i < N; i++) {
-    for (size_t j = 0; j < N; j++) {
-      for (size_t k = 0; k < N; k++) {
-        maxErr = std::max(maxErr, std::abs(A[i][j][k] - B[i][j][k]));
+// L2 Norm (2 inputs) 
+template <size_t N_>
+f64 L2Norm3D(const NormalMatrix3D<N_> &A,const NormalMatrix3D<N_> &B){
+  f64 error = 0.0;
+  for (size_t i = 0; i < N_; i++){
+    for (size_t j = 0; j < N_; j++){
+      for (size_t k = 0; k < N_; k++){
+        f64 diff = A[i][j][k] - B[i][j][k];
+        error += diff * diff;
       }
     }
   }
-
-  return maxErr;
+  return std::sqrt(error);
 }
-
-// MeanAbsError3D: Compute the avg element-wise absolute diff between 3D arrays
-// of the same size
-template <size_t N>
-f64 MeanAbsError3D(const NormalMatrix3D<N> A, const NormalMatrix3D<N> B) {
-  f64 sumAbs = 0.0;
-
-  for (size_t i = 0; i < N; i++) {
-    for (size_t j = 0; j < N; j++) {
-      for (size_t k = 0; k < N; k++) {
-        sumAbs += std::abs(A[i][j][k] - B[i][j][k]);
+// L2 Norm (1 input)
+template <size_t N_>
+static f64 L2Norm3D(const NormalMatrix3D<N_> &A){
+  f64 norm_sq = 0.0;
+  for (size_t i = 0; i < N_; i++){
+    for (size_t j = 0; j < N_; j++){
+      for (size_t k = 0; k < N_; k++){
+        norm_sq += A[i][j][k] * A[i][j][k];
       }
     }
   }
-
-  return sumAbs / (N * N * N);
+  return std::sqrt(norm_sq);
 }
 
 // ----------------------------------------
-//    HEAT 3D STENCIL POLYBENCH VERSION
+//   (1) HEAT 3D STENCIL POLYBENCH VERSION
 // ----------------------------------------
 // ref:
 // https://github.com/MatthiasJReisinger/PolyBenchC-4.2.1/blob/master/stencils/heat-3d/heat-3d.c
 template <size_t N>
-static NormalMatrix3D<N> HeatReference3D(const u32 steps, NormalMatrix3D<N> A,
-                                         NormalMatrix3D<N> B) {
+static void Heat3DReference(const u32 steps, NormalMatrix3D<N> &A,
+                                         NormalMatrix3D<N> &B) {
   profiler::func();
   for (u32 t = 1; t <= steps; t++) {
     for (u32 i = 1; i < N - 1; i++) {
@@ -106,15 +102,14 @@ static NormalMatrix3D<N> HeatReference3D(const u32 steps, NormalMatrix3D<N> A,
       }
     }
   }
-  return A;
 }
 
 // ----------------------------------------
-//    HEAT 3D STENCIL BLOCK VERSION
+//   (2) HEAT 3D STENCIL NAIVE BLOCK VERSION
 // ----------------------------------------
 template <size_t N>
-TestingMatrix3D<N> HeatBlock3D(const u32 steps, TestingMatrix3D<N> A,
-                               TestingMatrix3D<N> B) {
+static void Heat3DNaiveBlock(const u32 steps, TestingMatrix3D<N> &A,
+                               TestingMatrix3D<N> &B) {
   profiler::func();
 
   for (u32 t = 0; t < steps; t++) {
@@ -154,64 +149,255 @@ TestingMatrix3D<N> HeatBlock3D(const u32 steps, TestingMatrix3D<N> A,
       }
     }
   }
-  return A;
 }
 
-f64 Test(const u32 steps) {
+// -----------------------------------------------
+//   (3) HEAT 3D STENCIL SPREADBLOCKEACH VERSION
+// -----------------------------------------------
+template <u32 N>
+static void Heat3DSpreadBlockEach(const u32 steps,
+                                                TestingMatrix3D<N> &A_block,
+                                                TestingMatrix3D<N> &B_block) {
+  profiler::func();
+  std::array<f64, N * N * N> a_spread, b_spread;
+
+  for (u32 t = 0; t < steps; t++) {
+    a_spread = A_block.Spread();
+    std::array<f64, N * N * N> b_new = a_spread;
+
+    for (u32 i = 1; i < N - 1; i++) {
+      for (u32 j = 1; j < N - 1; j++) {
+        for (u32 k = 1; k < N - 1; k++) {
+          const u32 center = i * N * N + j * N + k;
+          const u32 ip = (i + 1) * N * N + j * N + k;
+          const u32 im = (i - 1) * N * N + j * N + k;
+          const u32 jp = i * N * N + (j + 1) * N + k;
+          const u32 jm = i * N * N + (j - 1) * N + k;
+          const u32 kp = i * N * N + j * N + (k + 1);
+          const u32 km = i * N * N + j * N + (k - 1);
+
+          b_new[center] =
+              0.125 * (a_spread[ip] - 2.0 * a_spread[center] + a_spread[im]) +
+              0.125 * (a_spread[jp] - 2.0 * a_spread[center] + a_spread[jm]) +
+              0.125 * (a_spread[kp] - 2.0 * a_spread[center] + a_spread[km]) +
+              a_spread[center];
+        }
+      }
+    }
+    B_block = TestingMatrix3D<N>(b_new);
+
+    b_spread = B_block.Spread();
+    std::array<f64, N * N * N> a_new = b_spread;
+
+    for (u32 i = 1; i < N - 1; i++) {
+      for (u32 j = 1; j < N - 1; j++) {
+        for (u32 k = 1; k < N - 1; k++) {
+          const u32 center = i * N * N + j * N + k;
+          const u32 ip = (i + 1) * N * N + j * N + k;
+          const u32 im = (i - 1) * N * N + j * N + k;
+          const u32 jp = i * N * N + (j + 1) * N + k;
+          const u32 jm = i * N * N + (j - 1) * N + k;
+          const u32 kp = i * N * N + j * N + (k + 1);
+          const u32 km = i * N * N + j * N + (k - 1);
+
+          a_new[center] =
+              0.125 * (b_spread[ip] - 2.0 * b_spread[center] + b_spread[im]) +
+              0.125 * (b_spread[jp] - 2.0 * b_spread[center] + b_spread[jm]) +
+              0.125 * (b_spread[kp] - 2.0 * b_spread[center] + b_spread[km]) +
+              b_spread[center];
+        }
+      }
+    }
+    A_block = TestingMatrix3D<N>(a_new);
+  }
+}
+
+
+// -----------------------------------------------
+//   (4) HEAT 3D STENCIL SPREADBLOCKONCE VERSION
+// -----------------------------------------------
+template <u32 N>
+static void Heat3DSpreadBlockOnce(const u32 steps,
+                                                TestingMatrix3D<N> &A_block,
+                                                TestingMatrix3D<N> &B_block) {
+  profiler::func();
+
+  std::array<f64, N * N * N> a_spread = A_block.Spread();
+  std::array<f64, N * N * N> b_spread = B_block.Spread();
+
+  for (u32 t = 0; t < steps; t++) {
+    // compute b_spread from a_spread
+    for (u32 i = 1; i < N - 1; i++) {
+      for (u32 j = 1; j < N - 1; j++) {
+        for (u32 k = 1; k < N - 1; k++) {
+          const u32 center = i * N * N + j * N + k;
+          const u32 ip = (i + 1) * N * N + j * N + k;
+          const u32 im = (i - 1) * N * N + j * N + k;
+          const u32 jp = i * N * N + (j + 1) * N + k;
+          const u32 jm = i * N * N + (j - 1) * N + k;
+          const u32 kp = i * N * N + j * N + (k + 1);
+          const u32 km = i * N * N + j * N + (k - 1);
+
+          b_spread[center] =
+              0.125 * (a_spread[ip] - 2.0 * a_spread[center] + a_spread[im]) +
+              0.125 * (a_spread[jp] - 2.0 * a_spread[center] + a_spread[jm]) +
+              0.125 * (a_spread[kp] - 2.0 * a_spread[center] + a_spread[km]) +
+              a_spread[center];
+        }
+      }
+    }
+
+    // compute a_spread from b_spread
+    for (u32 i = 1; i < N - 1; i++) {
+      for (u32 j = 1; j < N - 1; j++) {
+        for (u32 k = 1; k < N - 1; k++) {
+          const u32 center = i * N * N + j * N + k;
+          const u32 ip = (i + 1) * N * N + j * N + k;
+          const u32 im = (i - 1) * N * N + j * N + k;
+          const u32 jp = i * N * N + (j + 1) * N + k;
+          const u32 jm = i * N * N + (j - 1) * N + k;
+          const u32 kp = i * N * N + j * N + (k + 1);
+          const u32 km = i * N * N + j * N + (k - 1);
+
+          a_spread[center] =
+              0.125 * (b_spread[ip] - 2.0 * b_spread[center] + b_spread[im]) +
+              0.125 * (b_spread[jp] - 2.0 * b_spread[center] + b_spread[jm]) +
+              0.125 * (b_spread[kp] - 2.0 * b_spread[center] + b_spread[km]) +
+              b_spread[center];
+        }
+      }
+    }
+  }
+
+  A_block = TestingMatrix3D<N>(a_spread);
+  B_block = TestingMatrix3D<N>(b_spread);
+}
+
+
+struct ElementWise {
+  f64 naive;
+  f64 spread_each;
+  f64 spread_once;
+};
+
+struct Iteration {
+  ElementWise percentage;
+  ElementWise absolute;
+};
+
+
+
+Iteration Test(u32 steps) {
   using Size = BlockDims<N, N, N>;
   using Block = TestingBlock<Size>;
 
-  NormalMatrix3D<N> a{}, b{};
+  NormalMatrix3D<N> a_base{}, b_base{};
+  // TODO: Do we want to populate a_base/b_base each time randomly 
+  //       or fix it such that it depends on N and not on ITERATION ?
+  static std::random_device rd;
+  static std::mt19937 gen(rd());
+  static std::uniform_real_distribution<> distrib(-10.0, 10.0);
 
   for (u32 i = 0; i < N; i++) {
     for (u32 j = 0; j < N; j++) {
       for (u32 k = 0; k < N; k++) {
-        a[i][j][k] = (i + j + (N - k)) * 10.0 / N;
-        b[i][j][k] = (i + j + (N - k)) * 10.0 / N;
+        f64 random_val = distrib(gen); 
+        a_base[i][j][k] = random_val; // fixed becomes: a[i][j][k] = (i + j + (N - k)) * 10.0 / N;
+        b_base[i][j][k] = random_val; // similarly:     b[i][j][k] = (i + j + (N - k)) * 10.0 / N;
       }
     }
   }
 
   // init linearized arrays for blocks
-  std::array<f64, N * N * N> aLinear{};
-  std::array<f64, N * N * N> bLinear{};
+  std::array<f64, N * N * N> aLinear_base{};
+  std::array<f64, N * N * N> bLinear_base{};
 
   for (u32 i = 0; i < N; i++) {
     for (u32 j = 0; j < N; j++) {
       for (u32 k = 0; k < N; k++) {
-        aLinear[i * N * N + j * N + k] = a[i][j][k]; // aLinear[..] = a[..]
-        bLinear[i * N * N + j * N + k] = b[i][j][k];
+        aLinear_base[i * N * N + j * N + k] = a_base[i][j][k]; // aLinear[..] = a[..]
+        bLinear_base[i * N * N + j * N + k] = b_base[i][j][k];
       }
     }
   }
 
-  const auto blockA = Block(aLinear);
-  const auto blockB = Block(bLinear);
-
-  auto referenceResult = HeatReference3D<N>(steps, a, b);
-  auto blockResult = HeatBlock3D<N>(steps, blockA, blockB);
-
-  // Convert the block into an array so that we can calculate the error
-  NormalMatrix3D<N> blockAsArray = BlockToArray3D<N>(blockResult);
-
-  // calculate error(s)
-  return MeanAbsError3D<N>(referenceResult, blockAsArray);
-}
-
-constexpr u32 Steps = 10;
-constexpr u32 Iterations = 100;
-
-int main() {
-  f64 totalError = 0.0;
+  auto a_ref = a_base;
+  auto b_ref = b_base;
 
   profiler::begin();
 
-  for (u32 i = 0; i < Iterations; i++) {
-    totalError += Test(Steps);
+  // Baseline (1)
+  Heat3DReference<N>(steps, a_ref, b_ref);
+
+  // NaiveBlock (2)
+  Block blockA_naive(aLinear_base), blockB_naive(bLinear_base);
+  Heat3DNaiveBlock<N>(steps, blockA_naive, blockB_naive);
+
+  // SpreadBlockEach (3)
+  Block blockA_spread_each(aLinear_base), blockB_spread_each(bLinear_base);
+  Heat3DSpreadBlockEach<N>(steps, blockA_spread_each, blockB_spread_each);
+
+  // SpreadBlockOnce (4)
+  Block blockA_spread_once(aLinear_base), blockB_spread_once(bLinear_base);
+  Heat3DSpreadBlockOnce<N>(steps, blockA_spread_once, blockB_spread_once);
+
+
+  auto norm_ref = L2Norm3D(a_ref);
+
+
+  const auto collect_error_percent = [&](const f64 error_abs) {
+    return (error_abs / norm_ref) * 100.0;
+  };
+
+
+  const auto error_naive = L2Norm3D<N>(a_ref, BlockToArray3D<N>(blockA_naive));
+  const auto error_spread_each = L2Norm3D<N>(a_ref, BlockToArray3D<N>(blockA_spread_each));
+  const auto error_spread_once = L2Norm3D<N>(a_ref, BlockToArray3D<N>(blockA_spread_once));
+
+  return Iteration{
+      ElementWise{collect_error_percent(error_naive),
+                  collect_error_percent(error_spread_each),
+                  collect_error_percent(error_spread_once)},
+      ElementWise{error_naive, error_spread_each, error_spread_once},
+  };
+}
+
+
+int main() {
+  using Size = BlockDims<N, N, N>;
+  using Block = TestingBlock<Size>;
+  auto writer = CsvWriter();
+  for (u32 steps: StepsArray){
+    CsvInfo primitive = PrepareCsvPrimitive("heat3d:primitive", N, steps);
+    CsvInfo block = PrepareCsvBlock<Block>("heat3d:block", N, steps);
+
+
+    profiler::begin();
+
+    for (u32 i = 0; i < Iterations; i++) {
+      auto [percentage, absolute] = Test(steps);
+
+      writer.next_iteration();
+      auto infos = profiler::dump_and_reset();
+
+      for (auto &x : infos) {
+        auto const &label = std::string(x.label);
+
+        if (label == "Heat3DReference") {
+          writer.append_csv(primitive, x, 0, 0);
+        } else if (label == "Heat3DNaiveBlock") {
+          writer.append_csv(block, x, percentage.naive, absolute.naive);
+        } else if (label == "Heat3DSpreadBlockEach") {
+          writer.append_csv(block, x, percentage.spread_each,
+                            absolute.spread_each);
+        } else if (label == "Heat3DSpreadBlockOnce") {
+          writer.append_csv(block, x, percentage.spread_once,
+                            absolute.spread_once);
+        }
+      }
+    }
   }
 
-  f64 errorMean = totalError / Iterations;
-  std::cout << "Mean absolute error: " << errorMean << std::endl;
-
-  profiler::end_and_print();
+  writer.dump("../benchmarks/heat3d.csv");
+  return 0;
 }
