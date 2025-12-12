@@ -104,7 +104,7 @@ concept IFloatRepr = requires(f64 v, std::array<u8, T::SizeBytes()> a) {
  *
  */
 template <u16 Exponent, u16 Significand, u16 Sign,
-          RoundingMode RMode = RoundingMode::NearestEven>
+          RoundingMode RMode = RoundingMode::Stochastic>
 class FloatRepr {
 public:
   using PackedForm =
