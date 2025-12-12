@@ -40,12 +40,12 @@ f64 MeanAbsPercentageError(const NormalVector &A, const NormalVector &B) {
   f64 sumPerc = 0.0;
   f64 nonZeroCount = 0;
   for (size_t i = 0; i < N; i++) {
-    if (A[i] != 0.0) {
+    if (std::fpclassify(A[i]) != FP_ZERO) {
       sumPerc += std::abs((A[i] - B[i]) / A[i]);
       nonZeroCount++;
     }
   }
-  if (nonZeroCount == 0) {
+  if (std::fpclassify(nonZeroCount) == FP_ZERO) {
     return 0.0;
   }
   return (sumPerc / nonZeroCount) * 100.0;
@@ -81,7 +81,7 @@ void YieldPureError(CsvWriter &writer) {
       f64 absolute = MeanAbsError(input, output);
       
       // We use 'v' as the iteration variable to plot against x-axis (value magnitude)
-      writer.write_err_only(block, "PureQuant", v, percentage, absolute);
+      writer.write_err_only(block, "PureQuant", (u64)v, percentage, absolute);
   }
 }
 

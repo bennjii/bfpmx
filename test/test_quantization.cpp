@@ -37,7 +37,7 @@ void Test(const std::array<f64, BlockSize::TotalSize()> &full_precision) {
 
     BlockFmt<A, Q> block = New<A, Q>(full_precision);
 
-    for (int i = 0; i < BlockSize::TotalSize(); ++i) {
+    for (u32 i = 0; i < BlockSize::TotalSize(); ++i) {
         f64 recoveredValue = block.RealizeAtUnsafe(i);
         f64 originalValue = full_precision.at(i);
 
@@ -95,7 +95,7 @@ void TestAllArithmetic(const std::array<f64, BlockSize::TotalSize()> &full_preci
 int main() {
     profiler::begin();
 
-    constexpr u64 iterations = 1000;
+    constexpr u32 iterations = 1000;
 
     constexpr f64 min = -10.0;
     constexpr f64 max = +10.0;
@@ -103,7 +103,7 @@ int main() {
     const std::array array =
       fill_random_arrays<f64, BlockSize::TotalSize()>(min, max);
 
-    for (int i = 0; i < iterations; i++) {
+    for (u32 i = 0; i < iterations; i++) {
         TestAllArithmetic(array);
     }
 

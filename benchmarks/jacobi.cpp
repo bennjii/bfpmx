@@ -32,11 +32,11 @@ using TestingBlockNoMarshal =
 
 // Somewhat opinionated port of Jacobi2D from PolyBench:
 // https://github.com/MatthiasJReisinger/PolyBenchC-4.2.1/blob/3e872547cef7e5c9909422ef1e6af03cf4e56072/stencils/jacobi-2d/jacobi-2d.c
-template <size_t N>
-static void Jacobi2DArray(const int steps, std::array<std::array<f64, N>, N> &A,
+template <u32 N>
+static void Jacobi2DArray(const u32 steps, std::array<std::array<f64, N>, N> &A,
                           std::array<std::array<f64, N>, N> &B) {
   profiler::func();
-  int t, i, j;
+  u32 t, i, j;
 
   for (t = 0; t < steps; t++) {
     for (i = 1; i < N - 1; i++)
@@ -50,13 +50,11 @@ static void Jacobi2DArray(const int steps, std::array<std::array<f64, N>, N> &A,
   }
 }
 
-template <size_t N>
-static void Jacobi2DNaiveBlock(const int steps,
+template <u32 N>
+static void Jacobi2DNaiveBlock(const u32 steps,
                                TestingBlock<BlockDims<N, N>> &A,
                                TestingBlock<BlockDims<N, N>> &B) {
   profiler::func();
-
-  using Dimensions = BlockDims<N, N>;
 
   for (u32 t = 0; t < steps; t++) {
     for (u32 i = 1; i < N - 1; i++) {
@@ -81,8 +79,8 @@ static void Jacobi2DNaiveBlock(const int steps,
   }
 }
 
-template <size_t N>
-static void Jacobi2DSpreadBlockEach(const int steps,
+template <u32 N>
+static void Jacobi2DSpreadBlockEach(const u32 steps,
                                     TestingBlock<BlockDims<N, N>> &A_block,
                                     TestingBlock<BlockDims<N, N>> &B_block) {
   profiler::func();
@@ -128,13 +126,11 @@ static void Jacobi2DSpreadBlockEach(const int steps,
   }
 }
 
-template <size_t N>
-static void Jacobi2DSpreadBlockOnce(const int steps,
+template <u32 N>
+static void Jacobi2DSpreadBlockOnce(const u32 steps,
                                     TestingBlock<BlockDims<N, N>> &A_block,
                                     TestingBlock<BlockDims<N, N>> &B_block) {
   profiler::func();
-
-  using Dimensions = BlockDims<N, N>;
 
   std::array<f64, N * N> a_spread, b_spread;
   a_spread = A_block.Spread();
@@ -284,7 +280,7 @@ int main() {
 
     profiler::begin();
 
-    for (int i = 0; i < Iterations; i++) {
+    for (u32 i = 0; i < Iterations; i++) {
       auto [percentage, absolute] = Test(Steps);
 
       writer.next_iteration();

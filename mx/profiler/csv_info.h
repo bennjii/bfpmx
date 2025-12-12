@@ -58,15 +58,15 @@ public:
   u64 next_iteration() { return ++iteration_id; }
 
   void write_err_only(CsvInfo const &basic_info, std::string const &label,
-                      const f64 iteration, const f64 error_percent,
+                      const u64 iteration, const f64 error_percent,
                       const f64 error_abs) {
     write_line(basic_info, label, -1, -1, -1, iteration, -1, error_percent,
                error_abs);
   }
 
   void write_line(CsvInfo const &basic_info, std::string const &label,
-                  const f64 elapsed, const f64 elapsed_exclusive,
-                  const f64 hit_count, const f64 iteration,
+                  const u64 elapsed, const u64 elapsed_exclusive,
+                  const u64 hit_count, const u64 iteration,
                   const f64 runtime_ms, const f64 error_percent,
                   const f64 error_abs) {
     csv += basic_info.format;

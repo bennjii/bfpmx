@@ -74,13 +74,13 @@ static f64 L2Norm3D(const NormalMatrix3D<N_> &A){
 // ref:
 // https://github.com/MatthiasJReisinger/PolyBenchC-4.2.1/blob/master/stencils/heat-3d/heat-3d.c
 template <size_t N>
-static void Heat3DReference(const int steps, NormalMatrix3D<N> &A,
+static void Heat3DReference(const u32 steps, NormalMatrix3D<N> &A,
                                          NormalMatrix3D<N> &B) {
   profiler::func();
-  for (int t = 1; t <= steps; t++) {
-    for (int i = 1; i < N - 1; i++) {
-      for (int j = 1; j < N - 1; j++) {
-        for (int k = 1; k < N - 1; k++) {
+  for (u32 t = 1; t <= steps; t++) {
+    for (u32 i = 1; i < N - 1; i++) {
+      for (u32 j = 1; j < N - 1; j++) {
+        for (u32 k = 1; k < N - 1; k++) {
           B[i][j][k] =
               0.125 * (A[i + 1][j][k] - 2.0 * A[i][j][k] + A[i - 1][j][k]) +
               0.125 * (A[i][j + 1][k] - 2.0 * A[i][j][k] + A[i][j - 1][k]) +
@@ -90,9 +90,9 @@ static void Heat3DReference(const int steps, NormalMatrix3D<N> &A,
       }
     }
 
-    for (int i = 1; i < N - 1; i++) {
-      for (int j = 1; j < N - 1; j++) {
-        for (int k = 1; k < N - 1; k++) {
+    for (u32 i = 1; i < N - 1; i++) {
+      for (u32 j = 1; j < N - 1; j++) {
+        for (u32 k = 1; k < N - 1; k++) {
           A[i][j][k] =
               0.125 * (B[i + 1][j][k] - 2.0 * B[i][j][k] + B[i - 1][j][k]) +
               0.125 * (B[i][j + 1][k] - 2.0 * B[i][j][k] + B[i][j - 1][k]) +
@@ -108,7 +108,7 @@ static void Heat3DReference(const int steps, NormalMatrix3D<N> &A,
 //   (2) HEAT 3D STENCIL NAIVE BLOCK VERSION
 // ----------------------------------------
 template <size_t N>
-static void Heat3DNaiveBlock(const int steps, TestingMatrix3D<N> &A,
+static void Heat3DNaiveBlock(const u32 steps, TestingMatrix3D<N> &A,
                                TestingMatrix3D<N> &B) {
   profiler::func();
 
@@ -154,8 +154,8 @@ static void Heat3DNaiveBlock(const int steps, TestingMatrix3D<N> &A,
 // -----------------------------------------------
 //   (3) HEAT 3D STENCIL SPREADBLOCKEACH VERSION
 // -----------------------------------------------
-template <size_t N>
-static void Heat3DSpreadBlockEach(const int steps,
+template <u32 N>
+static void Heat3DSpreadBlockEach(const u32 steps,
                                                 TestingMatrix3D<N> &A_block,
                                                 TestingMatrix3D<N> &B_block) {
   profiler::func();
@@ -216,8 +216,8 @@ static void Heat3DSpreadBlockEach(const int steps,
 // -----------------------------------------------
 //   (4) HEAT 3D STENCIL SPREADBLOCKONCE VERSION
 // -----------------------------------------------
-template <size_t N>
-static void Heat3DSpreadBlockOnce(const int steps,
+template <u32 N>
+static void Heat3DSpreadBlockOnce(const u32 steps,
                                                 TestingMatrix3D<N> &A_block,
                                                 TestingMatrix3D<N> &B_block) {
   profiler::func();
@@ -374,7 +374,7 @@ int main() {
 
     profiler::begin();
 
-    for (int i = 0; i < Iterations; i++) {
+    for (u32 i = 0; i < Iterations; i++) {
       auto [percentage, absolute] = Test(steps);
 
       writer.next_iteration();

@@ -41,7 +41,7 @@ template <typename T> struct CPUArithmeticFastMarshalling {
 
     T result{typename T::Uninitialized{}};
     result.SetScalar(rBias);
-    for (std::size_t i = 0; i < T::Length(); i++) {
+    for (u32 i = 0; i < T::Length(); i++) {
       Arithmetic::template AnyOpAt<op>(result, i, a, i, b, i);
     }
     return result;

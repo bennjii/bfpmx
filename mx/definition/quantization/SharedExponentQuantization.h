@@ -13,7 +13,7 @@ public:
   static f64
   QuantizerScaleFactor(const std::array<f64, BlockShape::TotalSize()> &vec) {
     uint64_t largestBiasedExponent = 0;
-    for (int i = 0; i < BlockShape::TotalSize(); i++) {
+    for (u32 i = 0; i < BlockShape::TotalSize(); i++) {
       const uint64_t bits = std::bit_cast<uint64_t>(vec[i]);
       const uint64_t exponent = (bits >> F64_BITS_SIGNIFICAND) & 0x7FF;
       largestBiasedExponent = std::max(largestBiasedExponent, exponent);

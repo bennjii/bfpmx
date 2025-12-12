@@ -13,17 +13,17 @@ public:
   static f64
   QuantizerScaleFactor(const std::array<f64, BlockShape::TotalSize()> &vec) {
     f64 sum_of_squares = 0;
-    for (int i = 0; i < BlockShape::TotalSize(); i++) {
+    for (u32 i = 0; i < BlockShape::TotalSize(); i++) {
       sum_of_squares += std::pow(vec[i], 2);
     }
 
-    if (sum_of_squares == 0.0) {
+    if (std::fpclassify(sum_of_squares) == FP_ZERO) {
       return 1.0;
     }
 
     const f64 rms = sqrt(sum_of_squares / BlockShape::TotalSize());
 
-    const int exponent = std::ceil(std::log2(rms));
+    const int exponent = (int)std::ceil(std::log2(rms));
     return std::pow(2, exponent);
   }
 

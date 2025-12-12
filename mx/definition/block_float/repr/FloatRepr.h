@@ -107,7 +107,7 @@ public:
   }
 
   static constexpr f64 Next(const f64 value) {
-    if (value == 0.0) {
+    if (std::fpclassify(value) == FP_ZERO) {
       // smallest positive subnormal
       return std::pow(2.0, 1 - BiasValue()) / (1 << SignificandBits());
     }
@@ -169,8 +169,8 @@ public:
     const u64 frac = bits & ((1ull << srcSigBits) - 1);
 
     // handle special cases
-    u32 newSign = static_cast<u32>(sign);
-    u32 newExp;
+    u64 newSign = static_cast<u32>(sign);
+    u64 newExp;
     u64 newFrac;
 
     if (exp == 0x7FF) { // NaN or Inf
@@ -195,7 +195,7 @@ public:
       }
     }
 
-    return {newSign, newExp, newFrac};
+    return std::make_tuple(newSign, newExp, newFrac);
   }
 
   HD [[nodiscard]] static constexpr f64 Unpack(PackedForm value) {
