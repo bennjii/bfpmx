@@ -140,7 +140,7 @@ std::vector<NormalVector> GetResults_InBlock(const NormalVector &startingArray,
   return results;
 }
 
-constexpr f64 ReferenceValue = 2;
+constexpr f64 ReferenceValue = 0;
 const auto StartingArray = fill_known_arrays<f64, N>(ReferenceValue);
 
 template <IFloatRepr Float, template <std::size_t, BlockDimsType,
@@ -174,7 +174,7 @@ void TestQuantizationPolicy(CsvWriter &writer, const Operation operation) {
 }
 
 void TestVariants(CsvWriter &writer) {
-  for (constexpr std::array operations = {Mul}; const auto operation : operations) {
+  for (constexpr std::array operations = {Add}; const auto operation : operations) {
     // TestQuantizationPolicy<L2NormQuantization>(writer, operation);
     // TestQuantizationPolicy<SharedExponentQuantization>(writer, operation);
     TestQuantizationPolicy<MaximumFractionalQuantization>(writer, operation);
@@ -183,7 +183,10 @@ void TestVariants(CsvWriter &writer) {
 
 int main() {
   auto writer = CsvWriter();
-  TestVariants(writer);
+  for (int i = 0; i < Iterations; i++)
+  {
+    TestVariants(writer);
+  }
 
   writer.dump("error_trend.csv");
   std::cout << "Written file";
