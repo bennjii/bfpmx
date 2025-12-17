@@ -10,13 +10,24 @@
 #if !defined(__CUDACC__)
     // Pure host (g++, clang++)
     #include <format>
+#else
+    // For CUDA compilation, use snprintf instead of std::format
+    #include <cstdio>
 #endif
 #include <cstring>
 #include <string>
+#include <optional>
 
 #include "BlockDims.h"
 #include "arch/prelude.h"
 #include "definition/block_float/repr/FloatRepr.h"
+
+// nvcc has issues with [[nodiscard]] in some contexts
+#if defined(__CUDACC__)
+#define NODISCARD_ATTR
+#else
+#define NODISCARD_ATTR [[nodiscard]]
+#endif
 
 template <template <typename> typename ImplPolicy> struct WithPolicy {
   template <typename T> using Type = ArithmeticEnabled<T, ImplPolicy<T>>;
@@ -89,7 +100,7 @@ public:
     return NumElems * Float::SizeBytes() + ScalarSizeBytes;
   }
 
-  [[nodiscard]] std::optional<PackedFloat> At(const u16 index) const {
+  NODISCARD_ATTR std::optional<PackedFloat> At(const u16 index) const {
     if (index >= NumElems) {
       return std::nullopt;
     }
@@ -185,7 +196,15 @@ public:
     for (int i = 0; i < NumElems; i++) {
       f64 fullPrecisionFloat = fullPrecisionValues[i];
       std::string end = (i == NumElems - 1) ? "" : ", ";
+#if !defined(__CUDACC__)
+      // Use std::format when available (C++20, not in nvcc)
       value += std::format("({}) {:.3f}{}", i, fullPrecisionFloat, end);
+#else
+      // Fallback for CUDA compilation: use sprintf-style formatting
+      char buffer[64];
+      snprintf(buffer, sizeof(buffer), "(%d) %.3f%s", i, fullPrecisionFloat, end.c_str());
+      value += buffer;
+#endif
     }
     value += "]";
 

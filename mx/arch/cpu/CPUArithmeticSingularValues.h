@@ -11,6 +11,9 @@
 
 enum OperationType { AddOp, SubOp, MulOp, DivOp };
 
+template<OperationType>
+inline constexpr bool always_false_v = false;
+
 template <typename TR, typename TA, typename TB>
 struct CPUArithmeticSingularValues {
   // needed to work correctly
@@ -123,7 +126,7 @@ struct CPUArithmeticSingularValues {
     else if constexpr (op == DivOp)
       rF32 = aF32 / bF32;
     else
-      static_assert(false);
+      static_assert(always_false_v<op>, "Invalid operation type");
     u32 rBits = fromMagicValue<op>(rF32, rBias, aBias, bBias);
     r.SetBitsAtUnsafe(rIdx, rBits);
   }

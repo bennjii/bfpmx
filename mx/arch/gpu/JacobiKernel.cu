@@ -1,5 +1,6 @@
 #include "JacobiKernel.cuh"
 
+#ifndef JACOBI_KERNEL_INSTANTIATIONS_ONLY
 __global__ void Jacobi2DUpdateKernel(const ElemType* __restrict__ A,
                                      ElemType* __restrict__ B,
                                      uint32_t N) {
@@ -26,13 +27,7 @@ __global__ void Jacobi2DUpdateKernel(const ElemType* __restrict__ A,
         0.2 * (A[center] + A[left] + A[right] + A[up] + A[down])
     );
 }
-
-// Explicit instantiation for GPUVector used in JacobiHeatGPU tests
-using GPUVector32 = mx::vector::MxVector<BlockDims<32>, unsigned char, fp8::E4M3Type,
-                                         GPUArithmeticNaive, MaximumFractionalQuantization>;
-
-template GPUVector32 Jacobi2DGPUMxVectorNaive<GPUVector32>(
-    const GPUVector32&, const GPUVector32&, uint32_t, uint32_t);
+#endif // JACOBI_KERNEL_INSTANTIATIONS_ONLY
 
 // Naive Jacobi 2D over a flattened N×N grid stored in an MxVector.
 // Keeps boundary cells unchanged. Returns the final A buffer after `steps`.
@@ -130,4 +125,44 @@ MxVectorT Jacobi2DGPUMxVectorNaive(const MxVectorT& A,
 
     return result;
 }
+
+#ifndef JACOBI_KERNEL_INSTANTIATIONS_ONLY
+// GPU implementation using normal CUDA arrays (f64/double)
+void Jacobi2DGPUArrayNaive(const ElemType* A_host,
+                          const ElemType* B_host,
+                          ElemType* result_host,
+                          uint32_t N,
+                          uint32_t steps) {
+    const size_t size = static_cast<size_t>(N) * N;
+    const size_t bytes = size * sizeof(ElemType);
+    
+    // Allocate device memory
+    ElemType* d_A = nullptr;
+    ElemType* d_B = nullptr;
+    CUDA_CHECK(cudaMalloc(&d_A, bytes));
+    CUDA_CHECK(cudaMalloc(&d_B, bytes));
+    
+    // Copy initial data to device
+    CUDA_CHECK(cudaMemcpy(d_A, A_host, bytes, cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(d_B, B_host, bytes, cudaMemcpyHostToDevice));
+    
+    // Launch kernel configuration
+    const int blockSize = 256;
+    const int numBlocks = static_cast<int>((size + blockSize - 1) / blockSize);
+    
+    // Run Jacobi iterations
+    for (uint32_t t = 0; t < steps; ++t) {
+        Jacobi2DUpdateKernel<<<numBlocks, blockSize>>>(d_A, d_B, N);
+        Jacobi2DUpdateKernel<<<numBlocks, blockSize>>>(d_B, d_A, N);
+    }
+    CUDA_CHECK_KERNEL();
+    
+    // Copy result back to host
+    CUDA_CHECK(cudaMemcpy(result_host, d_A, bytes, cudaMemcpyDeviceToHost));
+    
+    // Free device memory
+    CUDA_CHECK(cudaFree(d_A));
+    CUDA_CHECK(cudaFree(d_B));
+}
+#endif // JACOBI_KERNEL_INSTANTIATIONS_ONLY
 

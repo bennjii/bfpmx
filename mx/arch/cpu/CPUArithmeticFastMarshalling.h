@@ -37,7 +37,7 @@ template <typename T> struct CPUArithmeticFastMarshalling {
     else if constexpr (op == DivOp)
       rBias = aBias - bBias;
     else
-      static_assert(false);
+      static_assert(always_false_v<op>, "Invalid operation type");
 
     T result{typename T::Uninitialized{}};
     result.SetScalar(rBias);

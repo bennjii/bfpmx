@@ -136,6 +136,10 @@ MxVectorT Heat3DGPUMxVectorNaive(const MxVectorT& A,
 }
 
 // Explicit instantiation for GPUVector used in JacobiHeatGPU tests
+// Note: MxVector.hpp is included here (after device code) for the explicit instantiation.
+// This is host code, so nvcc will compile STL here, but it's necessary for the instantiation.
+#include "definition/vector/MxVector.hpp"
+
 using GPUVector32Heat = mx::vector::MxVector<BlockDims<32>, unsigned char, fp8::E4M3Type,
                                              GPUArithmeticNaive, MaximumFractionalQuantization>;
 

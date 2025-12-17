@@ -13,10 +13,19 @@ __global__ void Jacobi2DUpdateKernel(const ElemType* __restrict__ A,
 
 // Naive Jacobi 2D over a flattened N×N grid stored in an MxVector.
 // Keeps boundary cells unchanged. Returns the final A buffer after `steps`.
+// Template definition is in JacobiKernel.cu (needs to be compiled with nvcc due to kernel launches)
 template <typename MxVectorT>
 MxVectorT Jacobi2DGPUMxVectorNaive(const MxVectorT& A,
                                    const MxVectorT& B,
                                    uint32_t N,
                                    uint32_t steps);
+
+// GPU implementation using normal CUDA arrays (f64/double)
+// Allocates device memory, runs kernel, and returns result in host array
+void Jacobi2DGPUArrayNaive(const ElemType* A_host,
+                          const ElemType* B_host,
+                          ElemType* result_host,
+                          uint32_t N,
+                          uint32_t steps);
 
 

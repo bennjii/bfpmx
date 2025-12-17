@@ -82,6 +82,11 @@ foreach(test_src ${TEST_SOURCES})
             Catch2::Catch2WithMain
             bfpmx
     )
+    
+    # Link CUDA libraries if CUDA is available (needed for MxVector GPU code paths)
+    if(CMAKE_CUDA_COMPILER)
+        target_link_libraries(${test_name} PRIVATE bfpmx_gpu)
+    endif()
 
     catch_discover_tests(${test_name})
 endforeach()
