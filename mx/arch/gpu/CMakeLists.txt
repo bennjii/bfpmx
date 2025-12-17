@@ -4,6 +4,8 @@ set(GPU_KERNEL_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/SpreadKernel.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/PackKernel.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/FusedKernel.cu
+    ${CMAKE_CURRENT_SOURCE_DIR}/JacobiKernel.cu
+    ${CMAKE_CURRENT_SOURCE_DIR}/HeatKernel.cu
 )
 
 # Compile kernels as an OBJECT library (device + host code)

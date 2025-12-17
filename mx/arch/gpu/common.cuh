@@ -4,6 +4,7 @@
 #include <array>
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
+#include "cuda_utils.h"
 
 using ElemType = f64;
 enum class ArithmeticOp : uint8_t {
