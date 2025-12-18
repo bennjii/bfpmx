@@ -115,3 +115,11 @@ target_link_libraries(drift PRIVATE bfpmx)
 
 add_executable(pure benchmarks/error/pure.cpp)
 target_link_libraries(pure PRIVATE bfpmx)
+
+add_executable(jacobi2dALL benchmarks/jacobiALL.cpp)
+target_link_libraries(jacobi2dALL PRIVATE bfpmx)
+
+add_executable(heat3dALL benchmarks/heat3dALL.cpp)
+target_link_libraries(heat3dALL PRIVATE bfpmx)
+
+
