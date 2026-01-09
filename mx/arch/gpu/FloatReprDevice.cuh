@@ -130,9 +130,12 @@ struct FloatReprDevice {
                                   (pf.exp  << SignificandBits()) |
                                   (pf.frac & ((1ull << SignificandBits()) - 1));
         std::array<u8, SizeBytes()> out;
+        // Use reinterpret_cast to access array data without calling constexpr methods
+        // std::array is guaranteed to be a POD-like structure, so this is safe
+        u8* out_data = reinterpret_cast<u8*>(&out);
         #pragma unroll
         for (unsigned int i = 0; i < SizeBytes(); ++i) {
-            out[i] = (bits >> (8 * i)) & 0xFF;
+            out_data[i] = (bits >> (8 * i)) & 0xFF;
         }
         return out;
     }

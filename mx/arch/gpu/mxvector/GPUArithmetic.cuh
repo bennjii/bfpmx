@@ -7,7 +7,6 @@
 #include "../FusedKernel.cuh"
 #include "../StreamPool.h"
 #include "../PinnedMemoryPool.h"
-#include "definition/vector/DataLocation.h"
 #include <vector>
 #include <cuda_runtime.h>
 #include <cstring>
@@ -29,7 +28,7 @@ struct MxVectorView {
 
 
 template <typename MxVectorT>
-auto ToDeviceMxVectorView(MxVectorT& mxvector) {
+auto ToDeviceMxVectorView(MxVectorT& mxvector, cudaStream_t stream = nullptr) {
     using BlockT = MxVectorT::BlockType;
     using MxVectorViewT = MxVectorView<BlockT>;
 
@@ -77,15 +76,24 @@ auto ToDeviceMxVectorView(MxVectorT& mxvector) {
         offset += block_bytes;
     }
 
-    // Use stream pool
-    auto& stream_pool = GetGlobalStreamPool();
-    cudaStream_t stream = stream_pool.Acquire();
+    // Use provided stream or acquire from pool
+    bool owns_stream = (stream == nullptr);
+    if (owns_stream) {
+        auto& stream_pool = GetGlobalStreamPool();
+        stream = stream_pool.Acquire();
+    }
+    
     CUDA_CHECK(cudaMemcpyAsync(d_data_buffer, pinned_data_buffer,
                                total_data_size, cudaMemcpyHostToDevice, stream));
     CUDA_CHECK(cudaMemcpyAsync(d_blocks_ptr, host_blocks.data(),
                                num_blocks * sizeof(BlockViewT), cudaMemcpyHostToDevice, stream));
-    CUDA_CHECK(cudaStreamSynchronize(stream));
-    stream_pool.Release(stream);
+    
+    // Only synchronize if we own the stream (backward compatibility)
+    if (owns_stream) {
+        CUDA_CHECK(cudaStreamSynchronize(stream));
+        auto& stream_pool = GetGlobalStreamPool();
+        stream_pool.Release(stream);
+    }
     
     // Release pinned memory back to pool
     mem_pool.Release(std::move(pinned_buffer));
@@ -98,7 +106,7 @@ auto ToDeviceMxVectorView(MxVectorT& mxvector) {
 }
 
 template <typename BlockType, typename MxVectorT>
-auto ToHostMxVector(const MxVectorView<BlockType>& mxvectorview) {
+auto ToHostMxVector(const MxVectorView<BlockType>& mxvectorview, cudaStream_t stream = nullptr) {
     using MxVectorViewT = MxVectorView<BlockType>;
     using BlockViewT = typename MxVectorViewT::BlockViewT;
 
@@ -115,9 +123,13 @@ auto ToHostMxVector(const MxVectorView<BlockType>& mxvectorview) {
     auto pinned_buffer = mem_pool.Acquire(total_data_size);
     uint8_t* pinned_data_buffer = static_cast<uint8_t*>(pinned_buffer->ptr);
     
-    // Use stream pool
-    auto& stream_pool = GetGlobalStreamPool();
-    cudaStream_t stream = stream_pool.Acquire();
+    // Use provided stream or acquire from pool
+    bool owns_stream = (stream == nullptr);
+    if (owns_stream) {
+        auto& stream_pool = GetGlobalStreamPool();
+        stream = stream_pool.Acquire();
+    }
+    
     CUDA_CHECK(cudaMemcpyAsync(host_block_views.data(),
                mxvectorview.blocks,
                num_blocks * sizeof(BlockViewT),
@@ -129,8 +141,16 @@ auto ToHostMxVector(const MxVectorView<BlockType>& mxvectorview) {
                    total_data_size,
                    cudaMemcpyDeviceToHost, stream));
     }
+    
+    // Synchronize: if we own the stream, sync it; if provided, assume caller has already synced
+    // but we still need to sync to ensure async copies complete
     CUDA_CHECK(cudaStreamSynchronize(stream));
-    stream_pool.Release(stream);
+    
+    // Release stream only if we own it
+    if (owns_stream) {
+        auto& stream_pool = GetGlobalStreamPool();
+        stream_pool.Release(stream);
+    }
     
     uint8_t* host_data_ptr = pinned_data_buffer;
 
@@ -310,28 +330,9 @@ MxVectorT AddPointwiseGPUMxVectorFused(const MxVectorT& lhs, const MxVectorT& rh
     auto& stream_pool = GetGlobalStreamPool();
     cudaStream_t compute_stream = stream_pool.Acquire();
 
-    MxVectorViewT d_l, d_r;
-    bool need_free_l = true;
-    bool need_free_r = true;
-
-    #ifdef HAS_CUDA
-    if (lhs.getDataLocation() == mx::vector::DataLocation::GPU_ONLY || lhs.getDataLocation() == mx::vector::DataLocation::BOTH) {
-        d_l = lhs.getGPUView();
-        need_free_l = false;
-    } else {
-        d_l = ToDeviceMxVectorView(const_cast<MxVectorT&>(lhs));
-    }
-
-    if (rhs.getDataLocation() == mx::vector::DataLocation::GPU_ONLY || rhs.getDataLocation() == mx::vector::DataLocation::BOTH) {
-        d_r = rhs.getGPUView();
-        need_free_r = false;
-    } else {
-        d_r = ToDeviceMxVectorView(const_cast<MxVectorT&>(rhs));
-    }
-    #else
-    d_l = ToDeviceMxVectorView(const_cast<MxVectorT&>(lhs));
-    d_r = ToDeviceMxVectorView(const_cast<MxVectorT&>(rhs));
-    #endif
+    // Explicitly create device views - no caching, always create fresh
+    MxVectorViewT d_l = ToDeviceMxVectorView(const_cast<MxVectorT&>(lhs), compute_stream);
+    MxVectorViewT d_r = ToDeviceMxVectorView(const_cast<MxVectorT&>(rhs), compute_stream);
 
     MxVectorViewT d_result = AllocateDeviceMxVectorView<BlockT>(lhs.Size());
 
@@ -342,15 +343,13 @@ MxVectorT AddPointwiseGPUMxVectorFused(const MxVectorT& lhs, const MxVectorT& rh
 
     stream_pool.Release(compute_stream);
 
-    if (need_free_l) {
-        FreeDeviceMxVectorView(&d_l);
-    }
-    if (need_free_r) {
-        FreeDeviceMxVectorView(&d_r);
-    }
+    // Always free device views - they're temporary
+    FreeDeviceMxVectorView(&d_l);
+    FreeDeviceMxVectorView(&d_r);
 
-    MxVectorT result(lhs.Size());
-    result.setGPUView(d_result);
+    // Convert result back to host MxVector
+    MxVectorT result = ToHostMxVector<BlockT, MxVectorT>(d_result, compute_stream);
+    FreeDeviceMxVectorView(&d_result);
 
     return result;
 }

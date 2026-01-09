@@ -2,13 +2,8 @@ cmake_minimum_required(VERSION 3.28.3)
 project(bfpmx)
 
 set(CMAKE_CXX_STANDARD 20)
-# set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-# add_custom_target(fix_compile_commands ALL
-#        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/fix-compile-commands.py
-#        ${CMAKE_BINARY_DIR}/compile_commands.json
-#        DEPENDS ${CMAKE_BINARY_DIR}/compile_commands.json
-#        COMMENT "Fixing compile_commands.json for clang-tidy"
-# )
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set(CMAKE_CUDA_HOST_COMPILER /usr/bin/g++-13)
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "mx/*.cpp")
 list(APPEND SOURCES ${HEADERS})
@@ -45,6 +40,8 @@ set_target_properties(bfpmx PROPERTIES
         ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/artifacts/lib"
         LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/artifacts/lib"
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/artifacts/bin"
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
 )
 
 find_package(OpenMP REQUIRED)
@@ -91,8 +88,8 @@ foreach(test_src ${TEST_SOURCES})
     catch_discover_tests(${test_name})
 endforeach()
 
+add_subdirectory(mx/arch/gpu)
 add_subdirectory(test)
 add_definitions(-DUNIT_TESTS)
 add_subdirectory(example)
 add_subdirectory(benchmarks)
-add_subdirectory(mx/arch/gpu)

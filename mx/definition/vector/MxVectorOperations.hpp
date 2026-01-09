@@ -1,5 +1,6 @@
 #pragma once
 #include "definition/vector/MxVector.hpp"
+#include "arch/cpu/CPUArithmetic.h"
 #include <optional>
 #include <omp.h>
 
@@ -15,7 +16,7 @@ namespace mx::vector::ops {
         for (auto i = 0; i < a.NumBlocks(); ++i) {
             const auto a_block = a.BlockAt(i);
             const auto b_block = b.BlockAt(i);
-            result += a_block * b_block;
+            result += CPUArithmetic<typename T::BlockType>::Dot(a_block, b_block);
         }
         return result;
     }

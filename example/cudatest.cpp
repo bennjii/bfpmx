@@ -25,7 +25,6 @@ int main() {
 
     std::cout << "\n--- CPU Addition (Blockwise) ---" << std::endl;
     auto result_cpu = mx::vector::ops::AddBlockwise(mx1, mx2);
-    std::cout << "Result CPU data location: " << static_cast<int>(result_cpu.getDataLocation()) << std::endl;
     std::cout << "First 4 elements: ";
     for (size_t i = 0; i < 4 && i < result_cpu.Size(); ++i) {
         std::cout << result_cpu.ItemAt(i) << " ";
@@ -34,16 +33,14 @@ int main() {
 
     std::cout << "\n--- GPU Addition (Fused) ---" << std::endl;
     auto result_gpu = mx::vector::ops::AddPointwiseGPUFused(mx1, mx2);
-    std::cout << "Result GPU data location: " << static_cast<int>(result_gpu.getDataLocation()) << std::endl;
-    std::cout << "  (0=CPU_ONLY, 1=GPU_ONLY, 2=BOTH, 3=INVALID)" << std::endl;
+    std::cout << "  (Result is automatically converted back to CPU MxVector)" << std::endl;
     
-    std::cout << "\n--- Accessing GPU result (triggers CPU transfer) ---" << std::endl;
+    std::cout << "\n--- Accessing GPU result ---" << std::endl;
     std::cout << "First 4 elements: ";
     for (size_t i = 0; i < 4 && i < result_gpu.Size(); ++i) {
         std::cout << result_gpu.ItemAt(i) << " ";
     }
     std::cout << std::endl;
-    std::cout << "Data location after access: " << static_cast<int>(result_gpu.getDataLocation()) << std::endl;
 
     std::cout << "\n--- Verification ---" << std::endl;
     bool match = true;
@@ -64,10 +61,9 @@ int main() {
         std::cout << "Mismatch between GPU and CPU results!" << std::endl;
     }
 
-    std::cout << "\n--- Testing Persistent GPU Data ---" << std::endl;
+    std::cout << "\n--- Testing Second GPU Operation ---" << std::endl;
     auto result_gpu2 = mx::vector::ops::AddPointwiseGPUFused(result_gpu, mx1);
-    std::cout << "Second GPU operation result location: " << static_cast<int>(result_gpu2.getDataLocation()) << std::endl;
-    std::cout << "  (Should be GPU_ONLY=1, data stays on GPU)" << std::endl;
+    std::cout << "Second GPU operation completed (result converted back to CPU)" << std::endl;
 
     return match ? 0 : 1;
 }

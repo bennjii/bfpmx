@@ -178,12 +178,12 @@ public:
     if (index >= NumElems) {
       throw std::out_of_range("Index out of range in Block::SetItemAt");
     }
-    data_.at(index) = Float::Marshal(value / Scalar());
+    data_[index] = Float::Marshal(value / ScalarValue());
   }
 
   // TODO: Heuristic to rescale to block, for now no requantization
   void SetItemAtUnsafe(const u16 index, f64 value) {
-    data_.at(index) = Float::Marshal(value / Scalar());
+    data_[index] = Float::Marshal(value / ScalarValue());
   }
 
   [[nodiscard]] std::string asString() const {

@@ -4,9 +4,6 @@ set(GPU_KERNEL_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/SpreadKernel.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/PackKernel.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/FusedKernel.cu
-    ${CMAKE_CURRENT_SOURCE_DIR}/JacobiKernel.cu
-    ${CMAKE_CURRENT_SOURCE_DIR}/JacobiKernelInstantiations.cu
-    ${CMAKE_CURRENT_SOURCE_DIR}/HeatKernel.cu
 )
 
 # Compile kernels as an OBJECT library (device + host code)
@@ -40,3 +37,26 @@ target_link_libraries(bfpmx_gpu INTERFACE
     bfpmx_cuda_kernels
     CUDA::cudart
 )
+
+# NVTX support for profiling
+# Fetch NVTX from GitHub and use its CMake targets
+if(CMAKE_CUDA_COMPILER)
+    include(FetchContent)
+    # Use the same base directory as other dependencies
+    set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/.deps")
+    FetchContent_Declare(
+        nvtx
+        GIT_REPOSITORY https://github.com/NVIDIA/NVTX.git
+        GIT_TAG        v3.1.1
+    )
+    
+    FetchContent_MakeAvailable(nvtx)
+    
+    # Add NVTX c subdirectory to get nvtx3-c target
+    # Use a unique binary directory name to avoid conflicts
+    add_subdirectory(${nvtx_SOURCE_DIR}/c ${nvtx_BINARY_DIR}/c EXCLUDE_FROM_ALL)
+    
+    # Link against nvtx3-c target (provides nvToolsExt.h compatibility via nvtx3/nvToolsExt.h)
+    target_link_libraries(bfpmx_cuda_kernels PRIVATE nvtx3-c)
+    message(STATUS "Using NVTX from GitHub: ${nvtx_SOURCE_DIR}")
+endif()

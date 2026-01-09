@@ -24,10 +24,10 @@ template <typename T, typename Impl> struct ArithmeticEnabled {
     return Impl::Sub(lhs, rhs);
   }
 
-  friend double operator*(const T &lhs, const T &rhs)
+  friend T operator*(const T &lhs, const T &rhs)
     requires ArithmeticImpl<Impl, T>
   {
-    return Impl::Dot(lhs, rhs);
+    return Impl::Mul(lhs, rhs);
   }
 
   friend T operator/(const T &lhs, const T &rhs)

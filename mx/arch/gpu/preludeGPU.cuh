@@ -9,8 +9,6 @@
 #include "SpreadKernel.cuh"
 #include "PackKernel.cuh"
 #include "FusedKernel.cuh"
-#include "JacobiKernel.cuh"
-#include "HeatKernel.cuh"
 #include "mxvector/GPUArithmetic.cuh"
 #endif
 

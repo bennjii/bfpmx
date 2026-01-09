@@ -8,10 +8,12 @@
 #define PROFILE 1
 
 #include "prelude.h"
+
+#include "profiler/csv_info.h"
 #include "profiler/profiler.h"
 
 constexpr u32 N = 32;
-constexpr u32 Steps = 250;
+constexpr std::array<u32,4> StepsArray = {5,10,50,100};
 constexpr u32 Iterations = 100;
 
 using TestingScalar = u32;
@@ -59,7 +61,7 @@ static void Jacobi2DNaiveBlock(const int steps,
   for (u32 t = 0; t < steps; t++) {
     for (u32 i = 1; i < N - 1; i++) {
       for (u32 j = 1; j < N - 1; j++) {
-        u32 coords = Dimensions::CoordsToLinear({i, j});
+        u32 coords = BlockDims<N, N>::CoordsToLinear({i, j});
         f64 newVal = 0.2f * (A(i, j) + A(i, j - 1) + A(i, 1 + j) + A(1 + i, j) +
                              A(i - 1, j));
 
@@ -69,7 +71,7 @@ static void Jacobi2DNaiveBlock(const int steps,
 
     for (u32 i = 1; i < N - 1; i++) {
       for (u32 j = 1; j < N - 1; j++) {
-        u32 coords = Dimensions::CoordsToLinear({i, j});
+        u32 coords = BlockDims<N, N>::CoordsToLinear({i, j});
 
         f64 newVal = 0.2f * (B(i, j) + B(i, j - 1) + B(i, 1 + j) + B(1 + i, j) +
                              B(i - 1, j));
@@ -166,132 +168,149 @@ static void Jacobi2DSpreadBlockOnce(const int steps,
     }
   }
 
-  A_block = TestingBlock<Dimensions>(a_spread);
-  B_block = TestingBlock<Dimensions>(b_spread);
+  A_block = TestingBlock<BlockDims<N, N>>(a_spread);
+  B_block = TestingBlock<BlockDims<N, N>>(b_spread);
 }
 
-template <size_t N>
-static void Jacobi2DAlwaysFastMarshal(const int steps,
-                                      TestingBlock<BlockDims<N, N>> &A_block,
-                                      TestingBlock<BlockDims<N, N>> &B_block) {
-  profiler::func();
-  using Dimensions = BlockDims<N, N>;
-
-  // TODO: block mulAt by scalar
-  const auto scalar = TestingBlock<BlockDims<1>>(std::array<f64, 1>{0.2f});
-
-  using TypeA = std::remove_reference_t<decltype(A_block)>;
-  using TypeS = decltype(scalar);
-
-#define AT(i, j) ((i) * N + (j))
-#define ADD(...)                                                               \
-  CPUArithmeticSingularValues<TypeA, TypeA, TypeA>::AddAt(__VA_ARGS__);
-#define MUL(...)                                                               \
-  CPUArithmeticSingularValues<TypeA, TypeA, TypeS>::MulAt(__VA_ARGS__);
-
-  for (u32 t = 0; t < steps; t++) {
-    for (u32 i = 1; i < N - 1; i++) {
-      for (u32 j = 1; j < N - 1; j++) {
-        ADD(B_block, AT(i, j), A_block, AT(i, j), A_block, AT(i, j - 1));
-        ADD(B_block, AT(i, j), B_block, AT(i, j), A_block, AT(i, j + 1));
-        ADD(B_block, AT(i, j), B_block, AT(i, j), A_block, AT(i + 1, j));
-        ADD(B_block, AT(i, j), B_block, AT(i, j), A_block, AT(i - 1, j));
-        MUL(B_block, AT(i, j), B_block, AT(i, j), scalar, 0);
-      }
-    }
-
-    for (u32 i = 1; i < N - 1; i++) {
-      for (u32 j = 1; j < N - 1; j++) {
-        ADD(A_block, AT(i, j), B_block, AT(i, j), B_block, AT(i, j - 1));
-        ADD(A_block, AT(i, j), A_block, AT(i, j), B_block, AT(i, j + 1));
-        ADD(A_block, AT(i, j), A_block, AT(i, j), B_block, AT(i + 1, j));
-        ADD(A_block, AT(i, j), A_block, AT(i, j), B_block, AT(i - 1, j));
-        MUL(A_block, AT(i, j), A_block, AT(i, j), scalar, 0);
-      }
+template <size_t N_>
+static f64 L2Norm(const std::array<std::array<f64, N_>, N_> &A,
+                  const std::array<f64, N_ * N_> &B_linear) {
+  f64 error = 0.0;
+  for (size_t i = 0; i < N_; ++i) {
+    for (size_t j = 0; j < N_; ++j) {
+      f64 diff = A[i][j] - B_linear[i * N_ + j];
+      error += diff * diff;
     }
   }
+  return std::sqrt(error);
 }
 
-void Test() {
+template <size_t N_>
+static f64 L2Norm(const std::array<std::array<f64, N_>, N_> &A) {
+  f64 norm_sq = 0.0;
+  for (size_t i = 0; i < N_; ++i) {
+    for (size_t j = 0; j < N_; ++j) {
+      norm_sq += A[i][j] * A[i][j];
+    }
+  }
+  return std::sqrt(norm_sq);
+}
+
+struct ElementWise {
+  f64 naive;
+  f64 spread_each;
+  f64 spread_once;
+};
+
+struct Iteration {
+  ElementWise percentage;
+  ElementWise absolute;
+};
+
+Iteration Test(u32 Steps) {
   using Size = BlockDims<N, N>;
   using Block = TestingBlock<Size>;
 
-  auto a = std::array<std::array<f64, N>, N>{
-      std::array<f64, N>{1.2f},
-      std::array<f64, N>{3.4f},
-  };
+  // Create and fill arrays
+  auto a_base = std::array<std::array<f64, N>, N>{};
+  auto b_base = std::array<std::array<f64, N>, N>{};
 
-  auto b = std::array<std::array<f64, N>, N>{
-      std::array<f64, N>{1.2f},
-      std::array<f64, N>{3.4f},
-  };
+  for (u32 i = 0; i < N; i++) {
+    a_base[i] = fill_random_arrays<f64, N>(-10, 10);
+    b_base[i] = fill_random_arrays<f64, N>(-10, 10);
+  }
 
-  std::array<f64, N * N> aLinear = {};
+  // Linearize for blocks
+  std::array<f64, N * N> aLinear_base = {};
   for (u32 i = 0; i < N; i++) {
     for (u32 j = 0; j < N; j++) {
-      aLinear[i * N + j] = a[i][j];
+      aLinear_base[i * N + j] = a_base[i][j];
     }
   }
 
-  std::array<f64, N * N> bLinear = {};
+  std::array<f64, N * N> bLinear_base = {};
   for (u32 i = 0; i < N; i++) {
     for (u32 j = 0; j < N; j++) {
-      bLinear[i * N + j] = b[i][j];
+      bLinear_base[i * N + j] = b_base[i][j];
     }
   }
 
-  // used to prevent compiler optimization on the calls
-  auto black_box_f64 = [&](auto &a, auto &b) {
-    f64 sum = 0;
-    for (u32 i = 0; i < N; i++)
-      for (u32 j = 0; j < N; j++)
-        sum += a[i][j] + b[i][j];
-    volatile f64 x = sum;
+  // Get reference result
+  auto a_ref = a_base;
+  auto b_ref = b_base;
+  Jacobi2DArray<N>(Steps, a_ref, b_ref);
+
+  profiler::begin();
+
+  auto a_prof = a_base;
+  auto b_prof = b_base;
+  Jacobi2DArray<N>(Steps, a_prof, b_prof);
+
+  Block blockA_naive(aLinear_base), blockB_naive(bLinear_base);
+  Jacobi2DNaiveBlock<N>(Steps, blockA_naive, blockB_naive);
+
+  Block blockA_spread_each(aLinear_base), blockB_spread_each(bLinear_base);
+  Jacobi2DSpreadBlockEach<N>(Steps, blockA_spread_each, blockB_spread_each);
+
+  Block blockA_spread_once(aLinear_base), blockB_spread_once(bLinear_base);
+  Jacobi2DSpreadBlockOnce<N>(Steps, blockA_spread_once, blockB_spread_once);
+
+  auto norm_ref = L2Norm(a_base);
+
+  const auto collect_error_percent = [&](const f64 error_abs) {
+    return (error_abs / norm_ref) * 100.0;
   };
 
-  // used to prevent compiler optimization on the calls
-  auto black_box_block = [&](auto &a, auto &b) {
-    f64 sum = 0;
-    for (u32 i = 0; i < N; i++)
-      for (u32 j = 0; j < N; j++)
-        sum += a(i, j) + b(i, j);
-    volatile f64 x = sum;
+  const auto error_naive = L2Norm<N>(a_ref, blockA_naive.Spread());
+  const auto error_spread_each = L2Norm<N>(a_ref, blockA_spread_each.Spread());
+  const auto error_spread_once = L2Norm<N>(a_ref, blockA_spread_once.Spread());
+
+  return Iteration{
+      ElementWise{collect_error_percent(error_naive),
+                  collect_error_percent(error_spread_each),
+                  collect_error_percent(error_spread_once)},
+      ElementWise{error_naive, error_spread_each, error_spread_once},
   };
-
-  Jacobi2DArray<N>(Steps, a, b);
-  black_box_f64(a, b);
-
-  Block blockA, blockB;
-
-  blockA = Block(aLinear);
-  blockB = Block(bLinear);
-  Jacobi2DNaiveBlock<N>(Steps, blockA, blockB);
-  black_box_block(blockA, blockB);
-
-  blockA = Block(aLinear);
-  blockB = Block(bLinear);
-  Jacobi2DSpreadBlockEach<N>(Steps, blockA, blockB);
-  black_box_block(blockA, blockB);
-
-  blockA = Block(aLinear);
-  blockB = Block(bLinear);
-  Jacobi2DSpreadBlockOnce<N>(Steps, blockA, blockB);
-  black_box_block(blockA, blockB);
-
-  blockA = Block(aLinear);
-  blockB = Block(bLinear);
-  Jacobi2DAlwaysFastMarshal<N>(Steps, blockA, blockB);
-  black_box_block(blockA, blockB);
 }
 
 int main() {
-  profiler::begin();
+  using Size = BlockDims<N, N>;
+  using Block = TestingBlock<Size>;
+  auto writer = CsvWriter();
+  for (u32 Steps: StepsArray){
+    CsvInfo primitive = PrepareCsvPrimitive("jacobi2d:primitive", N, Steps);
+    CsvInfo block = PrepareCsvBlock<Block>("jacobi2d:block", N, Steps);
 
-  for (int i = 0; i < Iterations; i++) {
-    Test();
+
+    profiler::begin();
+
+    for (int i = 0; i < Iterations; i++) {
+      auto [percentage, absolute] = Test(Steps);
+
+      writer.next_iteration();
+      auto infos = profiler::dump_and_reset();
+
+      for (auto &x : infos) {
+        auto const &label = std::string(x.label);
+
+        if (label == "Jacobi2DArray") {
+          writer.append_csv(primitive, x, 0, 0);
+        } else if (label == "Jacobi2DNaiveBlock") {
+          writer.append_csv(block, x, percentage.naive, absolute.naive);
+        } else if (label == "Jacobi2DSpreadBlockEach") {
+          writer.append_csv(block, x, percentage.spread_each,
+                            absolute.spread_each);
+        } else if (label == "Jacobi2DSpreadBlockOnce") {
+          writer.append_csv(block, x, percentage.spread_once,
+                            absolute.spread_once);
+        }
+      }
+    }
   }
 
-  profiler::end_and_print();
+  writer.dump("../benchmarks/jacobi2d.csv");
+  // to_dump.dump(std::cout);
+
   return 0;
 }
 

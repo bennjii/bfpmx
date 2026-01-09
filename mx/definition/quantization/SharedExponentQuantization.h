@@ -19,7 +19,9 @@ public:
       largestBiasedExponent = std::max(largestBiasedExponent, exponent);
     }
 
-    const u64 largestUnbiasedExponent = largestBiasedExponent - F64_BIAS;
+    const u64 largestUnbiasedExponent = (largestBiasedExponent > F64_BIAS)
+                                            ? largestBiasedExponent - F64_BIAS
+                                            : 0;
     const u64 exponent = NormalizedExponent(largestUnbiasedExponent);
 
     return std::pow(2.0, exponent);

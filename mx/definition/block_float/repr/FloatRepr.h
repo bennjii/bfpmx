@@ -154,7 +154,7 @@ public:
     // TODO: this way we are not able to store in a compact way 6 or 4 bits
     // floats (e.g. E2M3, E3M2, E2M1)in a Block
     //       we still use 8 bits per significan instead of 6 (or 4).
-    return Size() / 8;
+    return (Size() + 7) / 8;
   }
 
   [[nodiscard]] static constexpr PackedForm Pack(const f64 value) {
@@ -272,6 +272,24 @@ public:
     return std::pow(2, -(SignificandBits() - 1.0));
   }
 };
+
+namespace fp64 {
+using E11M52Type = FloatRepr<11, 52, 1>;
+constexpr auto E11M52 = E11M52Type();
+} // namespace fp64
+
+namespace fp32 {
+using E8M23Type = FloatRepr<8, 23, 1>;
+constexpr auto E8M23 = E8M23Type();
+} // namespace fp32
+
+namespace fp16 {
+using E6M9Type = FloatRepr<6, 9, 1>;
+constexpr auto E6M9 = E6M9Type();
+
+using E5M10Type = FloatRepr<5, 10, 1>;
+constexpr auto E5M10 = E5M10Type();
+} // namespace fp16
 
 namespace fp8 {
 using E4M3Type = FloatRepr<4, 3, 1>;
