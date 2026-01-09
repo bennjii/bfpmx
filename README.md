@@ -51,3 +51,13 @@ cmake --build build
 #
 run-clang-tidy -p build mx/ -quiet
 ```
+
+### GPU Benchmarks
+To test MxVector on GPU with Jacobi2D benchmark, checkout to the `gpu_benchmarks` branch:
+```
+git checkout gpu_benchmarks
+cmake -B build -S .
+cmake --build . -t jacobi2d_gpu
+cmake --build . -t jacobi2d_stdpar
+```
+`jacobi2d_gpu` requires `nvcc` for compilation. `jacobi2d_stdpar` requires `nvc++` for compilation to enable GPU offload. Refer to [NVIDIA documentation](https://docs.nvidia.com/hpc-sdk/) for instruction and download.
